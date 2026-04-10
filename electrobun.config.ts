@@ -2,17 +2,21 @@ import type { ElectrobunConfig } from "electrobun";
 
 export default {
 	app: {
-		name: "react-tailwind-vite",
-		identifier: "reacttailwindvite.electrobun.dev",
+		name: "MyOS",
+		identifier: "dev.myos.app",
 		version: "0.0.1",
 	},
+	runtime: {
+		exitOnLastWindowClosed: false,
+	},
 	build: {
-		// Vite builds to dist/, we copy from there
-		copy: {
-			"dist/index.html": "views/mainview/index.html",
-			"dist/assets": "views/mainview/assets",
+		bun: {
+			entrypoint: "src/shell/bun/main.ts",
 		},
-		// Ignore Vite output in watch mode — HMR handles view rebuilds separately
+		copy: {
+			"dist/index.html": "views/dashboard/index.html",
+			"dist/assets": "views/dashboard/assets",
+		},
 		watchIgnore: ["dist/**"],
 		mac: {
 			bundleCEF: false,

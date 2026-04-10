@@ -1,12 +1,12 @@
 {
-	"name": "MyOS",
+	"name": "myos",
 	"version": "0.0.1",
-	"description": "Electrobun app with React, Tailwind CSS, and Vite HMR",
+	"description": "Local-first productivity dashboard built with Electrobun",
 	"scripts": {
 		"start": "vite build && electrobun dev",
 		"dev": "electrobun dev --watch",
 		"dev:hmr": "concurrently \"bun run hmr\" \"bun run start\"",
-		"hmr": "vite --port 5173",
+		"hmr": "vite --config vite.config.ts",
 		"build:dev": "bun install && electrobun build",
 		"build:stable": "vite build && electrobun build --env=stable",
 		"build:canary": "vite build && electrobun build --env=canary"

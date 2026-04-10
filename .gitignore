@@ -24,3 +24,18 @@ coverage/
 
 # OS files
 .DS_Store
+
+# Application data directory (SQLite databases, WAL files, etc.)
+data/
+
+# SQLite databases anywhere else (safety net)
+*.db
+*.db-wal
+*.db-shm
+
+# User data scripts (exported from DB for backup — not source code)
+src/scripts/local/
+!src/scripts/.gitkeep
+
+# Backups
+backups/
