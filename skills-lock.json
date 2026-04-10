@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "electrobun": {
+      "source": "gyorkluu/electrobun-skills",
+      "sourceType": "github",
+      "computedHash": "4e37d138754cead75bce301fb31318800b2b7772c7a8de10ae36ae7dcac9aa42"
+    },
+    "electrobun-best-practices": {
+      "source": "0xbigboss/claude-code",
+      "sourceType": "github",
+      "computedHash": "708f261a16aa01e1b0d7a9a0b904dbe6176e864f424515db4f48707cd11dfdf9"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "computedHash": "784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea"
+    }
+  }
+}

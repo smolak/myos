@@ -1,0 +1,32 @@
+{
+	"name": "MyOS",
+	"version": "0.0.1",
+	"description": "Electrobun app with React, Tailwind CSS, and Vite HMR",
+	"scripts": {
+		"start": "vite build && electrobun dev",
+		"dev": "electrobun dev --watch",
+		"dev:hmr": "concurrently \"bun run hmr\" \"bun run start\"",
+		"hmr": "vite --port 5173",
+		"build:dev": "bun install && electrobun build",
+		"build:stable": "vite build && electrobun build --env=stable",
+		"build:canary": "vite build && electrobun build --env=canary"
+	},
+	"dependencies": {
+		"electrobun": "1.15.1",
+		"react": "^19.2.5",
+		"react-dom": "^19.2.5"
+	},
+	"devDependencies": {
+		"@tailwindcss/postcss": "^4.2.2",
+		"@types/bun": "latest",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^6.0.1",
+		"autoprefixer": "^10.4.27",
+		"concurrently": "^9.2.1",
+		"postcss": "^8.5.9",
+		"tailwindcss": "^4.2.2",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.8"
+	}
+}

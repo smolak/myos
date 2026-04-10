@@ -1,0 +1,22 @@
+---
+description: Conventions for working with task files
+globs: "tasks/**"
+---
+
+# Task Conventions
+
+Read `specs/TASKS.md` for the full task format, philosophy, and reading strategy.
+
+## Before Starting a Task
+
+1. Read the Task Registry table in `specs/TASKS.md` to understand project state.
+2. Only open the full task file for the task you're actively working on.
+3. For dependencies: read just the TL;DR section (first ~15 lines) of dependency task files.
+4. For architecture questions: read `specs/ARCHITECTURE.md`, not old task files.
+5. For testing conventions: read `specs/TESTING.md` before writing any tests.
+
+## When Completing a Task
+
+1. Add a `## TL;DR (completed)` section right after the metadata block (2–4 lines max).
+2. Update the task's `**Status:**` field to `Complete`.
+3. Update the Task Registry table in `specs/TASKS.md` (Status + Outcome columns).

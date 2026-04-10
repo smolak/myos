@@ -1,0 +1,26 @@
+---
+description: Project-wide naming and coding conventions (supplements AGENTS.md)
+globs: *
+---
+
+# Project Conventions
+
+> Reading list, key constraints, and project overview are in `AGENTS.md` (always applied). This rule adds naming and coding conventions not covered there.
+
+## Naming
+
+- **Event names:** kebab-case, namespaced with feature ID. `"rss:new-entry"`, `"todo:item-completed"`.
+- **Action/query names:** kebab-case. `"mark-read"`, `"get-entries"`.
+- **Feature IDs:** lowercase kebab-case slugs. `"rss-reader"`, `"todo"`, `"pomodoro"`.
+
+## Path Aliases
+
+- `@core/*` → `src/core/*`
+- `@shell/*` → `src/shell/*`
+- `@features/*` → `src/features/*`
+
+Configured in both `tsconfig.json` and `vite.config.ts`.
+
+## Skills
+
+Check `.agents/skills/` for domain-specific guidance (Electrobun, etc.). See `specs/SKILLS.md` for the full skills guide.

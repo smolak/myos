@@ -1,0 +1,20 @@
+---
+description: Testing conventions — read TESTING.md before writing any tests
+globs: "**/*.test.{ts,tsx}"
+---
+
+# Testing Rules
+
+Read `specs/TESTING.md` for full conventions before writing or modifying tests.
+
+## Quick Reference
+
+- **Co-locate** test files next to source: `foo.ts` → `foo.test.ts`. No `__tests__/` directories.
+- **Use `.test.`** not `.spec.` — one convention, no ambiguity.
+- **Use `test()`** not `it()` for consistency.
+- **Test names**: lowercase, verb-first, present tense, no "should" prefix. Example: `"creates data directories if they do not exist"`.
+- **Assertions**: prefer specific matchers (`toEqual`, `toHaveLength`, `toThrow`) over generic boolean checks.
+- **Bun-side tests** (`src/core/`, `src/features/**/bun/`): use `bun:test`, real SQLite (`:memory:` for features, temp dirs for DB manager).
+- **UI tests** (`src/shell/view/`, `src/features/**/view/`): use Vitest + React Testing Library. Test behavior, not implementation.
+- **Never mock SQLite** in feature tests — use real in-memory databases to catch SQL errors and constraint violations.
+- **Always test idempotency** for action handlers.
