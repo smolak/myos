@@ -12,9 +12,9 @@ They are the development roadmap for this project, derived from the build order 
 |---|---|---|---|---|
 | 0001 | Cleanup demo template and restructure project | Pre-phase | Complete | Vertical slice layout, shell tray app, dashboard placeholder, configs updated |
 | 0002 | Install core dependencies and define type system | Phase 1 — Core Shell | Complete | Core deps, Vitest setup, `src/core/types/*`, path aliases; Bun/Vitest scripts scoped to `./src/core/bun` and `./src/features` with `--pass-with-no-tests` / `passWithNoTests` |
-| 0003 | Implement the Database Manager | Phase 1 — Core Shell | Not started | — |
+| 0003 | Implement the Database Manager | Phase 1 — Core Shell | Complete | `DatabaseManager`, migration runner, core migration `001` (features + settings), `DatabaseManagerConfig`, `bun:test` coverage |
 
-> **Next task:** 0003 — all preceding tasks are complete or N/A.
+> **Next task:** Add the next numbered task to the registry when defined — 0003 is complete.
 
 > **Maintaining this table:** Add a row when a new task is created. Update Status and Outcome when a task completes. The Outcome column is a single sentence summarizing what the task delivered. Update the "Next task" pointer when a task completes.
 
