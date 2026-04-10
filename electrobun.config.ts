@@ -11,7 +11,7 @@ export default {
 	},
 	build: {
 		bun: {
-			entrypoint: "src/shell/bun/main.ts",
+			entrypoint: "src/shell/bun/index.ts",
 		},
 		copy: {
 			"dist/index.html": "views/dashboard/index.html",
