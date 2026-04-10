@@ -55,16 +55,16 @@ src/features/todo/view/TodoWidget.test.tsx ← co-located
 ```json
 {
   "scripts": {
-    "test": "bun test src/core src/features && vitest run",
-    "test:core": "bun test src/core src/features",
+    "test": "bun test --pass-with-no-tests ./src/core/bun ./src/features && vitest run",
+    "test:core": "bun test --pass-with-no-tests ./src/core/bun ./src/features",
     "test:ui": "vitest run",
-    "test:watch": "bun test --watch src/core src/features",
+    "test:watch": "bun test --watch --pass-with-no-tests ./src/core/bun ./src/features",
     "test:ui:watch": "vitest"
   }
 }
 ```
 
-- `bun test src/core src/features` — runs `*.test.ts` files under `src/core/` and `src/features/**/bun/`. Path arguments are required to prevent Bun from discovering Vitest UI test files (which import from `vitest` and would fail under Bun's test runner).
+- `bun test --pass-with-no-tests ./src/core/bun ./src/features` — runs `*.test.ts` under `src/core/bun/` and anywhere under `src/features/`. The `./` prefixes tell Bun to treat these as paths (not name filters). `--pass-with-no-tests` exits successfully when no files match yet. Vitest is configured with `passWithNoTests: true` so `vitest run` also passes with zero UI tests.
 - `vitest run` — runs all `*.test.tsx` files under `src/shell/view/` and `src/features/**/view/` (scoped by the `include` array in `vitest.config.ts`)
 - `bun test --watch` and `vitest` (no `run`) for development watch mode
 
@@ -318,6 +318,7 @@ export default defineConfig({
       "src/core/ui/**/*.test.{ts,tsx}",
     ],
     globals: true,
+    passWithNoTests: true,
   },
   resolve: {
     alias: {

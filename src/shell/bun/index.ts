@@ -1,10 +1,4 @@
-import {
-	BrowserWindow,
-	type ElectrobunEvent,
-	Tray,
-	Updater,
-	Utils,
-} from "electrobun/bun";
+import { BrowserWindow, Updater } from "electrobun/bun";
 
 const APP_TITLE = "MyOS";
 const DEV_SERVER_PORT = 5173;
@@ -47,7 +41,7 @@ function createMainWindow(url: string): BrowserWindow {
 		url,
 		frame: WINDOW_FRAME,
 	});
-	// attachCloseHandler(win);
+	attachCloseHandler(win);
 	mainWindow = win;
 	return win;
 }
@@ -111,5 +105,7 @@ createMainWindow(initialUrl);
 // 			break;
 // 	}
 // });
+
+void mainWindow;
 
 console.log(`${APP_TITLE} started — tray app with dashboard shell`);
