@@ -1,4 +1,4 @@
-import { BrowserWindow, Updater } from "electrobun/bun";
+import { BrowserWindow, ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
 
 const APP_TITLE = "MyOS";
 const DEV_SERVER_PORT = 5173;
@@ -46,65 +46,65 @@ function createMainWindow(url: string): BrowserWindow {
 	return win;
 }
 
-// async function showDashboard() {
-// 	const url = await getDashboardUrl();
-// 	if (mainWindow) {
-// 		const existing = BrowserWindow.getById(mainWindow.id);
-// 		if (existing) {
-// 			existing.show();
-// 			if (existing.isMinimized()) {
-// 				existing.unminimize();
-// 			}
-// 			return;
-// 		}
-// 		mainWindow = null;
-// 	}
-// 	createMainWindow(url);
-// }
+async function showDashboard() {
+	const url = await getDashboardUrl();
+	if (mainWindow) {
+		const existing = BrowserWindow.getById(mainWindow.id);
+		if (existing) {
+			existing.show();
+			if (existing.isMinimized()) {
+				existing.unminimize();
+			}
+			return;
+		}
+		mainWindow = null;
+	}
+	createMainWindow(url);
+}
 
-// function hideDashboard() {
-// 	if (!mainWindow) return;
-// 	const win = BrowserWindow.getById(mainWindow.id);
-// 	if (win) {
-// 		win.minimize();
-// 	}
-// }
+function hideDashboard() {
+	if (!mainWindow) return;
+	const win = BrowserWindow.getById(mainWindow.id);
+	if (win) {
+		win.minimize();
+	}
+}
 
 const initialUrl = await getDashboardUrl();
 createMainWindow(initialUrl);
 
-// const tray = new Tray({
-// 	title: APP_TITLE,
-// 	template: true,
-// });
+const tray = new Tray({
+	title: APP_TITLE,
+	template: true,
+});
 
-// tray.setMenu([
-// 	{ type: "normal", label: "Show", action: "show" },
-// 	{ type: "normal", label: "Hide", action: "hide" },
-// 	{ type: "divider" },
-// 	{ type: "normal", label: "Quit", action: "quit" },
-// ]);
+tray.setMenu([
+	{ type: "normal", label: "Show", action: "show" },
+	{ type: "normal", label: "Hide", action: "hide" },
+	{ type: "divider" },
+	{ type: "normal", label: "Quit", action: "quit" },
+]);
 
-// tray.on("tray-clicked", (raw) => {
-// 	const event = raw as ElectrobunEvent<
-// 		{ id: number; action: string; data?: unknown },
-// 		{ allow: boolean }
-// 	>;
+tray.on("tray-clicked", (raw) => {
+	const event = raw as ElectrobunEvent<
+		{ id: number; action: string; data?: unknown },
+		{ allow: boolean }
+	>;
 
-// 	switch (event.data.action) {
-// 		case "show":
-// 			void showDashboard();
-// 			break;
-// 		case "hide":
-// 			hideDashboard();
-// 			break;
-// 		case "quit":
-// 			Utils.quit();
-// 			break;
-// 		default:
-// 			break;
-// 	}
-// });
+	switch (event.data.action) {
+		case "show":
+			void showDashboard();
+			break;
+		case "hide":
+			hideDashboard();
+			break;
+		case "quit":
+			Utils.quit();
+			break;
+		default:
+			break;
+	}
+});
 
 void mainWindow;
 
