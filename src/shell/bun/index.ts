@@ -51,10 +51,10 @@ async function showDashboard() {
 	if (mainWindow) {
 		const existing = BrowserWindow.getById(mainWindow.id);
 		if (existing) {
-			existing.show();
 			if (existing.isMinimized()) {
 				existing.unminimize();
 			}
+			existing.show();
 			return;
 		}
 		mainWindow = null;
@@ -66,7 +66,8 @@ function hideDashboard() {
 	if (!mainWindow) return;
 	const win = BrowserWindow.getById(mainWindow.id);
 	if (win) {
-		win.minimize();
+		win.close();
+		mainWindow = null;
 	}
 }
 
