@@ -65,11 +65,11 @@ Implement `SettingsManager` service backed by the `settings` table in core DB. S
 
 ### Acceptance criteria
 
-- [ ] `settings.get("global", "theme", "system")` returns default if not set
-- [ ] `settings.set("global", "theme", "dark")` persists value
-- [ ] Subsequent `get` returns persisted value
-- [ ] Per-feature settings are isolated by scope
-- [ ] Tests cover get/set, default values, scope isolation
+- [x] `settings.get("global", "theme", "system")` returns default if not set
+- [x] `settings.set("global", "theme", "dark")` persists value
+- [x] Subsequent `get` returns persisted value
+- [x] Per-feature settings are isolated by scope
+- [x] Tests cover get/set, default values, scope isolation
 
 ---
 
