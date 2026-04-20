@@ -28,11 +28,11 @@ Convert the current `BrowserWindow` setup into a tray-based app. The Bun main pr
 
 ### Acceptance criteria
 
-- [ ] Tray icon appears in system tray on app start
-- [ ] Clicking tray icon shows the window if hidden, hides if visible
-- [ ] Closing the window hides it (does not quit the app)
-- [ ] App continues running in background with no visible windows
-- [ ] Quitting via tray menu (or Cmd+Q) actually terminates the app
+- [x] Tray icon appears in system tray on app start
+- [x] Clicking tray icon shows the window if hidden, hides if visible
+- [x] Closing the window hides it (does not quit the app)
+- [x] App continues running in background with no visible windows
+- [x] Quitting via tray menu (or Cmd+Q) actually terminates the app
 
 ---
 
@@ -46,12 +46,12 @@ Implement `DatabaseManager` service that creates and manages SQLite databases. O
 
 ### Acceptance criteria
 
-- [ ] `core.db` is created in app data directory on first launch
-- [ ] All core schema tables exist per `ARCHITECTURE.md` § Core Database Schema
-- [ ] WAL mode is enabled on all databases
-- [ ] `DatabaseManager.createFeatureDb(featureId)` creates isolated per-feature DB
-- [ ] Migration tracking table records applied migrations
-- [ ] Tests cover DB creation, WAL mode verification, migration tracking
+- [x] `core.db` is created in app data directory on first launch
+- [x] All core schema tables exist per `ARCHITECTURE.md` § Core Database Schema
+- [x] WAL mode is enabled on all databases
+- [x] `DatabaseManager.createFeatureDb(featureId)` creates isolated per-feature DB
+- [x] Migration tracking table records applied migrations
+- [x] Tests cover DB creation, WAL mode verification, migration tracking
 
 ---
 
