@@ -53,7 +53,7 @@ Based on the architecture and planned roadmap.
 
 ### Very Useful
 
-- `test-driven-development`
+- `tdd`
 - `systematic-debugging`
 - `tailwind-design-system`
 - `shadcn` / `shadcn-ui` related skill
@@ -94,13 +94,13 @@ Mapped to the build order in `ARCHITECTURE.md`.
 | 1. Core shell (tray, empty grid, registry, DB manager) | `electrobun`, `electrobun-best-practices`, `database-schema-design` | Correct Electrobun process wiring, safer defaults, solid core DB foundations |
 | 2. Todo List feature | `electrobun`, `vercel-react-best-practices`, `react:components` | Implements first full feature contract with clean React widget/full-view patterns |
 | 3. Script engine | `workflow-automation`, `database-schema-design`, `security-best-practices` | Event/action orchestration, queue schema quality, strict script boundaries |
-| 4. Pomodoro feature | `electrobun`, `vercel-react-best-practices`, `test-driven-development` | Timer behavior + cross-feature hooks, with reliable tests for time-based logic |
+| 4. Pomodoro feature | `electrobun`, `vercel-react-best-practices`, `tdd` | Timer behavior + cross-feature hooks, with reliable tests for time-based logic |
 | 5. RSS Reader feature | `workflow-automation`, `systematic-debugging`, `security-best-practices` | Scheduled fetch flows, retry/debug instrumentation, safer handling of external input |
 | 6. Clock + Weather | `electrobun-best-practices`, `react:components`, `tailwind-design-system` | Lightweight widget UX and predictable refresh/data presentation |
 | 7. Command palette + notifications + theming | `vercel-react-best-practices`, `tailwind-design-system`, `shadcn` / `shadcn-ui` | Shared UI quality, consistency, accessibility, and theme token discipline |
 | 8. Daily Journal + Global Search + Focus Mode | `workflow-automation`, `database-schema-design`, `systematic-debugging` | Cross-feature aggregation and query correctness with strong debugging support |
 | 9. Calendar + Habits + Bookmarks + Countdowns | `security-best-practices`, `workflow-automation`, `code-review` | Integrations and automations with tighter review and safer defaults |
-| 10. Clipboard + Snippets + scale-out polish | `test-driven-development`, `code-review`, `gh-cli` | Stability and release workflow maturity as feature count grows |
+| 10. Clipboard + Snippets + scale-out polish | `tdd`, `code-review`, `gh-cli` | Stability and release workflow maturity as feature count grows |
 
 ## Quick Start Skill Stack (Minimal)
 
@@ -110,7 +110,7 @@ If you only install a few additional skills first, use this order:
 2. `workflow-automation`
 3. `security-best-practices`
 4. `vercel-react-best-practices`
-5. `test-driven-development`
+5. `tdd`
 
 ## Example Prompts Per Phase
 
