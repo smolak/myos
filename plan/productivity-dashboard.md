@@ -83,12 +83,12 @@ Implement `FeatureRegistry` service. On startup, scan for features, run `install
 
 ### Acceptance criteria
 
-- [ ] Features are discovered and registered on startup
-- [ ] `install` runs once on first registration, persisted in DB
-- [ ] `activate` runs on every startup for enabled features
-- [ ] `FeatureContext` is provided with `db`, `events`, `actions`, `queries`, `settings`, `log`
-- [ ] Feature that throws during `activate` is auto-disabled, app continues
-- [ ] Tests cover lifecycle order, error handling, context provision
+- [x] Features are discovered and registered on startup
+- [x] `install` runs once on first registration, persisted in DB
+- [x] `activate` runs on every startup for enabled features
+- [x] `FeatureContext` is provided with `db`, `events`, `actions`, `queries`, `settings`, `log`
+- [x] Feature that throws during `activate` is auto-disabled, app continues
+- [x] Tests cover lifecycle order, error handling, context provision
 
 ---
 
