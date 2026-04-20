@@ -14,11 +14,12 @@
 		"hmr": "vite --config vite.config.ts",
 		"build:dev": "bun install && electrobun build",
 		"build:stable": "vite build && electrobun build --env=stable",
-		"build:canary": "vite build && electrobun build --env=canary"
+		"build:canary": "vite build && electrobun build --env=canary",
+		"tsc": "tsc"
 	},
 	"dependencies": {
-		"electrobun": "1.15.1",
-		"nanoid": "^5.1.7",
+		"electrobun": "1.16.0",
+		"nanoid": "^5.1.9",
 		"react": "^19.2.5",
 		"react-dom": "^19.2.5",
 		"react-grid-layout": "^2.2.3"
@@ -27,19 +28,19 @@
 		"@tailwindcss/postcss": "^4.2.2",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.2",
-		"@types/bun": "latest",
+		"@types/bun": "^1.3.12",
 		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.3",
 		"@types/react-grid-layout": "^2.1.0",
-		"@types/three": "^0.183.1",
+		"@types/three": "^0.184.0",
 		"@vitejs/plugin-react": "^6.0.1",
-		"autoprefixer": "^10.4.27",
+		"autoprefixer": "^10.5.0",
 		"concurrently": "^9.2.1",
 		"jsdom": "^29.0.2",
-		"postcss": "^8.5.9",
+		"postcss": "^8.5.10",
 		"tailwindcss": "^4.2.2",
-		"typescript": "^5.9.3",
-		"vite": "^8.0.8",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.9",
 		"vitest": "^4.1.4"
 	}
 }
