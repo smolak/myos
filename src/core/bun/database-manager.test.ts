@@ -45,14 +45,30 @@ describe("DatabaseManager", () => {
 			expect(row?.name).toBe("migrations");
 		});
 
-		test("runs initial migration", () => {
+		test("creates all core schema tables", () => {
 			const db = manager.getCoreDatabase();
 			const names = db
 				.query(
-					"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('features', 'settings') ORDER BY name",
+					`SELECT name FROM sqlite_master WHERE type = 'table'
+					AND name IN (
+						'credentials','event_log','execution_actions','features',
+						'scheduled_tasks','script_executions','script_store',
+						'script_subscriptions','scripts','settings'
+					) ORDER BY name`,
 				)
 				.all() as { name: string }[];
-			expect(names.map((n) => n.name)).toEqual(["features", "settings"]);
+			expect(names.map((n) => n.name)).toEqual([
+				"credentials",
+				"event_log",
+				"execution_actions",
+				"features",
+				"scheduled_tasks",
+				"script_executions",
+				"script_store",
+				"script_subscriptions",
+				"scripts",
+				"settings",
+			]);
 		});
 
 		test("tracks applied migrations", () => {
@@ -70,7 +86,7 @@ describe("DatabaseManager", () => {
 			const rows = db.query("SELECT version FROM migrations WHERE feature_id = ?").all("core") as {
 				version: string;
 			}[];
-			expect(rows).toEqual([{ version: "001" }]);
+			expect(rows).toEqual([{ version: "001" }, { version: "002" }]);
 		});
 	});
 
