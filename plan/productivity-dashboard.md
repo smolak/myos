@@ -102,11 +102,11 @@ Replace the current demo `App.tsx` with the dashboard shell. Implement `Dashboar
 
 ### Acceptance criteria
 
-- [ ] Dashboard grid renders with `react-grid-layout`
-- [ ] Empty state shows "No widgets configured" placeholder
-- [ ] Layout is persisted to settings (survives restart)
-- [ ] `DashboardPage` and `LayoutItem` types match ARCHITECTURE.md
-- [ ] Grid supports predefined widget sizes (1×1, 2×1, 2×2, 4×1)
+- [x] Dashboard grid renders with `react-grid-layout`
+- [x] Empty state shows "No widgets configured" placeholder
+- [x] Layout is persisted to settings (survives restart)
+- [x] `DashboardPage` and `LayoutItem` types match ARCHITECTURE.md
+- [x] Grid supports predefined widget sizes (1×1, 2×1, 2×2, 4×1)
 
 ---
 

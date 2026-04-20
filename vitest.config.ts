@@ -9,6 +9,7 @@ export default defineConfig({
 	plugins: [react()],
 	test: {
 		environment: "jsdom",
+		setupFiles: ["src/shell/view/test-setup.ts"],
 		include: [
 			"src/shell/view/**/*.test.{ts,tsx}",
 			"src/features/**/view/**/*.test.{ts,tsx}",
