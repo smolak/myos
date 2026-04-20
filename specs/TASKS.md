@@ -27,6 +27,7 @@ They are the development roadmap for this project, derived from the build order 
 3. **For dependencies:** read just the TL;DR section at the top of the dependency task file (first ~15 lines). Don't read the full steps/criteria of completed tasks.
 4. **For architecture questions:** read `ARCHITECTURE.md`, not old task files. Tasks implement the architecture — they don't define it.
 5. **For testing conventions:** read `TESTING.md` before writing any tests. It defines file placement, naming, patterns, assertion style, and API design guidelines.
+6. **For coding conventions:** read `CONVENTIONS.md` before writing any implementation code. It defines SOLID principles, bounded context rules, TypeScript conventions, and React patterns for this project.
 
 ---
 
@@ -35,6 +36,7 @@ They are the development roadmap for this project, derived from the build order 
 - **Small to medium scope.** Each task should be completable in a single focused session. If it feels like it needs sub-tasks with their own acceptance criteria, split it.
 - **Easy to implement.** Steps should be concrete and unambiguous. A task should never require major design decisions — those belong in `ARCHITECTURE.md` or a dedicated planning session before the task is written.
 - **Easy to verify.** Every task has explicit acceptance criteria that can be checked mechanically (compiler passes, app launches, behavior is observable, tests pass).
+- **TDD by default.** For any task that implements logic (functions, classes, handlers, components), follow red-green-refactor: write a failing test first, confirm it fails, then implement to make it pass. Skip TDD only when it is genuinely impractical — e.g. pure config changes, type-only files, or UI layout work with no testable logic.
 
 ## Task Format
 
