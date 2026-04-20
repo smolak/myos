@@ -1,17 +1,17 @@
 export interface DashboardPage {
-	id: string;
-	name: string;
-	layout: LayoutItem[];
-	order: number;
+	readonly id: string;
+	readonly name: string;
+	readonly layout: LayoutItem[];
+	readonly order: number;
 }
 
 export interface LayoutItem {
-	i: string;
-	x: number;
-	y: number;
-	w: number;
-	h: number;
-	featureId: string;
-	widgetId: string;
-	config?: Record<string, unknown>;
+	readonly i: string;
+	readonly x: number;
+	readonly y: number;
+	readonly w: number;
+	readonly h: number;
+	readonly featureId: string;
+	readonly widgetId: string;
+	readonly config?: Record<string, unknown>;
 }

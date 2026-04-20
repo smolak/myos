@@ -3,17 +3,17 @@ export type ScheduleType = "cron" | "interval";
 export type TaskStatus = "success" | "failed";
 
 export interface ScheduledTask {
-	id: string;
-	featureId: string;
-	name: string;
-	scheduleType: ScheduleType;
-	scheduleValue: string | number;
-	enabled: boolean;
-	lastRunAt: string | null;
-	nextRunAt: string;
-	lastStatus: TaskStatus | null;
-	lastError: string | null;
-	retryCount: number;
-	maxRetries: number;
-	createdAt: string;
+	readonly id: string;
+	readonly featureId: string;
+	readonly name: string;
+	readonly scheduleType: ScheduleType;
+	readonly scheduleValue: string | number;
+	readonly enabled: boolean;
+	readonly lastRunAt: string | null;
+	readonly nextRunAt: string;
+	readonly lastStatus: TaskStatus | null;
+	readonly lastError: string | null;
+	readonly retryCount: number;
+	readonly maxRetries: number;
+	readonly createdAt: string;
 }

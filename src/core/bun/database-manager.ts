@@ -15,13 +15,7 @@ function assertSafeFeatureId(featureId: string): void {
 	}
 }
 
-/**
- * Resolves the default root directory for SQLite files.
- *
- * - `MYOS_DATA_DIR` overrides everything when set.
- * - In `NODE_ENV === "production"`, uses Electrobun `Utils.paths.userData` + `data` (lazy-loaded so `bun test` does not need the native host).
- * - Otherwise uses `./data` under the current working directory (typical local development).
- */
+// electrobun/bun is lazy-required (not imported) so `bun test` doesn't need the native host
 export function resolveDefaultDataDir(): string {
 	const override = process.env.MYOS_DATA_DIR?.trim();
 	if (override) {

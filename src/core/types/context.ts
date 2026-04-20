@@ -2,9 +2,9 @@ import type { Database } from "bun:sqlite";
 import type { EventMap, ActionMap, QueryMap } from "./common";
 
 export interface ActionMeta {
-	executionId: string;
-	correlationId: string;
-	retriedCount: number;
+	readonly executionId: string;
+	readonly correlationId: string;
+	readonly retriedCount: number;
 }
 
 export interface ScopedLogger {
@@ -15,8 +15,8 @@ export interface ScopedLogger {
 }
 
 export interface FeatureLifecycleContext {
-	db: Database;
-	log: ScopedLogger;
+	readonly db: Database;
+	readonly log: ScopedLogger;
 }
 
 export interface FeatureContext<
@@ -24,13 +24,13 @@ export interface FeatureContext<
 	TActions extends ActionMap = ActionMap,
 	TQueries extends QueryMap = QueryMap,
 > {
-	db: Database;
+	readonly db: Database;
 
-	events: {
+	readonly events: {
 		emit<K extends keyof TEvents>(event: K, payload: TEvents[K]): void;
 	};
 
-	actions: {
+	readonly actions: {
 		handle<K extends keyof TActions>(
 			action: K,
 			handler: (
@@ -40,7 +40,7 @@ export interface FeatureContext<
 		): void;
 	};
 
-	queries: {
+	readonly queries: {
 		handle<K extends keyof TQueries>(
 			query: K,
 			handler: (params: TQueries[K]["params"]) => Promise<TQueries[K]["result"]>,
@@ -51,14 +51,14 @@ export interface FeatureContext<
 
 	query(feature: string, queryName: string, params: unknown): Promise<unknown>;
 
-	scheduler: {
+	readonly scheduler: {
 		register(taskId: string, handler: () => Promise<void>): void;
 	};
 
-	settings: {
+	readonly settings: {
 		get<T>(key: string, defaultValue: T): T;
 		set(key: string, value: unknown): Promise<void>;
 	};
 
-	log: ScopedLogger;
+	readonly log: ScopedLogger;
 }

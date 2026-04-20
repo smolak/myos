@@ -1,3 +1,3 @@
 export interface DatabaseManagerConfig {
-	dataDir: string;
+	readonly dataDir: string;
 }
