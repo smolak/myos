@@ -7,6 +7,7 @@ import type { FeatureContext, FeatureDefinition, FeatureLifecycleContext } from 
 import { DatabaseManager } from "./database-manager";
 import { SettingsManager } from "./settings-manager";
 import { FeatureRegistry } from "./feature-registry";
+import { EventBus } from "./event-bus";
 
 const EMPTY_MANIFEST = {
 	events: {},
@@ -37,6 +38,7 @@ function makeFeature(overrides: Partial<FeatureDefinition> = {}): FeatureDefinit
 describe("FeatureRegistry", () => {
 	let dbManager: DatabaseManager;
 	let settingsManager: SettingsManager;
+	let eventBus: EventBus;
 	let registry: FeatureRegistry;
 	let coreDb: Database;
 	let tmpDir: string;
@@ -46,7 +48,8 @@ describe("FeatureRegistry", () => {
 		dbManager = new DatabaseManager(tmpDir);
 		coreDb = dbManager.getCoreDatabase();
 		settingsManager = new SettingsManager(coreDb);
-		registry = new FeatureRegistry(dbManager, settingsManager);
+		eventBus = new EventBus(coreDb);
+		registry = new FeatureRegistry(dbManager, settingsManager, eventBus);
 	});
 
 	afterEach(async () => {
@@ -175,6 +178,45 @@ describe("FeatureRegistry", () => {
 			});
 			await registry.startup([feature]);
 			expect(capturedValue).toBe("default");
+		});
+
+		test("ctx.events.emit delivers to a subscriber registered via ctx.subscribe", async () => {
+			const received: unknown[] = [];
+			const emitter = makeFeature({
+				id: "emitter-feature",
+				activate: async (ctx) => {
+					ctx.events.emit("emitter-feature:happened", { value: 42 });
+				},
+			});
+			const listener = makeFeature({
+				id: "listener-feature",
+				activate: async (ctx) => {
+					ctx.subscribe("emitter-feature:happened", async (payload) => {
+						received.push(payload);
+					});
+				},
+			});
+			await registry.startup([listener, emitter]);
+			await Bun.sleep(0);
+			expect(received).toHaveLength(1);
+			expect(received[0]).toEqual({ value: 42 });
+		});
+
+		test("ctx.events.emit logs to event_log", async () => {
+			const feature = makeFeature({
+				id: "logging-feature",
+				activate: async (ctx) => {
+					ctx.events.emit("logging-feature:did-thing", { x: 1 });
+				},
+			});
+			await registry.startup([feature]);
+			const row = coreDb
+				.query<{ event_name: string; feature_id: string }, []>(
+					"SELECT event_name, feature_id FROM event_log",
+				)
+				.get();
+			expect(row?.event_name).toBe("logging-feature:did-thing");
+			expect(row?.feature_id).toBe("logging-feature");
 		});
 	});
 

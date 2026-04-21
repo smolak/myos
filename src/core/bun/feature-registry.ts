@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import { runMigrations } from "./migration-runner";
 import type { DatabaseManager } from "./database-manager";
 import type { SettingsManager } from "./settings-manager";
+import type { EventBus } from "./event-bus";
 import type {
 	ActionMap,
 	ActionMeta,
@@ -17,11 +18,13 @@ export class FeatureRegistry {
 	private readonly coreDb: Database;
 	private readonly dbManager: DatabaseManager;
 	private readonly settingsManager: SettingsManager;
+	private readonly eventBus: EventBus;
 
-	constructor(dbManager: DatabaseManager, settingsManager: SettingsManager) {
+	constructor(dbManager: DatabaseManager, settingsManager: SettingsManager, eventBus: EventBus) {
 		this.coreDb = dbManager.getCoreDatabase();
 		this.dbManager = dbManager;
 		this.settingsManager = settingsManager;
+		this.eventBus = eventBus;
 	}
 
 	async startup(features: readonly FeatureDefinition[]): Promise<void> {
@@ -90,10 +93,13 @@ export class FeatureRegistry {
 	}
 
 	private buildFeatureContext(db: Database, featureId: string): FeatureContext {
+		const { eventBus } = this;
 		return {
 			db,
 			events: {
-				emit<K extends keyof EventMap>(_event: K, _payload: EventMap[K]): void {},
+				emit<K extends keyof EventMap>(event: K, payload: EventMap[K]): void {
+					eventBus.emit(event as string, featureId, payload);
+				},
 			},
 			actions: {
 				handle<K extends keyof ActionMap>(
@@ -110,7 +116,9 @@ export class FeatureRegistry {
 					_handler: (params: QueryMap[K]["params"]) => Promise<QueryMap[K]["result"]>,
 				): void {},
 			},
-			subscribe(_event: string, _handler: (payload: unknown) => Promise<void>): void {},
+			subscribe(event: string, handler: (payload: unknown) => Promise<void>): void {
+				eventBus.subscribe(event, handler);
+			},
 			query: async (_feature: string, _queryName: string, _params: unknown) => undefined,
 			scheduler: {
 				register(_taskId: string, _handler: () => Promise<void>): void {},

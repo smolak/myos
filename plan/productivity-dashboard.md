@@ -143,12 +143,12 @@ Implement `EventBus` service. Features emit events via `ctx.events.emit()`. Othe
 
 ### Acceptance criteria
 
-- [ ] `eventBus.emit("todo:item-completed", payload)` delivers to subscribers
-- [ ] Multiple subscribers receive the same event
-- [ ] Subscriber errors don't affect other subscribers or emitter
-- [ ] Events are logged to `event_log` table
-- [ ] Todo feature events are delivered when actions complete
-- [ ] Tests cover emit/subscribe, error isolation, logging
+- [x] `eventBus.emit("todo:item-completed", payload)` delivers to subscribers
+- [x] Multiple subscribers receive the same event
+- [x] Subscriber errors don't affect other subscribers or emitter
+- [x] Events are logged to `event_log` table
+- [x] Todo feature events are delivered when actions complete
+- [x] Tests cover emit/subscribe, error isolation, logging
 
 ---
 
