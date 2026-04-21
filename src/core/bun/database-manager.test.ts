@@ -86,7 +86,7 @@ describe("DatabaseManager", () => {
 			const rows = db.query("SELECT version FROM migrations WHERE feature_id = ?").all("core") as {
 				version: string;
 			}[];
-			expect(rows).toEqual([{ version: "001" }, { version: "002" }]);
+			expect(rows).toEqual([{ version: "001" }, { version: "002" }, { version: "003" }]);
 		});
 	});
 

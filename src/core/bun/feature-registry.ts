@@ -3,6 +3,7 @@ import { runMigrations } from "./migration-runner";
 import type { DatabaseManager } from "./database-manager";
 import type { SettingsManager } from "./settings-manager";
 import type { EventBus } from "./event-bus";
+import type { ActionQueue } from "./action-queue";
 import type {
 	ActionMap,
 	ActionMeta,
@@ -19,12 +20,19 @@ export class FeatureRegistry {
 	private readonly dbManager: DatabaseManager;
 	private readonly settingsManager: SettingsManager;
 	private readonly eventBus: EventBus;
+	private readonly actionQueue: ActionQueue;
 
-	constructor(dbManager: DatabaseManager, settingsManager: SettingsManager, eventBus: EventBus) {
+	constructor(
+		dbManager: DatabaseManager,
+		settingsManager: SettingsManager,
+		eventBus: EventBus,
+		actionQueue: ActionQueue,
+	) {
 		this.coreDb = dbManager.getCoreDatabase();
 		this.dbManager = dbManager;
 		this.settingsManager = settingsManager;
 		this.eventBus = eventBus;
+		this.actionQueue = actionQueue;
 	}
 
 	async startup(features: readonly FeatureDefinition[]): Promise<void> {
@@ -34,6 +42,7 @@ export class FeatureRegistry {
 		for (const feature of features) {
 			await this.activate(feature);
 		}
+		await this.actionQueue.resumePending();
 	}
 
 	private async register(feature: FeatureDefinition): Promise<void> {
@@ -93,7 +102,7 @@ export class FeatureRegistry {
 	}
 
 	private buildFeatureContext(db: Database, featureId: string): FeatureContext {
-		const { eventBus } = this;
+		const { eventBus, actionQueue } = this;
 		return {
 			db,
 			events: {
@@ -103,23 +112,28 @@ export class FeatureRegistry {
 			},
 			actions: {
 				handle<K extends keyof ActionMap>(
-					_action: K,
-					_handler: (
+					action: K,
+					handler: (
 						params: ActionMap[K]["params"],
 						meta: ActionMeta,
 					) => Promise<ActionMap[K]["result"]>,
-				): void {},
+				): void {
+					actionQueue.registerHandler(featureId, action as string, handler as Parameters<typeof actionQueue.registerHandler>[2]);
+				},
 			},
 			queries: {
 				handle<K extends keyof QueryMap>(
-					_query: K,
-					_handler: (params: QueryMap[K]["params"]) => Promise<QueryMap[K]["result"]>,
-				): void {},
+					query: K,
+					handler: (params: QueryMap[K]["params"]) => Promise<QueryMap[K]["result"]>,
+				): void {
+					actionQueue.registerQueryHandler(featureId, query as string, handler as Parameters<typeof actionQueue.registerQueryHandler>[2]);
+				},
 			},
 			subscribe(event: string, handler: (payload: unknown) => Promise<void>): void {
 				eventBus.subscribe(event, handler);
 			},
-			query: async (_feature: string, _queryName: string, _params: unknown) => undefined,
+			query: (feature: string, queryName: string, params: unknown) =>
+				actionQueue.executeQuery(feature, queryName, params),
 			scheduler: {
 				register(_taskId: string, _handler: () => Promise<void>): void {},
 			},

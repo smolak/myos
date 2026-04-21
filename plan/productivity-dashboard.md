@@ -162,13 +162,13 @@ Implement `ActionQueue` service backed by `script_executions` and `execution_act
 
 ### Acceptance criteria
 
-- [ ] Actions persisted to DB before execution
-- [ ] Pending actions survive app crash and resume on restart
-- [ ] Failed actions retry with backoff (configurable max retries)
-- [ ] `correlationId` deduplication prevents double execution
-- [ ] `dependsOn` chains actions sequentially
-- [ ] `output_key` allows referencing previous action's result
-- [ ] Tests cover persistence, retry, idempotency, chaining
+- [x] Actions persisted to DB before execution
+- [x] Pending actions survive app crash and resume on restart
+- [x] Failed actions retry with backoff (configurable max retries)
+- [x] `correlationId` deduplication prevents double execution
+- [x] `dependsOn` chains actions sequentially
+- [x] `output_key` allows referencing previous action's result
+- [x] Tests cover persistence, retry, idempotency, chaining
 
 ---
 

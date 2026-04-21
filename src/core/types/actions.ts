@@ -23,6 +23,8 @@ export interface ExecutionAction {
 	readonly result: string | null;
 	readonly error: string | null;
 	readonly retryCount: number;
+	readonly correlationId: string | null;
+	readonly maxRetries: number;
 	readonly createdAt: string;
 	readonly completedAt: string | null;
 }
