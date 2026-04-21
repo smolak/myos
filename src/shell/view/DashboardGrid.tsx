@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { GridLayout, useContainerWidth } from "react-grid-layout";
 import type { Layout as RGLLayout } from "react-grid-layout";
 import type { DashboardPage, LayoutItem, WidgetSize } from "@core/types";
@@ -17,9 +18,10 @@ const GRID_ROW_HEIGHT = 160;
 interface Props {
 	page: DashboardPage;
 	onLayoutChange?: (layout: LayoutItem[]) => void;
+	renderWidget?: (item: LayoutItem) => ReactNode;
 }
 
-export function DashboardGrid({ page, onLayoutChange }: Props) {
+export function DashboardGrid({ page, onLayoutChange, renderWidget }: Props) {
 	const { width, containerRef, mounted } = useContainerWidth();
 
 	if (page.layout.length === 0) {
@@ -53,9 +55,13 @@ export function DashboardGrid({ page, onLayoutChange }: Props) {
 				>
 					{page.layout.map((item) => (
 						<div key={item.i} data-testid="widget-slot" className="bg-zinc-800 rounded-lg p-4">
-							<span className="text-xs text-zinc-500">
-								{item.featureId}/{item.widgetId}
-							</span>
+							{renderWidget ? (
+								renderWidget(item)
+							) : (
+								<span className="text-xs text-zinc-500">
+									{item.featureId}/{item.widgetId}
+								</span>
+							)}
 						</div>
 					))}
 				</GridLayout>

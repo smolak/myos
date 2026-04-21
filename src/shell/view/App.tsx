@@ -1,11 +1,18 @@
 import { useState } from "react";
 import type { DashboardPage, LayoutItem } from "@core/types";
 import { DashboardGrid } from "./DashboardGrid";
+import { TodoWidget } from "@features/todo/view/TodoWidget";
+import { TodoFullView } from "@features/todo/view/TodoFullView";
 
 const STORAGE_KEY = "dashboard:pages";
 
 const DEFAULT_PAGES: DashboardPage[] = [
-	{ id: "default", name: "Dashboard", layout: [], order: 0 },
+	{
+		id: "default",
+		name: "Dashboard",
+		layout: [{ i: "todo-1", x: 0, y: 0, w: 2, h: 2, featureId: "todo", widgetId: "task-list" }],
+		order: 0,
+	},
 ];
 
 function loadPages(): DashboardPage[] {
@@ -20,6 +27,7 @@ function loadPages(): DashboardPage[] {
 
 function App() {
 	const [pages, setPages] = useState<DashboardPage[]>(loadPages);
+	const [fullViewFeature, setFullViewFeature] = useState<string | null>(null);
 	const currentPage = pages[0]!;
 
 	function handleLayoutChange(layout: LayoutItem[]): void {
@@ -28,14 +36,37 @@ function App() {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 	}
 
+	function renderWidget(item: LayoutItem) {
+		if (item.featureId === "todo" && item.widgetId === "task-list") {
+			return <TodoWidget onOpenFullView={() => setFullViewFeature("todo")} />;
+		}
+		return (
+			<span className="text-xs text-zinc-500">
+				{item.featureId}/{item.widgetId}
+			</span>
+		);
+	}
+
 	return (
 		<div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
 			<header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur">
 				<h1 className="text-lg font-semibold tracking-tight">MyOS</h1>
 			</header>
 			<main className="flex-1 overflow-auto p-4">
-				<DashboardGrid page={currentPage} onLayoutChange={handleLayoutChange} />
+				<DashboardGrid
+					page={currentPage}
+					onLayoutChange={handleLayoutChange}
+					renderWidget={renderWidget}
+				/>
 			</main>
+
+			{fullViewFeature === "todo" && (
+				<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+					<div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
+						<TodoFullView onClose={() => setFullViewFeature(null)} />
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

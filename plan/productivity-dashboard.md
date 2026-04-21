@@ -120,16 +120,16 @@ Implement the Todo feature as the reference implementation of `FeatureDefinition
 
 ### Acceptance criteria
 
-- [ ] `FeatureDefinition` interface fully implemented
-- [ ] Actions: `create`, `update`, `complete`, `delete` — all idempotent
-- [ ] Queries: `find` (with filters), `get-by-id`
-- [ ] Events emitted on state changes
-- [ ] Widget renders on dashboard grid (2×2 size)
-- [ ] Clicking widget opens full view
-- [ ] Full view supports add/edit/complete/delete todos
-- [ ] Settings panel for todo-specific preferences
-- [ ] Migrations create `todos` table in feature DB
-- [ ] Tests cover all actions, queries, event emission
+- [x] `FeatureDefinition` interface fully implemented
+- [x] Actions: `create`, `update`, `complete`, `delete` — all idempotent
+- [x] Queries: `find` (with filters), `get-by-id`
+- [x] Events emitted on state changes
+- [x] Widget renders on dashboard grid (2×2 size)
+- [x] Clicking widget opens full view
+- [x] Full view supports add/edit/complete/delete todos
+- [x] Settings panel for todo-specific preferences
+- [x] Migrations create `todos` table in feature DB
+- [x] Tests cover all actions, queries, event emission
 
 ---
 
