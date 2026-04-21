@@ -84,6 +84,10 @@ This project follows a **bounded context** model. Each feature owns its data, it
 
 ## TypeScript
 
+### Type checking must always pass
+
+Run `bun tsc` before committing. The type checker must report zero errors. A failing type check is treated as a broken build — do not merge code that does not pass.
+
 ### Strict mode is non-negotiable
 
 The project uses `strict: true`. Never disable or work around strictness.
