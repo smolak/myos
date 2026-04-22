@@ -182,13 +182,13 @@ Implement `ScriptEngine` service. Load scripts from `scripts` table. Provide `Sc
 
 ### Acceptance criteria
 
-- [ ] Scripts loaded from DB on startup
-- [ ] `ctx.on("event", handler)` subscribes to events
-- [ ] `ctx.queries.todo.find(params)` invokes feature query
-- [ ] `ctx.actions.todo.create(params)` enqueues action
-- [ ] `ctx.store.get/set` persists per-script state
-- [ ] End-to-end: event → script → action queue → feature action
-- [ ] Tests cover script loading, event handling, action enqueuing
+- [x] Scripts loaded from DB on startup
+- [x] `ctx.on("event", handler)` subscribes to events
+- [x] `ctx.queries.todo.find(params)` invokes feature query
+- [x] `ctx.actions.todo.create(params)` enqueues action
+- [x] `ctx.store.get/set` persists per-script state
+- [x] End-to-end: event → script → action queue → feature action
+- [x] Tests cover script loading, event handling, action enqueuing
 
 ---
 

@@ -6,3 +6,4 @@ export * from "./events";
 export * from "./actions";
 export * from "./dashboard";
 export * from "./database";
+export * from "./script";
