@@ -48,8 +48,7 @@ export function DashboardGrid({ page, onLayoutChange, renderWidget }: Props) {
 			{mounted && (
 				<GridLayout
 					width={width}
-					cols={GRID_COLS}
-					rowHeight={GRID_ROW_HEIGHT}
+					gridConfig={{ cols: GRID_COLS, rowHeight: GRID_ROW_HEIGHT }}
 					layout={rglLayout}
 					onLayoutChange={handleLayoutChange}
 				>

@@ -18,7 +18,7 @@ const EMPTY_MANIFEST = {
 	scheduledTasks: [],
 	widgets: [],
 	commands: [],
-} as const;
+};
 
 function makeFeature(overrides: Partial<FeatureDefinition> = {}): FeatureDefinition {
 	const id = overrides.id ?? "test-feature";
@@ -223,12 +223,10 @@ describe("FeatureRegistry", () => {
 		});
 
 		test("ctx.actions.handle registers handler callable via actionQueue", async () => {
-			let handlerCalled = false;
 			const feature = makeFeature({
 				id: "action-feature",
 				activate: async (ctx) => {
 					ctx.actions.handle("do-thing" as never, async () => {
-						handlerCalled = true;
 						return { ok: true };
 					});
 				},
@@ -236,12 +234,6 @@ describe("FeatureRegistry", () => {
 			await registry.startup([feature]);
 
 			await actionQueue.executeQuery("action-feature", "do-thing", {}).catch(() => {});
-			// Action handlers are invoked via processExecution, not executeQuery.
-			// Verify the handler key is registered by checking no error from registerHandler side:
-			// We registered it, so calling it directly on actionQueue works.
-			handlerCalled = false;
-			// Direct invocation via internal handler map isn't exposed; confirm via round-trip:
-			// Register and invoke through a seeded execution instead.
 			expect(typeof actionQueue).toBe("object"); // placeholder — covered by action-queue.test.ts
 		});
 

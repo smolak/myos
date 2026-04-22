@@ -176,7 +176,7 @@ describe("todoFeature lifecycle via FeatureRegistry", () => {
 		eventBus.subscribe("todo:item-created", async (payload) => {
 			received.push({ event: "todo:item-created", payload });
 		});
-		eventBus.emit("todo:item-created", "todo", { id: item.id, title: item.title });
+		eventBus.emit("todo:item-created", "todo", { id: item.id, title: "EventBus test" });
 
 		await Bun.sleep(0);
 		expect(received.some((r) => r.event === "todo:item-created")).toBe(true);
