@@ -48,8 +48,8 @@ export class DatabaseManager {
 
 		const path = join(this.dataDir, "core.db");
 		const db = new Database(path);
-		db.exec("PRAGMA journal_mode=WAL");
-		db.exec("PRAGMA foreign_keys=ON");
+		db.run("PRAGMA journal_mode=WAL");
+		db.run("PRAGMA foreign_keys=ON");
 		bootstrapMigrationsTable(db);
 		runMigrations(db, "core", coreMigrations);
 		this.coreDb = db;
@@ -67,8 +67,8 @@ export class DatabaseManager {
 
 		const path = join(this.dataDir, "features", `${featureId}.db`);
 		const db = new Database(path);
-		db.exec("PRAGMA journal_mode=WAL");
-		db.exec("PRAGMA foreign_keys=ON");
+		db.run("PRAGMA journal_mode=WAL");
+		db.run("PRAGMA foreign_keys=ON");
 		bootstrapMigrationsTable(db);
 		this.databases.set(cacheKey, db);
 		return db;

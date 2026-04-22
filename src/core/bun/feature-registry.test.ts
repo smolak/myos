@@ -9,6 +9,7 @@ import { SettingsManager } from "./settings-manager";
 import { FeatureRegistry } from "./feature-registry";
 import { EventBus } from "./event-bus";
 import { ActionQueue } from "./action-queue";
+import { Scheduler } from "./scheduler";
 
 const EMPTY_MANIFEST = {
 	events: {},
@@ -41,6 +42,7 @@ describe("FeatureRegistry", () => {
 	let settingsManager: SettingsManager;
 	let eventBus: EventBus;
 	let actionQueue: ActionQueue;
+	let scheduler: Scheduler;
 	let registry: FeatureRegistry;
 	let coreDb: Database;
 	let tmpDir: string;
@@ -52,7 +54,8 @@ describe("FeatureRegistry", () => {
 		settingsManager = new SettingsManager(coreDb);
 		eventBus = new EventBus(coreDb);
 		actionQueue = new ActionQueue(coreDb, 0);
-		registry = new FeatureRegistry(dbManager, settingsManager, eventBus, actionQueue);
+		scheduler = new Scheduler(coreDb, 60_000, 0);
+		registry = new FeatureRegistry(dbManager, settingsManager, eventBus, actionQueue, scheduler);
 	});
 
 	afterEach(async () => {
@@ -146,7 +149,7 @@ describe("FeatureRegistry", () => {
 			expect(activateCount).toBe(1);
 		});
 
-		test("provides FeatureContext with db, events, actions, queries, settings, log", async () => {
+		test("provides FeatureContext with db, events, actions, queries, scheduler, settings, log", async () => {
 			let capturedCtx: FeatureContext | undefined;
 			const feature = makeFeature({ activate: async (ctx) => { capturedCtx = ctx; } });
 			await registry.startup([feature]);
@@ -155,6 +158,7 @@ describe("FeatureRegistry", () => {
 			expect(typeof capturedCtx!.events.emit).toBe("function");
 			expect(typeof capturedCtx!.actions.handle).toBe("function");
 			expect(typeof capturedCtx!.queries.handle).toBe("function");
+			expect(typeof capturedCtx!.scheduler.register).toBe("function");
 			expect(typeof capturedCtx!.settings.get).toBe("function");
 			expect(typeof capturedCtx!.settings.set).toBe("function");
 			expect(typeof capturedCtx!.log.info).toBe("function");

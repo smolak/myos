@@ -7,6 +7,7 @@ import { SettingsManager } from "@core/bun/settings-manager";
 import { FeatureRegistry } from "@core/bun/feature-registry";
 import { EventBus } from "@core/bun/event-bus";
 import { ActionQueue } from "@core/bun/action-queue";
+import { Scheduler } from "@core/bun/scheduler";
 import { todoFeature } from "./index";
 
 describe("todoFeature definition", () => {
@@ -69,7 +70,8 @@ describe("todoFeature lifecycle via FeatureRegistry", () => {
 		const settingsManager = new SettingsManager(coreDb);
 		const eventBus = new EventBus(coreDb);
 		const actionQueue = new ActionQueue(coreDb, 0);
-		registry = new FeatureRegistry(dbManager, settingsManager, eventBus, actionQueue);
+		const scheduler = new Scheduler(coreDb, 60_000, 0);
+		registry = new FeatureRegistry(dbManager, settingsManager, eventBus, actionQueue, scheduler);
 	});
 
 	afterEach(async () => {

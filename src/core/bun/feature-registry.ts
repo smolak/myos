@@ -4,6 +4,7 @@ import type { DatabaseManager } from "./database-manager";
 import type { SettingsManager } from "./settings-manager";
 import type { EventBus } from "./event-bus";
 import type { ActionQueue } from "./action-queue";
+import type { Scheduler } from "./scheduler";
 import type {
 	ActionMap,
 	ActionMeta,
@@ -12,6 +13,7 @@ import type {
 	FeatureDefinition,
 	FeatureLifecycleContext,
 	QueryMap,
+	ScheduleConfig,
 	ScopedLogger,
 } from "@core/types";
 
@@ -21,18 +23,21 @@ export class FeatureRegistry {
 	private readonly settingsManager: SettingsManager;
 	private readonly eventBus: EventBus;
 	private readonly actionQueue: ActionQueue;
+	private readonly scheduler: Scheduler;
 
 	constructor(
 		dbManager: DatabaseManager,
 		settingsManager: SettingsManager,
 		eventBus: EventBus,
 		actionQueue: ActionQueue,
+		scheduler: Scheduler,
 	) {
 		this.coreDb = dbManager.getCoreDatabase();
 		this.dbManager = dbManager;
 		this.settingsManager = settingsManager;
 		this.eventBus = eventBus;
 		this.actionQueue = actionQueue;
+		this.scheduler = scheduler;
 	}
 
 	async startup(features: readonly FeatureDefinition[]): Promise<void> {
@@ -102,7 +107,7 @@ export class FeatureRegistry {
 	}
 
 	private buildFeatureContext(db: Database, featureId: string): FeatureContext {
-		const { eventBus, actionQueue } = this;
+		const { eventBus, actionQueue, scheduler } = this;
 		return {
 			db,
 			events: {
@@ -135,7 +140,17 @@ export class FeatureRegistry {
 			query: (feature: string, queryName: string, params: unknown) =>
 				actionQueue.executeQuery(feature, queryName, params),
 			scheduler: {
-				register(_taskId: string, _handler: () => Promise<void>): void {},
+				register(taskId: string, schedule: ScheduleConfig, handler: () => Promise<void>): void {
+					scheduler.registerTask({
+						taskId,
+						featureId,
+						name: taskId,
+						scheduleType: schedule.type,
+						scheduleValue: schedule.value,
+						maxRetries: schedule.maxRetries,
+					});
+					scheduler.registerHandler(taskId, handler);
+				},
 			},
 			settings: this.settingsManager.forScope(featureId),
 			log: this.buildLogger(featureId),

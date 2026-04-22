@@ -4,7 +4,7 @@ import { ActionQueue } from "./action-queue";
 
 function setupDb(): Database {
 	const db = new Database(":memory:");
-	db.exec(`
+	db.run(`
     CREATE TABLE script_executions (
       id           TEXT PRIMARY KEY,
       script_id    TEXT NOT NULL,
@@ -13,7 +13,7 @@ function setupDb(): Database {
       created_at   TEXT NOT NULL
     )
   `);
-	db.exec(`
+	db.run(`
     CREATE TABLE execution_actions (
       id             TEXT PRIMARY KEY,
       execution_id   TEXT NOT NULL,
@@ -37,7 +37,7 @@ function setupDb(): Database {
 }
 
 function seedExecution(db: Database, id: string): void {
-	db.exec(
+	db.run(
 		`INSERT INTO script_executions (id, script_id, triggered_by, status, created_at)
      VALUES ('${id}', 'sys', 'manual', 'pending', '${new Date().toISOString()}')`,
 	);
@@ -561,7 +561,7 @@ describe("ActionQueue", () => {
 		test("resets running actions to pending before processing", async () => {
 			seedExecution(db, "exec-1");
 			// Simulate a crashed run by inserting an action in 'running' state
-			db.exec(`
+			db.run(`
         INSERT INTO execution_actions
           (id, execution_id, sequence, feature_id, action_name, params, status, retry_count, max_retries, created_at)
         VALUES

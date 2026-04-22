@@ -1,6 +1,12 @@
 import type { Database } from "bun:sqlite";
 import type { EventMap, ActionMap, QueryMap } from "./common";
 
+export interface ScheduleConfig {
+	readonly type: "cron" | "interval";
+	readonly value: string | number;
+	readonly maxRetries?: number;
+}
+
 export interface ActionMeta {
 	readonly executionId: string;
 	readonly correlationId: string;
@@ -52,7 +58,11 @@ export interface FeatureContext<
 	query(feature: string, queryName: string, params: unknown): Promise<unknown>;
 
 	readonly scheduler: {
-		register(taskId: string, handler: () => Promise<void>): void;
+		register(
+			taskId: string,
+			schedule: ScheduleConfig,
+			handler: () => Promise<void>,
+		): void;
 	};
 
 	readonly settings: {

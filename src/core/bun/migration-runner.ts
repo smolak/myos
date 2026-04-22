@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS migrations (
 `;
 
 export function bootstrapMigrationsTable(db: Database): void {
-	db.exec(BOOTSTRAP_SQL);
+	db.run(BOOTSTRAP_SQL);
 }
 
 export function getAppliedMigrations(db: Database, featureId: string): string[] {
@@ -43,7 +43,7 @@ export function runMigrations(
 		}
 
 		const runOne = db.transaction(() => {
-			db.exec(migration.up);
+			db.run(migration.up);
 			const appliedAt = new Date().toISOString();
 			db.run(
 				"INSERT INTO migrations (feature_id, version, name, applied_at) VALUES (?, ?, ?, ?)",

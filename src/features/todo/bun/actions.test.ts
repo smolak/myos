@@ -14,7 +14,7 @@ describe("Todo actions", () => {
 	beforeEach(async () => {
 		tmpDir = await mkdtemp(join(tmpdir(), "myos-todo-actions-"));
 		db = new Database(join(tmpDir, "todo.db"));
-		db.exec("PRAGMA journal_mode=WAL");
+		db.run("PRAGMA journal_mode=WAL");
 		bootstrapMigrationsTable(db);
 		runMigrations(db, "todo", todoMigrations);
 	});

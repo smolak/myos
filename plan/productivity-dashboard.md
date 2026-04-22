@@ -202,13 +202,13 @@ Implement `Scheduler` service backed by `scheduled_tasks` table. Support cron ex
 
 ### Acceptance criteria
 
-- [ ] Cron tasks run at scheduled times
-- [ ] Interval tasks run repeatedly at configured interval
-- [ ] `next_run_at` persists — tasks resume after restart
-- [ ] Failed tasks retry with backoff
-- [ ] Auto-disable after 5 consecutive failures
-- [ ] Features register scheduled tasks via `ctx.scheduler.register()`
-- [ ] Tests cover cron parsing, interval execution, retry, auto-disable
+- [x] Cron tasks run at scheduled times
+- [x] Interval tasks run repeatedly at configured interval
+- [x] `next_run_at` persists — tasks resume after restart
+- [x] Failed tasks retry with backoff
+- [x] Auto-disable after 5 consecutive failures
+- [x] Features register scheduled tasks via `ctx.scheduler.register()`
+- [x] Tests cover cron parsing, interval execution, retry, auto-disable
 
 ---
 
