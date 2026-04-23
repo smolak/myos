@@ -3,6 +3,8 @@ import type { DashboardPage, LayoutItem } from "@core/types";
 import { DashboardGrid } from "./DashboardGrid";
 import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
+import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
+import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 
 const STORAGE_KEY = "dashboard:pages";
 
@@ -10,7 +12,10 @@ const DEFAULT_PAGES: DashboardPage[] = [
 	{
 		id: "default",
 		name: "Dashboard",
-		layout: [{ i: "todo-1", x: 0, y: 0, w: 2, h: 2, featureId: "todo", widgetId: "task-list" }],
+		layout: [
+			{ i: "todo-1", x: 0, y: 0, w: 2, h: 2, featureId: "todo", widgetId: "task-list" },
+			{ i: "pomodoro-1", x: 2, y: 0, w: 2, h: 1, featureId: "pomodoro", widgetId: "timer" },
+		],
 		order: 0,
 	},
 ];
@@ -40,6 +45,9 @@ function App() {
 		if (item.featureId === "todo" && item.widgetId === "task-list") {
 			return <TodoWidget onOpenFullView={() => setFullViewFeature("todo")} />;
 		}
+		if (item.featureId === "pomodoro" && item.widgetId === "timer") {
+			return <PomodoroWidget onOpenFullView={() => setFullViewFeature("pomodoro")} />;
+		}
 		return (
 			<span className="text-xs text-zinc-500">
 				{item.featureId}/{item.widgetId}
@@ -64,6 +72,13 @@ function App() {
 				<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
 					<div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
 						<TodoFullView onClose={() => setFullViewFeature(null)} />
+					</div>
+				</div>
+			)}
+			{fullViewFeature === "pomodoro" && (
+				<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+					<div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
+						<PomodoroFullView onClose={() => setFullViewFeature(null)} />
 					</div>
 				</div>
 			)}

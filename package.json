@@ -3,10 +3,10 @@
 	"version": "0.0.1",
 	"description": "Local-first productivity dashboard built with Electrobun",
 	"scripts": {
-		"test": "bun test --pass-with-no-tests ./src/core/bun ./src/features/todo/bun && vitest run",
-		"test:core": "bun test --pass-with-no-tests ./src/core/bun ./src/features/todo/bun",
+		"test": "bun test --pass-with-no-tests ./src/core/bun ./src/features/todo/bun ./src/features/pomodoro/bun && vitest run",
+		"test:core": "bun test --pass-with-no-tests ./src/core/bun ./src/features/todo/bun ./src/features/pomodoro/bun",
 		"test:ui": "vitest run",
-		"test:watch": "bun test --watch --pass-with-no-tests ./src/core/bun ./src/features/todo/bun",
+		"test:watch": "bun test --watch --pass-with-no-tests ./src/core/bun ./src/features/todo/bun ./src/features/pomodoro/bun",
 		"test:ui:watch": "vitest",
 		"start": "vite build && electrobun dev",
 		"dev": "electrobun dev --watch",

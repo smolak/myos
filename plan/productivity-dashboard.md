@@ -222,13 +222,13 @@ Implement Pomodoro feature with timer widget (1×1 or 2×1). Start/pause/reset c
 
 ### Acceptance criteria
 
-- [ ] Pomodoro widget renders timer with start/pause/reset
-- [ ] Timer counts down, plays notification on completion
-- [ ] `pomodoro:session-ended` event emitted with session data
-- [ ] Settings for work duration, break duration
-- [ ] Cross-feature script: `pomodoro:session-ended` → `todo:create`
-- [ ] Both Todo and Pomodoro features coexist without conflict
-- [ ] Tests cover timer logic, event emission
+- [x] Pomodoro widget renders timer with start/pause/reset
+- [x] Timer counts down, plays notification on completion
+- [x] `pomodoro:session-ended` event emitted with session data
+- [x] Settings for work duration, break duration
+- [x] Cross-feature script: `pomodoro:session-ended` → `todo:create`
+- [x] Both Todo and Pomodoro features coexist without conflict
+- [x] Tests cover timer logic, event emission
 
 ---
 

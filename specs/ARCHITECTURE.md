@@ -581,10 +581,7 @@ src/
 │   ├── weather/
 │   └── ...
 │
-└── scripts/                       # Example/seed automation scripts (development only)
-    └── ...                        # User scripts are stored in the core DB `scripts` table at runtime.
-                                   # This directory holds development-time examples and seed scripts
-                                   # that can be imported into the app. Not deployed to production.
+                                   # User scripts are stored in the core DB `scripts` table at runtime.
 ```
 
 ---
