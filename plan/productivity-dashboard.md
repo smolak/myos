@@ -242,13 +242,42 @@ Implement RSS Reader feature with scheduled feed polling. Parse RSS/Atom feeds. 
 
 ### Acceptance criteria
 
-- [ ] Feed URLs configured in settings
-- [ ] Scheduler polls feeds at configured interval
-- [ ] New entries stored, `rss:new-entry` event emitted
-- [ ] Widget shows recent entries with title/date
-- [ ] Full view lists all entries, supports mark-read
-- [ ] Automation script creates todos from new entries
-- [ ] Tests cover feed parsing, entry storage, event emission
+- [x] Feed URLs configured in settings
+- [x] Scheduler polls feeds at configured interval
+- [x] New entries stored, `rss:new-entry` event emitted
+- [x] Widget shows recent entries with title/date
+- [x] Full view lists all entries, supports mark-read
+- [x] Automation script creates todos from new entries
+- [x] Tests cover feed parsing, entry storage, event emission
+
+---
+
+## Phase 12.1: RSS Reader — CORS Fix via Electrobun RPC
+
+**User stories**: RSS feeds can actually be fetched. Adding a feed works without "Load failed" errors.
+
+### Context
+
+WKWebView blocks cross-origin network requests from the webview origin (`localhost:5173` in dev, `views://dashboard` in prod`). RSS feeds don't send `Access-Control-Allow-Origin` headers, so every `fetch(feedUrl)` in the browser fails with "Load failed". The fix is to route all RSS fetches through the Bun main process via Electrobun's typed RPC system.
+
+### What to build
+
+1. **`src/shell/shared/rpc-schema.ts`** (already created) — `AppRPCSchema` extending `ElectrobunRPCSchema` with `bun.requests["fetch-feed"]`: `{ params: { url: string }; response: string }`.
+
+2. **`src/shell/bun/index.ts`** — Wire up `BrowserView.defineRPC<AppRPCSchema>` with a `"fetch-feed"` handler that calls Bun's native `fetch`, checks `res.ok`, and returns `res.text()`. Pass the resulting `rpc` object into `BrowserWindow` constructor.
+
+3. **`src/shell/view/electrobun.ts`** (new file) — Browser-side: `Electroview.defineRPC<AppRPCSchema>` + `new Electroview({ rpc })`. Export the typed `rpc` object and an `overrideFetchXml(fn)` setter that `main.tsx` can call.
+
+4. **`src/shell/view/main.tsx`** — Import `electrobun.ts`, call `overrideFetchXml(url => rpc.request["fetch-feed"]({ url }))` before rendering.
+
+5. **`src/features/rss-reader/view/useRssReader.ts`** — Replace inline `fetch` with a module-level `_fetchXml` variable (default: browser `fetch` + `.text()`). Export `overrideFetchXml(fn: (url: string) => Promise<string>)` so the shell can inject the IPC-based fetcher without creating a `@features` → `@shell` dependency.
+
+### Acceptance criteria
+
+- [ ] Adding an RSS feed URL succeeds (no "Load failed")
+- [ ] Feed entries appear after adding a feed
+- [ ] Refresh all works for existing feeds
+- [ ] No `@features` → `@shell` import dependency introduced
 
 ---
 

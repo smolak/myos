@@ -5,8 +5,11 @@ import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
 import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
+import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
+import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 
 const STORAGE_KEY = "dashboard:pages";
+const LAYOUT_VERSION = 3;
 
 const DEFAULT_PAGES: DashboardPage[] = [
 	{
@@ -15,15 +18,25 @@ const DEFAULT_PAGES: DashboardPage[] = [
 		layout: [
 			{ i: "todo-1", x: 0, y: 0, w: 2, h: 2, featureId: "todo", widgetId: "task-list" },
 			{ i: "pomodoro-1", x: 2, y: 0, w: 2, h: 1, featureId: "pomodoro", widgetId: "timer" },
+			{ i: "rss-1", x: 0, y: 2, w: 4, h: 2, featureId: "rss-reader", widgetId: "feed-list" },
 		],
 		order: 0,
 	},
 ];
 
+interface StoredLayout {
+	version: number;
+	pages: DashboardPage[];
+}
+
 function loadPages(): DashboardPage[] {
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) return JSON.parse(stored) as DashboardPage[];
+		if (stored) {
+			const parsed = JSON.parse(stored) as StoredLayout | DashboardPage[];
+			if (Array.isArray(parsed)) return DEFAULT_PAGES;
+			if (parsed.version === LAYOUT_VERSION) return parsed.pages;
+		}
 	} catch {
 		// ignore corrupt storage
 	}
@@ -38,7 +51,7 @@ function App() {
 	function handleLayoutChange(layout: LayoutItem[]): void {
 		const updated = pages.map((p) => (p.id === currentPage.id ? { ...p, layout } : p));
 		setPages(updated);
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+		localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: LAYOUT_VERSION, pages: updated }));
 	}
 
 	function renderWidget(item: LayoutItem) {
@@ -47,6 +60,9 @@ function App() {
 		}
 		if (item.featureId === "pomodoro" && item.widgetId === "timer") {
 			return <PomodoroWidget onOpenFullView={() => setFullViewFeature("pomodoro")} />;
+		}
+		if (item.featureId === "rss-reader" && item.widgetId === "feed-list") {
+			return <RssReaderWidget onOpenFullView={() => setFullViewFeature("rss-reader")} />;
 		}
 		return (
 			<span className="text-xs text-zinc-500">
@@ -79,6 +95,13 @@ function App() {
 				<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
 					<div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
 						<PomodoroFullView onClose={() => setFullViewFeature(null)} />
+					</div>
+				</div>
+			)}
+			{fullViewFeature === "rss-reader" && (
+				<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+					<div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+						<RssReaderFullView onClose={() => setFullViewFeature(null)} />
 					</div>
 				</div>
 			)}
