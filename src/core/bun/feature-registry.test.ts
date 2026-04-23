@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -284,11 +284,13 @@ describe("FeatureRegistry", () => {
 
 	describe("error handling", () => {
 		test("auto-disables feature that throws during activate", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			const feature = makeFeature({
 				id: "broken-feature",
 				activate: async () => { throw new Error("activation failed"); },
 			});
 			await registry.startup([feature]);
+			spy.mockRestore();
 			const row = coreDb
 				.query<{ enabled: number }, [string]>("SELECT enabled FROM features WHERE id = ?")
 				.get("broken-feature");
@@ -296,6 +298,7 @@ describe("FeatureRegistry", () => {
 		});
 
 		test("continues activating remaining features after one fails", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			let goodActivated = false;
 			const bad = makeFeature({
 				id: "bad-feature",
@@ -306,6 +309,7 @@ describe("FeatureRegistry", () => {
 				activate: async () => { goodActivated = true; },
 			});
 			await registry.startup([bad, good]);
+			spy.mockRestore();
 			expect(goodActivated).toBe(true);
 		});
 	});

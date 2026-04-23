@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
 import { EventBus } from "./event-bus";
 import { ActionQueue } from "./action-queue";
@@ -126,15 +126,19 @@ describe("ScriptEngine", () => {
 		});
 
 		test("logs and skips scripts that fail to evaluate", () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			insertScript(db, "s1", "bad-script", "this is not valid javascript }{");
 
 			expect(() => engine.start()).not.toThrow();
+			spy.mockRestore();
 		});
 
 		test("logs and skips scripts that throw during initialization", () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			insertScript(db, "s1", "throwing-script", "throw new Error('init error');");
 
 			expect(() => engine.start()).not.toThrow();
+			spy.mockRestore();
 		});
 	});
 
@@ -190,6 +194,7 @@ describe("ScriptEngine", () => {
 		});
 
 		test("handler error does not affect other scripts", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			insertScript(
 				db,
 				"s1",
@@ -207,6 +212,7 @@ describe("ScriptEngine", () => {
 			eventBus.emit("test:event", "sys", {});
 			await Bun.sleep(10);
 
+			spy.mockRestore();
 			expect(getStoreValue(db, "s2", "ran")).toBe(true);
 		});
 	});
@@ -376,6 +382,7 @@ describe("ScriptEngine", () => {
 		});
 
 		test("marks execution as failed when action handler throws and max retries exhausted", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			actionQueue.registerHandler("todo", "fail", async () => {
 				throw new Error("action always fails");
 			});
@@ -398,6 +405,7 @@ describe("ScriptEngine", () => {
 			engine.start();
 			eventBus.emit("test:event", "sys", {});
 			await Bun.sleep(50);
+			spy.mockRestore();
 
 			expect(getStoreValue(db, "s1", "caught")).toBe(true);
 
@@ -525,6 +533,7 @@ describe("ScriptEngine", () => {
 		});
 
 		test("marks execution as failed when handler throws", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			insertScript(
 				db,
 				"s1",
@@ -536,6 +545,7 @@ describe("ScriptEngine", () => {
 			eventBus.emit("test:event", "sys", {});
 			await Bun.sleep(10);
 
+			spy.mockRestore();
 			const exec = getExecution(db, "s1");
 			expect(exec?.status).toBe("failed");
 		});

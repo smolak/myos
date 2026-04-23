@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
 import { EventBus } from "./event-bus";
 
@@ -97,6 +97,7 @@ describe("EventBus", () => {
 		});
 
 		test("subscriber error does not affect other subscribers", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			const received: unknown[] = [];
 
 			bus.subscribe("todo:item-created", async () => {
@@ -109,15 +110,19 @@ describe("EventBus", () => {
 			bus.emit("todo:item-created", "todo", { id: "abc" });
 
 			await Bun.sleep(0);
+			spy.mockRestore();
 			expect(received).toHaveLength(1);
 		});
 
-		test("subscriber error does not propagate to emitter", () => {
+		test("subscriber error does not propagate to emitter", async () => {
+			const spy = spyOn(console, "error").mockImplementation(() => {});
 			bus.subscribe("todo:item-created", async () => {
 				throw new Error("subscriber failure");
 			});
 
 			expect(() => bus.emit("todo:item-created", "todo", {})).not.toThrow();
+			await Bun.sleep(0);
+			spy.mockRestore();
 		});
 
 		test("emitting with no subscribers still logs the event", () => {
