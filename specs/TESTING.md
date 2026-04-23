@@ -75,6 +75,12 @@ bun test src/core/bun/database-manager.test.ts
 bunx vitest run src/shell/view/App.test.tsx
 ```
 
+### No noisy errors in tests run logs
+
+Some tests might produce an (un)expected error, test passes, but the error is logged, producing noise.
+
+No such case can be present. Logs are to be clean.
+
 ---
 
 ## Writing Tests
