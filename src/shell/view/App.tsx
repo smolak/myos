@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { DashboardPage, LayoutItem } from "@core/types";
 import { DashboardGrid } from "./DashboardGrid";
 import { TodoWidget } from "@features/todo/view/TodoWidget";
@@ -9,8 +9,8 @@ import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { ClockWidget } from "@features/clock/view/ClockWidget";
 import { WeatherWidget } from "@features/weather/view/WeatherWidget";
+import { rpc } from "./electrobun";
 
-const STORAGE_KEY = "dashboard:pages";
 const LAYOUT_VERSION = 4;
 
 const DEFAULT_PAGES: DashboardPage[] = [
@@ -28,35 +28,26 @@ const DEFAULT_PAGES: DashboardPage[] = [
 	},
 ];
 
-interface StoredLayout {
-	version: number;
-	pages: DashboardPage[];
-}
-
-function loadPages(): DashboardPage[] {
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) {
-			const parsed = JSON.parse(stored) as StoredLayout | DashboardPage[];
-			if (Array.isArray(parsed)) return DEFAULT_PAGES;
-			if (parsed.version === LAYOUT_VERSION) return parsed.pages;
-		}
-	} catch {
-		// ignore corrupt storage
-	}
-	return DEFAULT_PAGES;
-}
-
 function App() {
-	const [pages, setPages] = useState<DashboardPage[]>(loadPages);
+	const [pages, setPages] = useState<DashboardPage[]>(DEFAULT_PAGES);
 	const [fullViewFeature, setFullViewFeature] = useState<string | null>(null);
 	const currentPage = pages[0]!;
 
-	function handleLayoutChange(layout: LayoutItem[]): void {
-		const updated = pages.map((p) => (p.id === currentPage.id ? { ...p, layout } : p));
-		setPages(updated);
-		localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: LAYOUT_VERSION, pages: updated }));
-	}
+	useEffect(() => {
+		void rpc.request["dashboard:get-layout"]({}).then((stored) => {
+			if (stored.version === LAYOUT_VERSION && stored.pages.length > 0) {
+				setPages(stored.pages);
+			}
+		});
+	}, []);
+
+	const handleLayoutChange = useCallback((layout: LayoutItem[]): void => {
+		setPages((prev) => {
+			const updated = prev.map((p) => (p.id === currentPage.id ? { ...p, layout } : p));
+			void rpc.request["dashboard:save-layout"]({ version: LAYOUT_VERSION, pages: updated });
+			return updated;
+		});
+	}, [currentPage.id]);
 
 	function renderWidget(item: LayoutItem) {
 		if (item.featureId === "todo" && item.widgetId === "task-list") {

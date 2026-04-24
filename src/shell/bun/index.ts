@@ -1,9 +1,64 @@
+// NOTE: imports in this file must use relative paths (../../core/..., ../../features/...).
+// The electrobun bundler does not resolve tsconfig path aliases (@core/*, @features/*, @shell/*).
 import { BrowserView, BrowserWindow, ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
 import type { AppRPCSchema } from "../shared/rpc-schema";
+import { DatabaseManager } from "../../core/bun/database-manager";
+import { SettingsManager } from "../../core/bun/settings-manager";
+import { CredentialStore } from "../../core/bun/credential-store";
+import { EventBus } from "../../core/bun/event-bus";
+import { ActionQueue } from "../../core/bun/action-queue";
+import { Scheduler } from "../../core/bun/scheduler";
+import { FeatureRegistry } from "../../core/bun/feature-registry";
+import { todoFeature } from "../../features/todo/bun/index";
+import { rssReaderFeature } from "../../features/rss-reader/bun/index";
+import { pomodoroFeature } from "../../features/pomodoro/bun/index";
+import { weatherFeature } from "../../features/weather/bun/index";
+import { clockFeature } from "../../features/clock/bun/index";
+import { join } from "node:path";
+
+const LAYOUT_SETTING_SCOPE = "dashboard";
+const LAYOUT_SETTING_KEY = "layout";
+const LAYOUT_VERSION = 4;
+
+const POMODORO_SETTINGS_SCOPE = "pomodoro";
+const DEFAULT_WORK_MINUTES = 25;
+const DEFAULT_BREAK_MINUTES = 5;
+
+// Bootstrap core services
+const dataDir = process.env.MYOS_DATA_DIR?.trim() || join(Utils.paths.userData, "data");
+const dbManager = new DatabaseManager(dataDir);
+const coreDb = dbManager.getCoreDatabase();
+const settingsManager = new SettingsManager(coreDb);
+const credentialStore = new CredentialStore(coreDb);
+const eventBus = new EventBus(coreDb);
+const actionQueue = new ActionQueue(coreDb);
+const scheduler = new Scheduler(coreDb);
+const featureRegistry = new FeatureRegistry(
+	dbManager,
+	settingsManager,
+	credentialStore,
+	eventBus,
+	actionQueue,
+	scheduler,
+);
+
+// Feature startup runs async; RPC handlers await this before executing
+const startupPromise = featureRegistry.startup([
+	todoFeature,
+	rssReaderFeature,
+	pomodoroFeature,
+	weatherFeature,
+	clockFeature,
+]);
+
+async function ready(): Promise<void> {
+	await startupPromise;
+}
 
 const rpc = BrowserView.defineRPC<AppRPCSchema>({
 	handlers: {
 		requests: {
+			// Network passthrough
 			"fetch-feed": async ({ url }) => {
 				const res = await fetch(url);
 				if (!res.ok) throw new Error(`fetch-feed failed: ${res.status} ${res.statusText}`);
@@ -13,6 +68,159 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
 				const res = await fetch(url);
 				if (!res.ok) throw new Error(`fetch-json failed: ${res.status} ${res.statusText}`);
 				return res.text();
+			},
+
+			// Todo
+			"todo:create": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("todo", "create", params) as Promise<{ id: string }>;
+			},
+			"todo:update": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("todo", "update", params) as Promise<{ success: boolean }>;
+			},
+			"todo:complete": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("todo", "complete", params) as Promise<{ success: boolean }>;
+			},
+			"todo:delete": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("todo", "delete", params) as Promise<{ success: boolean }>;
+			},
+			"todo:find": async (params) => {
+				await ready();
+				return actionQueue.executeQuery("todo", "find", params) as Promise<any>;
+			},
+
+			// RSS Reader
+			"rss:add-feed": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("rss-reader", "add-feed", params) as Promise<{ id: string }>;
+			},
+			"rss:delete-feed": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("rss-reader", "delete-feed", params) as Promise<{ success: boolean }>;
+			},
+			"rss:mark-read": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("rss-reader", "mark-read", params) as Promise<{ success: boolean }>;
+			},
+			"rss:mark-unread": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("rss-reader", "mark-unread", params) as Promise<{ success: boolean }>;
+			},
+			"rss:fetch-feeds": async (_params) => {
+				await ready();
+				return actionQueue.dispatchAction("rss-reader", "fetch-feeds", {}) as Promise<{ fetched: number; newEntries: number }>;
+			},
+			"rss:get-feeds": async (_params) => {
+				await ready();
+				return actionQueue.executeQuery("rss-reader", "get-feeds", {}) as Promise<any>;
+			},
+			"rss:get-entries": async (params) => {
+				await ready();
+				return actionQueue.executeQuery("rss-reader", "get-entries", params) as Promise<any>;
+			},
+
+			// Pomodoro
+			"pomodoro:start": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("pomodoro", "start", params) as Promise<{ id: string }>;
+			},
+			"pomodoro:pause": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("pomodoro", "pause", params) as Promise<{ success: boolean }>;
+			},
+			"pomodoro:resume": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("pomodoro", "resume", params) as Promise<{ success: boolean }>;
+			},
+			"pomodoro:complete": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("pomodoro", "complete", params) as Promise<{ success: boolean }>;
+			},
+			"pomodoro:cancel": async (params) => {
+				await ready();
+				return actionQueue.dispatchAction("pomodoro", "cancel", params) as Promise<{ success: boolean }>;
+			},
+			"pomodoro:get-current": async (_params) => {
+				await ready();
+				return actionQueue.executeQuery("pomodoro", "get-current", {}) as Promise<any>;
+			},
+			"pomodoro:get-settings": async (_params) => {
+				await ready();
+				return {
+					workDurationMinutes: settingsManager.get(POMODORO_SETTINGS_SCOPE, "workDurationMinutes", DEFAULT_WORK_MINUTES),
+					breakDurationMinutes: settingsManager.get(POMODORO_SETTINGS_SCOPE, "breakDurationMinutes", DEFAULT_BREAK_MINUTES),
+				};
+			},
+			"pomodoro:update-settings": async (params) => {
+				await ready();
+				if (params.workDurationMinutes !== undefined) {
+					await settingsManager.set(POMODORO_SETTINGS_SCOPE, "workDurationMinutes", params.workDurationMinutes);
+				}
+				if (params.breakDurationMinutes !== undefined) {
+					await settingsManager.set(POMODORO_SETTINGS_SCOPE, "breakDurationMinutes", params.breakDurationMinutes);
+				}
+				return { success: true };
+			},
+
+			// Weather
+			"weather:fetch": async (_params) => {
+				await ready();
+				return actionQueue.dispatchAction("weather", "fetch", {}) as Promise<{ success: boolean }>;
+			},
+			"weather:get-current": async (_params) => {
+				await ready();
+				return actionQueue.executeQuery("weather", "get-current", {}) as Promise<any>;
+			},
+			"weather:get-settings": async (_params) => {
+				await ready();
+				const weatherSettings = settingsManager.forScope("weather");
+				const location = weatherSettings.get("location", "");
+				const units = weatherSettings.get<"metric" | "imperial">("units", "metric");
+				const apiKey = (await credentialStore.forScope("weather").retrieve("openweathermap", "api-key")) ?? "";
+				return { apiKey, location, units };
+			},
+			"weather:update-settings": async (params) => {
+				await ready();
+				const weatherSettings = settingsManager.forScope("weather");
+				const weatherCreds = credentialStore.forScope("weather");
+				if (params.apiKey !== undefined) {
+					await weatherCreds.store("openweathermap", "api-key", params.apiKey);
+				}
+				if (params.location !== undefined) {
+					await weatherSettings.set("location", params.location);
+				}
+				if (params.units !== undefined) {
+					await weatherSettings.set("units", params.units);
+				}
+				return { success: true };
+			},
+
+			// Clock
+			"clock:get-format": async (_params) => {
+				await ready();
+				return { format: settingsManager.get<"12h" | "24h">("clock", "format", "24h") };
+			},
+			"clock:update-format": async (params) => {
+				await ready();
+				await settingsManager.set("clock", "format", params.format);
+				return { success: true };
+			},
+
+			// Dashboard layout
+			"dashboard:get-layout": async (_params) => {
+				await ready();
+				return settingsManager.get(LAYOUT_SETTING_SCOPE, LAYOUT_SETTING_KEY, {
+					version: LAYOUT_VERSION,
+					pages: [],
+				});
+			},
+			"dashboard:save-layout": async (params) => {
+				await ready();
+				await settingsManager.set(LAYOUT_SETTING_SCOPE, LAYOUT_SETTING_KEY, params);
+				return { success: true };
 			},
 		},
 	},

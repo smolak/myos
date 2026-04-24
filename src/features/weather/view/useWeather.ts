@@ -1,25 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { WeatherData, WeatherSettings } from "../shared/types";
-
-type FetchJsonFn = (url: string) => Promise<string>;
-
-let _fetchJson: FetchJsonFn = async (url) => {
-	const res = await fetch(url);
-	if (!res.ok) throw new Error(`HTTP ${res.status}`);
-	return res.text();
-};
-
-export function overrideFetchJson(fn: FetchJsonFn): void {
-	_fetchJson = fn;
-}
-
-const STORAGE_KEY = "weather:state";
-
-interface WeatherState {
-	settings: WeatherSettings;
-	data: WeatherData | null;
-	error: string | null;
-}
+import { rpc } from "@shell/view/electrobun";
 
 const DEFAULT_SETTINGS: WeatherSettings = {
 	apiKey: "",
@@ -27,101 +8,55 @@ const DEFAULT_SETTINGS: WeatherSettings = {
 	units: "metric",
 };
 
-function loadState(): WeatherState {
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) return JSON.parse(stored) as WeatherState;
-	} catch {
-		// ignore corrupt storage
-	}
-	return { settings: DEFAULT_SETTINGS, data: null, error: null };
-}
-
-function persist(state: WeatherState): void {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
 export interface UseWeatherReturn {
 	readonly data: WeatherData | null;
 	readonly settings: WeatherSettings;
 	readonly isLoading: boolean;
 	readonly error: string | null;
-	updateSettings(updates: Partial<WeatherSettings>): void;
+	updateSettings(updates: Partial<WeatherSettings>): Promise<void>;
 	refresh(): Promise<void>;
 }
 
 export function useWeather(): UseWeatherReturn {
-	const [state, setState] = useState<WeatherState>(loadState);
-	const [isLoading, setIsLoading] = useState(false);
+	const [data, setData] = useState<WeatherData | null>(null);
+	const [settings, setSettings] = useState<WeatherSettings>(DEFAULT_SETTINGS);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
-	const mutate = useCallback((updater: (prev: WeatherState) => WeatherState) => {
-		setState((prev) => {
-			const next = updater(prev);
-			persist(next);
-			return next;
-		});
+	useEffect(() => {
+		void Promise.all([
+			rpc.request["weather:get-settings"]({}),
+			rpc.request["weather:get-current"]({}),
+		]).then(([savedSettings, cachedData]) => {
+			setSettings(savedSettings);
+			setData(cachedData);
+		}).finally(() => setIsLoading(false));
 	}, []);
 
-	const fetchWeather = useCallback(async (settings: WeatherSettings) => {
-		const { apiKey, location, units } = settings;
-		if (!apiKey || !location) return;
-
+	const refresh = useCallback(async () => {
+		if (!settings.apiKey || !settings.location) return;
 		setIsLoading(true);
+		setError(null);
 		try {
-			const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${encodeURIComponent(apiKey)}&units=${units}`;
-			const text = await _fetchJson(url);
-			const raw = JSON.parse(text) as {
-				name: string;
-				main: { temp: number; feels_like: number; humidity: number };
-				weather: Array<{ id: number; main: string; description: string; icon: string }>;
-			};
-
-			const data: WeatherData = {
-				location: raw.name,
-				tempCelsius: raw.main.temp,
-				feelsLikeCelsius: raw.main.feels_like,
-				humidity: raw.main.humidity,
-				condition: {
-					id: raw.weather[0]!.id,
-					main: raw.weather[0]!.main,
-					description: raw.weather[0]!.description,
-					icon: raw.weather[0]!.icon,
-				},
-				fetchedAt: new Date().toISOString(),
-			};
-
-			mutate((prev) => ({ ...prev, data, error: null }));
+			const result = await rpc.request["weather:fetch"]({});
+			if (result.success) {
+				const fresh = await rpc.request["weather:get-current"]({});
+				setData(fresh);
+			} else {
+				setError("Failed to fetch weather");
+			}
 		} catch (err) {
-			const message = err instanceof Error ? err.message : "Failed to fetch weather";
-			mutate((prev) => ({ ...prev, error: message }));
+			setError(err instanceof Error ? err.message : "Failed to fetch weather");
 		} finally {
 			setIsLoading(false);
 		}
-	}, [mutate]);
+	}, [settings.apiKey, settings.location]);
 
-	useEffect(() => {
-		if (state.settings.apiKey && state.settings.location && !state.data) {
-			void fetchWeather(state.settings);
-		}
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	const updateSettings = useCallback(async (updates: Partial<WeatherSettings>) => {
+		await rpc.request["weather:update-settings"](updates);
+		setSettings((prev) => ({ ...prev, ...updates }));
+		setError(null);
+	}, []);
 
-	const updateSettings = useCallback(
-		(updates: Partial<WeatherSettings>) => {
-			mutate((prev) => ({ ...prev, settings: { ...prev.settings, ...updates }, error: null }));
-		},
-		[mutate],
-	);
-
-	const refresh = useCallback(async () => {
-		await fetchWeather(state.settings);
-	}, [fetchWeather, state.settings]);
-
-	return {
-		data: state.data,
-		settings: state.settings,
-		isLoading,
-		error: state.error,
-		updateSettings,
-		refresh,
-	};
+	return { data, settings, isLoading, error, updateSettings, refresh };
 }

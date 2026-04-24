@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { nanoid } from "nanoid";
-import type { SessionType, SessionStatus } from "../shared/types";
+import type { SessionType, SessionStatus, PomodoroSession } from "../shared/types";
+import { rpc } from "@shell/view/electrobun";
 
 export interface PomodoroSessionState {
 	readonly id: string;
@@ -16,78 +16,66 @@ export interface PomodoroSettings {
 	readonly breakDurationMinutes: number;
 }
 
-interface StoredPomodoroState {
-	session: PomodoroSessionState | null;
-	settings: PomodoroSettings;
-}
-
-const STORAGE_KEY = "pomodoro:state";
 const DEFAULT_SETTINGS: PomodoroSettings = {
 	workDurationMinutes: 25,
 	breakDurationMinutes: 5,
 };
 
-function loadState(): StoredPomodoroState {
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) return JSON.parse(stored) as StoredPomodoroState;
-	} catch {
-		// ignore corrupt storage
-	}
-	return { session: null, settings: DEFAULT_SETTINGS };
-}
-
-function persist(state: StoredPomodoroState): void {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function sessionToState(s: PomodoroSession): PomodoroSessionState {
+	return {
+		id: s.id,
+		type: s.type,
+		durationSeconds: s.durationSeconds,
+		elapsedSeconds: s.elapsedSeconds,
+		status: s.status,
+		startedAt: s.startedAt,
+	};
 }
 
 export interface UsePomodoroReturn {
 	readonly session: PomodoroSessionState | null;
 	readonly settings: PomodoroSettings;
 	readonly remaining: number;
-	start(type?: SessionType): void;
-	pause(): void;
-	resume(): void;
-	complete(): void;
-	cancel(): void;
-	updateSettings(settings: Partial<PomodoroSettings>): void;
+	start(type?: SessionType): Promise<void>;
+	pause(): Promise<void>;
+	resume(): Promise<void>;
+	complete(): Promise<void>;
+	cancel(): Promise<void>;
+	updateSettings(settings: Partial<PomodoroSettings>): Promise<void>;
 }
 
 export function usePomodoro(): UsePomodoroReturn {
-	const [state, setState] = useState<StoredPomodoroState>(loadState);
+	const [session, setSession] = useState<PomodoroSessionState | null>(null);
+	const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
 	const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-	const mutate = useCallback((updater: (prev: StoredPomodoroState) => StoredPomodoroState) => {
-		setState((prev) => {
-			const next = updater(prev);
-			persist(next);
-			return next;
+	// Load persisted session and settings on mount
+	useEffect(() => {
+		void Promise.all([
+			rpc.request["pomodoro:get-current"]({}),
+			rpc.request["pomodoro:get-settings"]({}),
+		]).then(([currentSession, savedSettings]) => {
+			if (currentSession) {
+				setSession(sessionToState(currentSession as PomodoroSession));
+			}
+			setSettings(savedSettings);
 		});
 	}, []);
 
+	// Timer tick — runs only in view layer
 	useEffect(() => {
-		if (state.session?.status === "running") {
+		if (session?.status === "running") {
 			tickRef.current = setInterval(() => {
-				mutate((prev) => {
-					if (!prev.session || prev.session.status !== "running") return prev;
+				setSession((prev) => {
+					if (!prev || prev.status !== "running") return prev;
 
-					const newElapsed = prev.session.elapsedSeconds + 1;
-
-					if (newElapsed >= prev.session.durationSeconds) {
-						return {
-							...prev,
-							session: {
-								...prev.session,
-								elapsedSeconds: prev.session.durationSeconds,
-								status: "completed",
-							},
-						};
+					const newElapsed = prev.elapsedSeconds + 1;
+					if (newElapsed >= prev.durationSeconds) {
+						// Auto-complete when timer reaches zero
+						void rpc.request["pomodoro:complete"]({ id: prev.id, elapsedSeconds: prev.durationSeconds });
+						return { ...prev, elapsedSeconds: prev.durationSeconds, status: "completed" };
 					}
-
-					return {
-						...prev,
-						session: { ...prev.session, elapsedSeconds: newElapsed },
-					};
+					return { ...prev, elapsedSeconds: newElapsed };
 				});
 			}, 1000);
 		} else {
@@ -103,87 +91,62 @@ export function usePomodoro(): UsePomodoroReturn {
 				tickRef.current = null;
 			}
 		};
-	}, [state.session?.status, mutate]);
+	}, [session?.status]);
 
 	const start = useCallback(
-		(type: SessionType = "work") => {
+		async (type: SessionType = "work") => {
 			const durationSeconds =
 				type === "work"
-					? state.settings.workDurationMinutes * 60
-					: state.settings.breakDurationMinutes * 60;
+					? settings.workDurationMinutes * 60
+					: settings.breakDurationMinutes * 60;
 
-			mutate((prev) => ({
-				...prev,
-				session: {
-					id: nanoid(),
-					type,
-					durationSeconds,
-					elapsedSeconds: 0,
-					status: "running",
-					startedAt: new Date().toISOString(),
-				},
-			}));
+			const result = await rpc.request["pomodoro:start"]({ type, durationSeconds });
+			setSession({
+				id: result.id,
+				type,
+				durationSeconds,
+				elapsedSeconds: 0,
+				status: "running",
+				startedAt: new Date().toISOString(),
+			});
 		},
-		[state.settings, mutate],
+		[settings],
 	);
 
-	const pause = useCallback(() => {
-		mutate((prev) => {
-			if (!prev.session || prev.session.status !== "running") return prev;
-			return { ...prev, session: { ...prev.session, status: "paused" } };
-		});
-	}, [mutate]);
+	const pause = useCallback(async () => {
+		if (!session || session.status !== "running") return;
+		await rpc.request["pomodoro:pause"]({ id: session.id, elapsedSeconds: session.elapsedSeconds });
+		setSession((prev) => (prev ? { ...prev, status: "paused" } : null));
+	}, [session]);
 
-	const resume = useCallback(() => {
-		mutate((prev) => {
-			if (!prev.session || prev.session.status !== "paused") return prev;
-			return { ...prev, session: { ...prev.session, status: "running" } };
-		});
-	}, [mutate]);
+	const resume = useCallback(async () => {
+		if (!session || session.status !== "paused") return;
+		await rpc.request["pomodoro:resume"]({ id: session.id });
+		setSession((prev) => (prev ? { ...prev, status: "running" } : null));
+	}, [session]);
 
-	const complete = useCallback(() => {
-		mutate((prev) => {
-			if (!prev.session) return prev;
-			return {
-				...prev,
-				session: {
-					...prev.session,
-					elapsedSeconds: prev.session.durationSeconds,
-					status: "completed",
-				},
-			};
-		});
-	}, [mutate]);
+	const complete = useCallback(async () => {
+		if (!session) return;
+		await rpc.request["pomodoro:complete"]({ id: session.id, elapsedSeconds: session.elapsedSeconds });
+		setSession((prev) => (prev ? { ...prev, status: "completed" } : null));
+	}, [session]);
 
-	const cancel = useCallback(() => {
-		mutate((prev) => ({ ...prev, session: null }));
-	}, [mutate]);
+	const cancel = useCallback(async () => {
+		if (!session) return;
+		await rpc.request["pomodoro:cancel"]({ id: session.id });
+		setSession(null);
+	}, [session]);
 
-	const updateSettings = useCallback(
-		(updates: Partial<PomodoroSettings>) => {
-			mutate((prev) => ({
-				...prev,
-				settings: { ...prev.settings, ...updates },
-			}));
-		},
-		[mutate],
-	);
+	const updateSettings = useCallback(async (updates: Partial<PomodoroSettings>) => {
+		await rpc.request["pomodoro:update-settings"](updates);
+		setSettings((prev) => ({ ...prev, ...updates }));
+	}, []);
 
-	const remaining = state.session
-		? Math.max(0, state.session.durationSeconds - state.session.elapsedSeconds)
+	const remaining = session
+		? Math.max(0, session.durationSeconds - session.elapsedSeconds)
 		: 0;
 
-	return {
-		session: state.session,
-		settings: state.settings,
-		remaining,
-		start,
-		pause,
-		resume,
-		complete,
-		cancel,
-		updateSettings,
-	};
+	return { session, settings, remaining, start, pause, resume, complete, cancel, updateSettings };
 }
 
 export function formatTime(seconds: number): string {

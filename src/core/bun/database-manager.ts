@@ -1,11 +1,8 @@
 import { Database } from "bun:sqlite";
-import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { bootstrapMigrationsTable, runMigrations } from "./migration-runner";
 import { coreMigrations } from "./migrations";
-
-const require = createRequire(import.meta.url);
 
 const FEATURE_ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -13,21 +10,6 @@ function assertSafeFeatureId(featureId: string): void {
 	if (!FEATURE_ID_PATTERN.test(featureId)) {
 		throw new Error(`Invalid feature ID "${featureId}" (expected lowercase kebab-case slug)`);
 	}
-}
-
-// electrobun/bun is lazy-required (not imported) so `bun test` doesn't need the native host
-export function resolveDefaultDataDir(): string {
-	const override = process.env.MYOS_DATA_DIR?.trim();
-	if (override) {
-		return override;
-	}
-
-	if (process.env.NODE_ENV === "production") {
-		const { Utils } = require("electrobun/bun") as typeof import("electrobun/bun");
-		return join(Utils.paths.userData, "data");
-	}
-
-	return join(process.cwd(), "data");
 }
 
 export class DatabaseManager {

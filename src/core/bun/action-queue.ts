@@ -141,6 +141,19 @@ export class ActionQueue {
 		return handler(params);
 	}
 
+	async dispatchAction(featureId: string, actionName: string, params: unknown): Promise<unknown> {
+		const handler = this.actionHandlers.get(`${featureId}:${actionName}`);
+		if (!handler) {
+			throw new Error(`No action handler registered for ${featureId}:${actionName}`);
+		}
+		const meta: ActionMeta = {
+			executionId: nanoid(),
+			correlationId: nanoid(),
+			retriedCount: 0,
+		};
+		return handler(params, meta);
+	}
+
 	async resumePending(): Promise<void> {
 		const pendingExecutions = this.db
 			.query<{ execution_id: string }, []>(

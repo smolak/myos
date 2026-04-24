@@ -1,88 +1,60 @@
-import { useState, useCallback } from "react";
-import { nanoid } from "nanoid";
+import { useState, useCallback, useEffect } from "react";
 import type { TodoItem } from "../shared/types";
-
-const STORAGE_KEY = "todo:items";
-
-function loadTodos(): TodoItem[] {
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) return JSON.parse(stored) as TodoItem[];
-	} catch {
-		// ignore corrupt storage
-	}
-	return [];
-}
-
-function persist(todos: TodoItem[]): void {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-}
+import { rpc } from "@shell/view/electrobun";
 
 export interface UseTodosReturn {
 	readonly todos: readonly TodoItem[];
-	create(title: string, description?: string): void;
-	update(id: string, changes: { title?: string; description?: string }): void;
-	complete(id: string): void;
-	remove(id: string): void;
+	readonly isLoading: boolean;
+	create(title: string, description?: string): Promise<void>;
+	update(id: string, changes: { title?: string; description?: string }): Promise<void>;
+	complete(id: string): Promise<void>;
+	remove(id: string): Promise<void>;
 }
 
 export function useTodos(): UseTodosReturn {
-	const [todos, setTodos] = useState<TodoItem[]>(loadTodos);
+	const [todos, setTodos] = useState<TodoItem[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
 
-	const mutate = useCallback((updater: (prev: TodoItem[]) => TodoItem[]) => {
-		setTodos((prev) => {
-			const next = updater(prev);
-			persist(next);
-			return next;
-		});
+	const reload = useCallback(async () => {
+		const items = await rpc.request["todo:find"]({});
+		setTodos(items as TodoItem[]);
 	}, []);
 
+	useEffect(() => {
+		void reload().finally(() => setIsLoading(false));
+	}, [reload]);
+
 	const create = useCallback(
-		(title: string, description?: string) => {
-			const now = new Date().toISOString();
-			const item: TodoItem = {
-				id: nanoid(),
-				title,
-				description: description ?? null,
-				completed: false,
-				completedAt: null,
-				createdAt: now,
-				updatedAt: now,
-			};
-			mutate((prev) => [item, ...prev]);
+		async (title: string, description?: string) => {
+			await rpc.request["todo:create"]({ title, description });
+			await reload();
 		},
-		[mutate],
+		[reload],
 	);
 
 	const update = useCallback(
-		(id: string, changes: { title?: string; description?: string }) => {
-			mutate((prev) =>
-				prev.map((t) =>
-					t.id === id ? { ...t, ...changes, updatedAt: new Date().toISOString() } : t,
-				),
-			);
+		async (id: string, changes: { title?: string; description?: string }) => {
+			await rpc.request["todo:update"]({ id, ...changes });
+			await reload();
 		},
-		[mutate],
+		[reload],
 	);
 
 	const complete = useCallback(
-		(id: string) => {
-			const now = new Date().toISOString();
-			mutate((prev) =>
-				prev.map((t) =>
-					t.id === id ? { ...t, completed: true, completedAt: now, updatedAt: now } : t,
-				),
-			);
+		async (id: string) => {
+			await rpc.request["todo:complete"]({ id });
+			await reload();
 		},
-		[mutate],
+		[reload],
 	);
 
 	const remove = useCallback(
-		(id: string) => {
-			mutate((prev) => prev.filter((t) => t.id !== id));
+		async (id: string) => {
+			await rpc.request["todo:delete"]({ id });
+			await reload();
 		},
-		[mutate],
+		[reload],
 	);
 
-	return { todos, create, update, complete, remove };
+	return { todos, isLoading, create, update, complete, remove };
 }

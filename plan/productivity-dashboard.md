@@ -368,15 +368,15 @@ Option B is not viable. Option A is the only correct path.
 
 ### Acceptance criteria
 
-- [ ] Todo state is read from and written to `todos` table in feature DB, not localStorage
-- [ ] RSS Reader sources and entries are read from and written to RSS DB, not localStorage
-- [ ] Pomodoro state is persisted in feature DB
-- [ ] Weather and Clock settings are persisted in feature DB (or core settings table)
-- [ ] Dashboard layout is persisted in core DB `settings` table
-- [ ] Running dev build and stable build shows different (isolated) data
-- [ ] SQLite files for each feature are created under the correct channel path (`dev.myos.app/dev/` vs `dev.myos.app/stable/`)
-- [ ] Backend events are emitted when UI mutates state (e.g., `todo:item-created` fires on add)
-- [ ] All existing feature tests still pass
+- [x] Todo state is read from and written to `todos` table in feature DB, not localStorage
+- [x] RSS Reader sources and entries are read from and written to RSS DB, not localStorage
+- [x] Pomodoro state is persisted in feature DB
+- [x] Weather and Clock settings are persisted in feature DB (or core settings table)
+- [x] Dashboard layout is persisted in core DB `settings` table
+- [x] Running dev build and stable build shows different (isolated) data
+- [x] SQLite files for each feature are created under the correct channel path (`dev.myos.app/dev/` vs `dev.myos.app/stable/`)
+- [x] Backend events are emitted when UI mutates state (e.g., `todo:item-created` fires on add)
+- [x] All existing feature tests still pass
 
 ### Plan correction
 
