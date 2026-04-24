@@ -2,6 +2,17 @@ import { useState, useCallback } from "react";
 import { nanoid } from "nanoid";
 import { parseFeed } from "../shared/feed-parser";
 
+type FetchXmlFn = (url: string) => Promise<string>;
+
+let _fetchXml: FetchXmlFn = async (url) => {
+	const response = await fetch(url);
+	return response.text();
+};
+
+export function overrideFetchXml(fn: FetchXmlFn): void {
+	_fetchXml = fn;
+}
+
 export interface StoredFeed {
 	readonly id: string;
 	readonly url: string;
@@ -69,8 +80,7 @@ export function useRssReader(): UseRssReaderReturn {
 
 	const fetchFeedEntries = useCallback(
 		async (feed: StoredFeed): Promise<StoredEntry[]> => {
-			const response = await fetch(feed.url);
-			const xml = await response.text();
+			const xml = await _fetchXml(feed.url);
 			const parsed = parseFeed(xml);
 
 			return parsed.entries.map((entry) => ({

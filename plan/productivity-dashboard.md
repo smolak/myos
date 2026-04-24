@@ -274,10 +274,10 @@ WKWebView blocks cross-origin network requests from the webview origin (`localho
 
 ### Acceptance criteria
 
-- [ ] Adding an RSS feed URL succeeds (no "Load failed")
-- [ ] Feed entries appear after adding a feed
-- [ ] Refresh all works for existing feeds
-- [ ] No `@features` → `@shell` import dependency introduced
+- [x] Adding an RSS feed URL succeeds (no "Load failed")
+- [x] Feed entries appear after adding a feed
+- [x] Refresh all works for existing feeds
+- [x] No `@features` → `@shell` import dependency introduced
 
 ---
 

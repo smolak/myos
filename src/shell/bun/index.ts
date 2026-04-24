@@ -1,4 +1,17 @@
-import { BrowserWindow, ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
+import { BrowserView, BrowserWindow, ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
+import type { AppRPCSchema } from "../shared/rpc-schema";
+
+const rpc = BrowserView.defineRPC<AppRPCSchema>({
+	handlers: {
+		requests: {
+			"fetch-feed": async ({ url }) => {
+				const res = await fetch(url);
+				if (!res.ok) throw new Error(`fetch-feed failed: ${res.status} ${res.statusText}`);
+				return res.text();
+			},
+		},
+	},
+});
 
 const APP_TITLE = "MyOS";
 const DEV_SERVER_PORT = 5173;
@@ -40,6 +53,7 @@ function createMainWindow(url: string): BrowserWindow {
 		title: APP_TITLE,
 		url,
 		frame: WINDOW_FRAME,
+		rpc,
 	});
 	attachCloseHandler(win);
 	mainWindow = win;
