@@ -560,6 +560,43 @@ Implement Clipboard History feature. Watch system clipboard for changes. Store c
 
 ---
 
+## Phase 24: App Options
+
+**User stories**: App-wide configuration panel for appearance, data storage, and system info.
+
+### What to build
+
+**Entry point**: Gear icon in app shell (top-right corner). Wires to Command Palette in Phase 14.
+
+**Full-screen overlay** with left sidebar navigation and right content area. Three sections:
+
+**Appearance**: Background style for the app window. Solid color picker + a small set of built-in dark/gradient presets. (Photo upload deferred to a follow-up phase.)
+
+**Data**: Shows current DB files directory (read-only path). "Change…" button opens native macOS folder picker (`osascript`). "Open in Finder" button. On change, displays a restart-required notice: *"Changes take effect on next launch. Copy your existing data files to the new location."*
+
+**About**: App name, version (read from `package.json`), current data directory path, "Open in Finder" button, and a note: *"Back up this folder to preserve your data."*
+
+**Window size**: Auto-remember last window bounds on close; restore on open. No UI needed — handled silently via settings.
+
+### Technical notes
+
+- New RPC endpoints: `app:get-options`, `app:update-options`, `app:get-data-dir`, `app:open-in-finder`, `app:pick-data-dir`
+- Settings stored via `settingsManager` under scope `"app"`
+- Native folder picker via `Bun.spawn` + `osascript` (macOS)
+- Window bounds persisted via `settingsManager` on Electrobun window close event
+
+### Acceptance criteria
+
+- [ ] Gear icon visible in app shell; clicking opens the options overlay
+- [ ] Appearance section: color picker and gradient presets update the app background; persists across restarts
+- [ ] Data section: current DB path displayed; "Change…" opens native folder picker; selecting a new path shows restart notice
+- [ ] Data section: "Open in Finder" opens the data directory in Finder
+- [ ] About section: shows app name, version, data directory path, "Open in Finder", and backup note
+- [ ] Window size and position are remembered across restarts
+- [ ] Tests cover options read/write, data dir RPC, window bounds persistence
+
+---
+
 ## Phase 23: Snippets (Nice-to-Have)
 
 **User stories**: Reusable text templates with variables.
