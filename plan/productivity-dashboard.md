@@ -305,6 +305,85 @@ Implement `CredentialStore` service for encrypted API key storage (backs the `cr
 
 ---
 
+## Phase 13.1: Data Layer — Migrate Feature State from localStorage to SQLite
+
+**User stories**: Feature data is isolated between dev and production builds. Data survives across sessions and is stored in the correct location per environment.
+
+### Context / What went wrong
+
+The architectural decision (see top of this file) states: _"Separate SQLite DB per feature. Core DB for orchestration. WAL mode on all databases."_ That decision was correct and intentional. However, every feature that was implemented since Phase 6 silently violated it by storing its UI state in `localStorage` instead.
+
+**Affected files and their storage keys:**
+
+| Feature | File | localStorage key |
+|---|---|---|
+| Todo | `src/features/todo/view/useTodos.ts` | `todo:todos` |
+| RSS Reader | `src/features/rss-reader/view/useRssReader.ts` | `rss-reader:state` |
+| Pomodoro | `src/features/pomodoro/view/usePomodoro.ts` | `pomodoro:state` |
+| Weather | `src/features/weather/view/useWeather.ts` | `weather:state` |
+| Clock | `src/features/clock/view/useClock.ts` | `clock:state` |
+| Dashboard layout | `src/shell/view/App.tsx` | `dashboard:layout` |
+
+The bun-side code (`src/features/*/bun/`) has correct SQLite migrations, actions, and queries — that work was done right. The problem is that the view layer (`src/features/*/view/`) never connected to it. Each hook re-implemented persistence independently using `localStorage` as a shortcut.
+
+### Why this is wrong
+
+**1. localStorage is shared across all Electrobun builds of the same app.**
+Electrobun registers a WebKit `WKWebsiteDataStore` keyed to the bundle identifier (`dev.myos.app`). Every build — dev, canary, stable — shares the same data store UUID and therefore the same `localStorage`. There is no isolation. Adding an RSS source in dev immediately appears in the stable build and vice versa.
+
+**2. localStorage is not accessible from the Bun process.**
+The entire backend infrastructure (Event Bus, Action Queue, Script Engine, Scheduler) operates on data from SQLite. When a todo is created via `useTodos.ts` → localStorage, the `todo:item-created` event is never emitted, the Action Queue never records it, the Script Engine never reacts to it, and the Daily Journal (Phase 15) has nothing to aggregate. The features are not integrated — they are islands.
+
+**3. localStorage has no migration path.**
+SQLite migrations are versioned and tracked in the `migrations` table. localStorage has no schema, no versioning, and no tooling. Any data shape change silently drops existing user data.
+
+**4. The acceptance criteria for Phase 6 were checked incorrectly.**
+Phase 6 includes `[x] Migrations create todos table in feature DB`. The migration exists, but feature data is never written to that table. The check should not have been marked done.
+
+### Root cause
+
+The view hooks were written in isolation from the bun backend. Connecting the view to bun requires IPC (the same RPC pattern introduced in Phase 12.1 for RSS feed fetching). That plumbing was not in place when Phase 6 was implemented, so `localStorage` was used as a temporary substitute that was never replaced.
+
+### Potential solutions
+
+**Option A — Bun IPC bridge (correct, required)**
+Extend `AppRPCSchema` with action/query handlers for each feature. View hooks call `rpc.request["todo.create"](params)` etc. instead of writing to localStorage. Bun processes the call, writes to SQLite, returns the result. This is the architecture the plan always described. It also enables the Event Bus, Action Queue, and Script Engine to receive real data.
+
+**Option B — Keep localStorage, accept shared state**
+Do nothing. All builds share the same data. This is incompatible with the core architectural goal of local-first, isolated feature databases, and it makes the entire backend infrastructure (Event Bus, Action Queue, Script Engine, Scheduler) meaningless in practice, since no real data flows through it.
+
+Option B is not viable. Option A is the only correct path.
+
+### What to build
+
+1. **Define IPC schemas** for each feature — extend `AppRPCSchema` in `src/shell/shared/rpc-schema.ts` with request/response types covering the actions and queries already defined in `src/features/*/bun/`.
+
+2. **Wire bun handlers** in `src/shell/bun/index.ts` — `BrowserView.defineRPC` handlers that delegate to the existing `FeatureRegistry` action/query dispatch.
+
+3. **Rewrite view hooks** for each feature — replace `localStorage.getItem/setItem` with typed `rpc.request[...]` calls. Initial load calls the query; mutations call the action.
+
+4. **Remove the `NODE_ENV === "production"` branch** in `src/core/bun/database-manager.ts` `resolveDefaultDataDir()` or fix it. Electrobun does not set `NODE_ENV=production` for packaged builds. Instead, detect the environment via `Utils.paths.userData` directly (it already includes the channel segment: `dev.myos.app/stable/` vs `dev.myos.app/dev/`), making SQLite data correctly isolated per channel.
+
+5. **Clear the stale localStorage keys** on first load after migration (one-time migration).
+
+### Acceptance criteria
+
+- [ ] Todo state is read from and written to `todos` table in feature DB, not localStorage
+- [ ] RSS Reader sources and entries are read from and written to RSS DB, not localStorage
+- [ ] Pomodoro state is persisted in feature DB
+- [ ] Weather and Clock settings are persisted in feature DB (or core settings table)
+- [ ] Dashboard layout is persisted in core DB `settings` table
+- [ ] Running dev build and stable build shows different (isolated) data
+- [ ] SQLite files for each feature are created under the correct channel path (`dev.myos.app/dev/` vs `dev.myos.app/stable/`)
+- [ ] Backend events are emitted when UI mutates state (e.g., `todo:item-created` fires on add)
+- [ ] All existing feature tests still pass
+
+### Plan correction
+
+The Architectural Decisions section at the top of this document was correct. The implementation of Phases 6, 11, 12, and 13 deviated from it. Phase 13.1 restores the implementation to match the stated design. No changes to the Architectural Decisions are needed.
+
+---
+
 ## Phase 14: Core UX (Command Palette + Notification Center + Theming)
 
 **User stories**: Core UX infrastructure for productivity. Search, notifications, appearance.
