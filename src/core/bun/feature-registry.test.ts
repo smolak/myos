@@ -6,6 +6,7 @@ import type { Database } from "bun:sqlite";
 import type { FeatureContext, FeatureDefinition, FeatureLifecycleContext } from "@core/types";
 import { DatabaseManager } from "./database-manager";
 import { SettingsManager } from "./settings-manager";
+import { CredentialStore } from "./credential-store";
 import { FeatureRegistry } from "./feature-registry";
 import { EventBus } from "./event-bus";
 import { ActionQueue } from "./action-queue";
@@ -40,6 +41,7 @@ function makeFeature(overrides: Partial<FeatureDefinition> = {}): FeatureDefinit
 describe("FeatureRegistry", () => {
 	let dbManager: DatabaseManager;
 	let settingsManager: SettingsManager;
+	let credentialStore: CredentialStore;
 	let eventBus: EventBus;
 	let actionQueue: ActionQueue;
 	let scheduler: Scheduler;
@@ -52,10 +54,11 @@ describe("FeatureRegistry", () => {
 		dbManager = new DatabaseManager(tmpDir);
 		coreDb = dbManager.getCoreDatabase();
 		settingsManager = new SettingsManager(coreDb);
+		credentialStore = new CredentialStore(coreDb);
 		eventBus = new EventBus(coreDb);
 		actionQueue = new ActionQueue(coreDb, 0);
 		scheduler = new Scheduler(coreDb, 60_000, 0);
-		registry = new FeatureRegistry(dbManager, settingsManager, eventBus, actionQueue, scheduler);
+		registry = new FeatureRegistry(dbManager, settingsManager, credentialStore, eventBus, actionQueue, scheduler);
 	});
 
 	afterEach(async () => {

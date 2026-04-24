@@ -9,6 +9,11 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
 				if (!res.ok) throw new Error(`fetch-feed failed: ${res.status} ${res.statusText}`);
 				return res.text();
 			},
+			"fetch-json": async ({ url }) => {
+				const res = await fetch(url);
+				if (!res.ok) throw new Error(`fetch-json failed: ${res.status} ${res.statusText}`);
+				return res.text();
+			},
 		},
 	},
 });

@@ -7,9 +7,11 @@ import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
+import { ClockWidget } from "@features/clock/view/ClockWidget";
+import { WeatherWidget } from "@features/weather/view/WeatherWidget";
 
 const STORAGE_KEY = "dashboard:pages";
-const LAYOUT_VERSION = 3;
+const LAYOUT_VERSION = 4;
 
 const DEFAULT_PAGES: DashboardPage[] = [
 	{
@@ -18,6 +20,8 @@ const DEFAULT_PAGES: DashboardPage[] = [
 		layout: [
 			{ i: "todo-1", x: 0, y: 0, w: 2, h: 2, featureId: "todo", widgetId: "task-list" },
 			{ i: "pomodoro-1", x: 2, y: 0, w: 2, h: 1, featureId: "pomodoro", widgetId: "timer" },
+			{ i: "clock-1", x: 2, y: 1, w: 1, h: 1, featureId: "clock", widgetId: "display" },
+			{ i: "weather-1", x: 3, y: 1, w: 1, h: 1, featureId: "weather", widgetId: "conditions" },
 			{ i: "rss-1", x: 0, y: 2, w: 4, h: 2, featureId: "rss-reader", widgetId: "feed-list" },
 		],
 		order: 0,
@@ -63,6 +67,12 @@ function App() {
 		}
 		if (item.featureId === "rss-reader" && item.widgetId === "feed-list") {
 			return <RssReaderWidget onOpenFullView={() => setFullViewFeature("rss-reader")} />;
+		}
+		if (item.featureId === "clock" && item.widgetId === "display") {
+			return <ClockWidget />;
+		}
+		if (item.featureId === "weather" && item.widgetId === "conditions") {
+			return <WeatherWidget onOpenFullView={() => setFullViewFeature("weather")} />;
 		}
 		return (
 			<span className="text-xs text-zinc-500">

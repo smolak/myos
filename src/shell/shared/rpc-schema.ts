@@ -4,6 +4,7 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
 	bun: {
 		requests: {
 			"fetch-feed": { params: { url: string }; response: string };
+			"fetch-json": { params: { url: string }; response: string };
 		};
 		messages: Record<never, never>;
 	};

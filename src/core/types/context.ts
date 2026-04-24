@@ -70,5 +70,11 @@ export interface FeatureContext<
 		set(key: string, value: unknown): Promise<void>;
 	};
 
+	readonly credentials: {
+		store(serviceName: string, credentialType: string, value: string): Promise<void>;
+		retrieve(serviceName: string, credentialType: string): Promise<string | null>;
+		delete(serviceName: string, credentialType?: string): Promise<void>;
+	};
+
 	readonly log: ScopedLogger;
 }

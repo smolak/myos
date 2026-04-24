@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import { runMigrations } from "./migration-runner";
 import type { DatabaseManager } from "./database-manager";
 import type { SettingsManager } from "./settings-manager";
+import type { CredentialStore } from "./credential-store";
 import type { EventBus } from "./event-bus";
 import type { ActionQueue } from "./action-queue";
 import type { Scheduler } from "./scheduler";
@@ -21,6 +22,7 @@ export class FeatureRegistry {
 	private readonly coreDb: Database;
 	private readonly dbManager: DatabaseManager;
 	private readonly settingsManager: SettingsManager;
+	private readonly credentialStore: CredentialStore;
 	private readonly eventBus: EventBus;
 	private readonly actionQueue: ActionQueue;
 	private readonly scheduler: Scheduler;
@@ -28,6 +30,7 @@ export class FeatureRegistry {
 	constructor(
 		dbManager: DatabaseManager,
 		settingsManager: SettingsManager,
+		credentialStore: CredentialStore,
 		eventBus: EventBus,
 		actionQueue: ActionQueue,
 		scheduler: Scheduler,
@@ -35,6 +38,7 @@ export class FeatureRegistry {
 		this.coreDb = dbManager.getCoreDatabase();
 		this.dbManager = dbManager;
 		this.settingsManager = settingsManager;
+		this.credentialStore = credentialStore;
 		this.eventBus = eventBus;
 		this.actionQueue = actionQueue;
 		this.scheduler = scheduler;
@@ -153,6 +157,7 @@ export class FeatureRegistry {
 				},
 			},
 			settings: this.settingsManager.forScope(featureId),
+			credentials: this.credentialStore.forScope(featureId),
 			log: this.buildLogger(featureId),
 		};
 	}

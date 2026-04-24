@@ -295,13 +295,13 @@ Implement `CredentialStore` service for encrypted API key storage (backs the `cr
 
 ### Acceptance criteria
 
-- [ ] Clock widget shows current time, updates live
-- [ ] Clock settings for 12h/24h format
-- [ ] Weather widget shows temperature and conditions
-- [ ] Weather settings for API key and location
-- [ ] `CredentialStore` encrypts sensitive values at rest
-- [ ] Weather gracefully handles missing/invalid API key
-- [ ] Tests cover credential storage, weather API integration (mocked)
+- [x] Clock widget shows current time, updates live
+- [x] Clock settings for 12h/24h format
+- [x] Weather widget shows temperature and conditions
+- [x] Weather settings for API key and location
+- [x] `CredentialStore` encrypts sensitive values at rest
+- [x] Weather gracefully handles missing/invalid API key
+- [x] Tests cover credential storage, weather API integration (mocked)
 
 ---
 
