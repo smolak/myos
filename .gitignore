@@ -1,5 +1,8 @@
 node_modules/
 
+# Claude Code local settings (permissions, hooks — machine-specific)
+.claude/
+
 # Build outputs
 dist/
 build/
