@@ -1,10 +1,10 @@
 import type { Migration } from "@core/types";
 
 export const weatherMigrations: Migration[] = [
-	{
-		version: "001",
-		name: "create-weather-cache",
-		up: `CREATE TABLE weather_cache (
+  {
+    version: "001",
+    name: "create-weather-cache",
+    up: `CREATE TABLE weather_cache (
 			id            TEXT NOT NULL PRIMARY KEY,
 			location      TEXT NOT NULL,
 			temp_celsius  REAL NOT NULL,
@@ -16,5 +16,5 @@ export const weatherMigrations: Migration[] = [
 			condition_icon TEXT NOT NULL,
 			fetched_at    TEXT NOT NULL
 		)`,
-	},
+  },
 ];

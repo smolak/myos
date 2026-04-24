@@ -6,19 +6,19 @@ import App from "./App";
 // One-time migration: clear stale localStorage keys from the pre-Phase-13.1 era.
 // Data is now stored in SQLite via the bun process.
 const STALE_KEYS = [
-	"todo:items",
-	"rss-reader:state",
-	"pomodoro:state",
-	"weather:state",
-	"clock:settings",
-	"dashboard:pages",
+  "todo:items",
+  "rss-reader:state",
+  "pomodoro:state",
+  "weather:state",
+  "clock:settings",
+  "dashboard:pages",
 ];
 for (const key of STALE_KEYS) {
-	localStorage.removeItem(key);
+  localStorage.removeItem(key);
 }
 
 createRoot(document.getElementById("root")!).render(
-	<StrictMode>
-		<App />
-	</StrictMode>,
+  <StrictMode>
+    <App />
+  </StrictMode>,
 );

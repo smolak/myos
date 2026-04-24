@@ -44,98 +44,98 @@ const ATOM_FEED = `<?xml version="1.0" encoding="UTF-8"?>
 </feed>`;
 
 describe("parseFeed — RSS 2.0", () => {
-	test("extracts feed title", () => {
-		expect(parseFeed(RSS_FEED).title).toBe("Test Blog");
-	});
+  test("extracts feed title", () => {
+    expect(parseFeed(RSS_FEED).title).toBe("Test Blog");
+  });
 
-	test("extracts feed description", () => {
-		expect(parseFeed(RSS_FEED).description).toBe("A test blog");
-	});
+  test("extracts feed description", () => {
+    expect(parseFeed(RSS_FEED).description).toBe("A test blog");
+  });
 
-	test("extracts all items", () => {
-		expect(parseFeed(RSS_FEED).entries).toHaveLength(2);
-	});
+  test("extracts all items", () => {
+    expect(parseFeed(RSS_FEED).entries).toHaveLength(2);
+  });
 
-	test("extracts plain text item fields", () => {
-		const first = parseFeed(RSS_FEED).entries[0]!;
-		expect(first.title).toBe("First Post");
-		expect(first.link).toBe("https://example.com/post-1");
-		expect(first.guid).toBe("https://example.com/post-1");
-		expect(first.description).toBe("Some description");
-	});
+  test("extracts plain text item fields", () => {
+    const first = parseFeed(RSS_FEED).entries[0]!;
+    expect(first.title).toBe("First Post");
+    expect(first.link).toBe("https://example.com/post-1");
+    expect(first.guid).toBe("https://example.com/post-1");
+    expect(first.description).toBe("Some description");
+  });
 
-	test("extracts CDATA-wrapped title", () => {
-		const second = parseFeed(RSS_FEED).entries[1]!;
-		expect(second.title).toBe("Second & Special Post");
-	});
+  test("extracts CDATA-wrapped title", () => {
+    const second = parseFeed(RSS_FEED).entries[1]!;
+    expect(second.title).toBe("Second & Special Post");
+  });
 
-	test("uses guid distinct from link when provided", () => {
-		const second = parseFeed(RSS_FEED).entries[1]!;
-		expect(second.guid).toBe("post-2-unique-guid");
-	});
+  test("uses guid distinct from link when provided", () => {
+    const second = parseFeed(RSS_FEED).entries[1]!;
+    expect(second.guid).toBe("post-2-unique-guid");
+  });
 
-	test("parses pubDate to ISO string", () => {
-		const first = parseFeed(RSS_FEED).entries[0]!;
-		expect(first.publishedAt).toBe(new Date("Mon, 01 Jan 2024 10:00:00 GMT").toISOString());
-	});
+  test("parses pubDate to ISO string", () => {
+    const first = parseFeed(RSS_FEED).entries[0]!;
+    expect(first.publishedAt).toBe(new Date("Mon, 01 Jan 2024 10:00:00 GMT").toISOString());
+  });
 });
 
 describe("parseFeed — Atom", () => {
-	test("extracts feed title", () => {
-		expect(parseFeed(ATOM_FEED).title).toBe("Atom Blog");
-	});
+  test("extracts feed title", () => {
+    expect(parseFeed(ATOM_FEED).title).toBe("Atom Blog");
+  });
 
-	test("extracts feed description from subtitle", () => {
-		expect(parseFeed(ATOM_FEED).description).toBe("An Atom blog");
-	});
+  test("extracts feed description from subtitle", () => {
+    expect(parseFeed(ATOM_FEED).description).toBe("An Atom blog");
+  });
 
-	test("extracts all entries", () => {
-		expect(parseFeed(ATOM_FEED).entries).toHaveLength(2);
-	});
+  test("extracts all entries", () => {
+    expect(parseFeed(ATOM_FEED).entries).toHaveLength(2);
+  });
 
-	test("extracts entry fields", () => {
-		const first = parseFeed(ATOM_FEED).entries[0]!;
-		expect(first.title).toBe("Atom Entry One");
-		expect(first.link).toBe("https://example.com/atom/1");
-		expect(first.guid).toBe("https://example.com/atom/1");
-		expect(first.description).toBe("Summary text");
-	});
+  test("extracts entry fields", () => {
+    const first = parseFeed(ATOM_FEED).entries[0]!;
+    expect(first.title).toBe("Atom Entry One");
+    expect(first.link).toBe("https://example.com/atom/1");
+    expect(first.guid).toBe("https://example.com/atom/1");
+    expect(first.description).toBe("Summary text");
+  });
 
-	test("parses published date to ISO string", () => {
-		const first = parseFeed(ATOM_FEED).entries[0]!;
-		expect(first.publishedAt).toBe("2024-01-01T10:00:00.000Z");
-	});
+  test("parses published date to ISO string", () => {
+    const first = parseFeed(ATOM_FEED).entries[0]!;
+    expect(first.publishedAt).toBe("2024-01-01T10:00:00.000Z");
+  });
 
-	test("extracts CDATA title with entities", () => {
-		const second = parseFeed(ATOM_FEED).entries[1]!;
-		expect(second.title).toBe("Atom & Special Entry");
-	});
+  test("extracts CDATA title with entities", () => {
+    const second = parseFeed(ATOM_FEED).entries[1]!;
+    expect(second.title).toBe("Atom & Special Entry");
+  });
 
-	test("falls back to updated when published is missing", () => {
-		const second = parseFeed(ATOM_FEED).entries[1]!;
-		expect(second.publishedAt).toBe("2024-01-02T10:00:00.000Z");
-	});
+  test("falls back to updated when published is missing", () => {
+    const second = parseFeed(ATOM_FEED).entries[1]!;
+    expect(second.publishedAt).toBe("2024-01-02T10:00:00.000Z");
+  });
 });
 
 describe("parseFeed — edge cases", () => {
-	test("falls back to link when guid is missing", () => {
-		const xml = `<rss version="2.0"><channel><title>T</title>
+  test("falls back to link when guid is missing", () => {
+    const xml = `<rss version="2.0"><channel><title>T</title>
       <item><title>I</title><link>https://x.com/1</link></item>
     </channel></rss>`;
-		expect(parseFeed(xml).entries[0]!.guid).toBe("https://x.com/1");
-	});
+    expect(parseFeed(xml).entries[0]!.guid).toBe("https://x.com/1");
+  });
 
-	test("null publishedAt when no date present", () => {
-		const xml = `<rss version="2.0"><channel><title>T</title>
+  test("null publishedAt when no date present", () => {
+    const xml = `<rss version="2.0"><channel><title>T</title>
       <item><title>I</title><link>https://x.com/1</link><guid>g1</guid></item>
     </channel></rss>`;
-		expect(parseFeed(xml).entries[0]!.publishedAt).toBeNull();
-	});
+    expect(parseFeed(xml).entries[0]!.publishedAt).toBeNull();
+  });
 
-	test("null description when missing", () => {
-		const xml = `<rss version="2.0"><channel><title>T</title>
+  test("null description when missing", () => {
+    const xml = `<rss version="2.0"><channel><title>T</title>
       <item><title>I</title><link>https://x.com/1</link><guid>g1</guid></item>
     </channel></rss>`;
-		expect(parseFeed(xml).entries[0]!.description).toBeNull();
-	});
+    expect(parseFeed(xml).entries[0]!.description).toBeNull();
+  });
 });

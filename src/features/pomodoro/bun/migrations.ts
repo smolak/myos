@@ -1,10 +1,10 @@
 import type { Migration } from "@core/types";
 
 export const pomodoroMigrations: Migration[] = [
-	{
-		version: "001",
-		name: "create-pomodoro-sessions",
-		up: `
+  {
+    version: "001",
+    name: "create-pomodoro-sessions",
+    up: `
 			CREATE TABLE pomodoro_sessions (
 				id               TEXT    NOT NULL PRIMARY KEY,
 				type             TEXT    NOT NULL DEFAULT 'work',
@@ -17,5 +17,5 @@ export const pomodoroMigrations: Migration[] = [
 				updated_at       TEXT    NOT NULL
 			)
 		`,
-	},
+  },
 ];

@@ -1,10 +1,10 @@
 import type { Migration } from "@core/types";
 
 export const todoMigrations: Migration[] = [
-	{
-		version: "001",
-		name: "create-todos",
-		up: `
+  {
+    version: "001",
+    name: "create-todos",
+    up: `
 			CREATE TABLE todos (
 				id           TEXT    NOT NULL PRIMARY KEY,
 				title        TEXT    NOT NULL,
@@ -15,5 +15,5 @@ export const todoMigrations: Migration[] = [
 				updated_at   TEXT    NOT NULL
 			)
 		`,
-	},
+  },
 ];

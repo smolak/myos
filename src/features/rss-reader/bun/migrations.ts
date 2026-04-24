@@ -1,10 +1,10 @@
 import type { Migration } from "@core/types";
 
 export const rssReaderMigrations: Migration[] = [
-	{
-		version: "001",
-		name: "create-rss-feeds",
-		up: `
+  {
+    version: "001",
+    name: "create-rss-feeds",
+    up: `
 			CREATE TABLE rss_feeds (
 				id                     TEXT    NOT NULL PRIMARY KEY,
 				url                    TEXT    NOT NULL UNIQUE,
@@ -16,11 +16,11 @@ export const rssReaderMigrations: Migration[] = [
 				updated_at             TEXT    NOT NULL
 			)
 		`,
-	},
-	{
-		version: "002",
-		name: "create-rss-entries",
-		up: `
+  },
+  {
+    version: "002",
+    name: "create-rss-entries",
+    up: `
 			CREATE TABLE rss_entries (
 				id           TEXT    NOT NULL PRIMARY KEY,
 				feed_id      TEXT    NOT NULL REFERENCES rss_feeds(id) ON DELETE CASCADE,
@@ -34,5 +34,5 @@ export const rssReaderMigrations: Migration[] = [
 				UNIQUE(feed_id, guid)
 			)
 		`,
-	},
+  },
 ];

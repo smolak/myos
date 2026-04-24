@@ -6,23 +6,23 @@ import { defineConfig } from "vitest/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-	plugins: [react()],
-	test: {
-		environment: "jsdom",
-		setupFiles: ["src/shell/view/test-setup.ts"],
-		include: [
-			"src/shell/view/**/*.test.{ts,tsx}",
-			"src/features/**/view/**/*.test.{ts,tsx}",
-			"src/core/ui/**/*.test.{ts,tsx}",
-		],
-		globals: true,
-		passWithNoTests: true,
-	},
-	resolve: {
-		alias: {
-			"@core": path.resolve(__dirname, "src/core"),
-			"@shell": path.resolve(__dirname, "src/shell"),
-			"@features": path.resolve(__dirname, "src/features"),
-		},
-	},
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: ["src/shell/view/test-setup.ts"],
+    include: [
+      "src/shell/view/**/*.test.{ts,tsx}",
+      "src/features/**/view/**/*.test.{ts,tsx}",
+      "src/core/ui/**/*.test.{ts,tsx}",
+    ],
+    globals: true,
+    passWithNoTests: true,
+  },
+  resolve: {
+    alias: {
+      "@core": path.resolve(__dirname, "src/core"),
+      "@shell": path.resolve(__dirname, "src/shell"),
+      "@features": path.resolve(__dirname, "src/features"),
+    },
+  },
 });

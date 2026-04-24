@@ -3,7 +3,7 @@ import type { EventMap, ActionMap, QueryMap } from "@core/types";
 export type TimeFormat = "12h" | "24h";
 
 export interface ClockSettings {
-	readonly format: TimeFormat;
+  readonly format: TimeFormat;
 }
 
 export interface ClockEvents extends EventMap {}

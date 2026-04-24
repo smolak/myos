@@ -1,9 +1,9 @@
 import type { Migration } from "@core/types";
 
 export const migration002: Migration = {
-	version: "002",
-	name: "remaining-core-schema",
-	up: `
+  version: "002",
+  name: "remaining-core-schema",
+  up: `
     CREATE TABLE scheduled_tasks (
         id              TEXT PRIMARY KEY,
         feature_id      TEXT NOT NULL REFERENCES features(id),

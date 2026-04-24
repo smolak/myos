@@ -1,9 +1,9 @@
 import type { Migration } from "@core/types";
 
 export const migration001: Migration = {
-	version: "001",
-	name: "initial-schema",
-	up: `
+  version: "001",
+  name: "initial-schema",
+  up: `
     CREATE TABLE features (
         id           TEXT PRIMARY KEY,
         name         TEXT NOT NULL,
