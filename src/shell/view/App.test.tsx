@@ -1,5 +1,5 @@
 import type { DashboardPage } from "@core/types";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import App from "./App";
 
@@ -24,8 +24,10 @@ vi.mock("./DashboardGrid", () => ({
 }));
 
 describe("App", () => {
-  test("renders the default dashboard page when no layout is stored", () => {
-    render(<App />);
+  test("renders the default dashboard page when no layout is stored", async () => {
+    await act(async () => {
+      render(<App />);
+    });
     expect(screen.getByTestId("dashboard-grid")).toHaveAttribute("data-page-name", "Dashboard");
   });
 
@@ -34,7 +36,9 @@ describe("App", () => {
     const saved: DashboardPage[] = [{ id: "work", name: "Work", layout: [], order: 0 }];
     vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 4, pages: saved });
 
-    render(<App />);
-    expect(await screen.findByTestId("dashboard-grid")).toHaveAttribute("data-page-name", "Work");
+    await act(async () => {
+      render(<App />);
+    });
+    expect(screen.getByTestId("dashboard-grid")).toHaveAttribute("data-page-name", "Work");
   });
 });

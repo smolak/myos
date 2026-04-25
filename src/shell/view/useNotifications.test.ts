@@ -1,5 +1,5 @@
 import type { AppNotification } from "@shell/shared/notification-types";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const mockGetHistory = vi.fn();
@@ -36,54 +36,57 @@ const NOTIF_B: AppNotification = {
   read: true,
 };
 
+// Flush all pending promises without advancing the fake clock.
+const flushPromises = () =>
+  act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+
 describe("useNotifications", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     mockGetHistory.mockResolvedValue([NOTIF_A, NOTIF_B]);
     mockMarkRead.mockResolvedValue({ success: true });
     mockClear.mockResolvedValue({ success: true });
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
   test("fetches history on mount", async () => {
     const { result } = renderHook(() => useNotifications());
-    await waitFor(() => expect(result.current.notifications).toHaveLength(2));
+    await flushPromises();
+    expect(result.current.notifications).toHaveLength(2);
     expect(mockGetHistory).toHaveBeenCalledOnce();
   });
 
   test("counts unread notifications", async () => {
     const { result } = renderHook(() => useNotifications());
-    await waitFor(() => expect(result.current.notifications).toHaveLength(2));
+    await flushPromises();
     expect(result.current.unreadCount).toBe(1);
   });
 
   test("polls for new notifications every 5 seconds", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      renderHook(() => useNotifications());
-      await waitFor(() => expect(mockGetHistory).toHaveBeenCalledTimes(1));
+    renderHook(() => useNotifications());
+    await flushPromises();
+    expect(mockGetHistory).toHaveBeenCalledTimes(1);
 
-      await act(async () => {
-        vi.advanceTimersByTime(5000);
-        await Promise.resolve();
-      });
-      await waitFor(() => expect(mockGetHistory).toHaveBeenCalledTimes(2));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(mockGetHistory).toHaveBeenCalledTimes(2);
 
-      await act(async () => {
-        vi.advanceTimersByTime(5000);
-        await Promise.resolve();
-      });
-      await waitFor(() => expect(mockGetHistory).toHaveBeenCalledTimes(3));
-    } finally {
-      vi.useRealTimers();
-    }
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(mockGetHistory).toHaveBeenCalledTimes(3);
   });
 
   test("markRead updates notification in state and calls RPC", async () => {
     const { result } = renderHook(() => useNotifications());
-    await waitFor(() => expect(result.current.notifications).toHaveLength(2));
+    await flushPromises();
 
     await act(async () => {
       await result.current.markRead("a");
@@ -97,7 +100,7 @@ describe("useNotifications", () => {
 
   test("clearAll removes all notifications and calls RPC", async () => {
     const { result } = renderHook(() => useNotifications());
-    await waitFor(() => expect(result.current.notifications).toHaveLength(2));
+    await flushPromises();
 
     await act(async () => {
       await result.current.clearAll();
@@ -109,20 +112,15 @@ describe("useNotifications", () => {
   });
 
   test("stops polling after unmount", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      const { result, unmount } = renderHook(() => useNotifications());
-      await waitFor(() => expect(result.current.notifications).toHaveLength(2));
-      unmount();
+    const { result, unmount } = renderHook(() => useNotifications());
+    await flushPromises();
+    expect(result.current.notifications).toHaveLength(2);
+    unmount();
 
-      await act(async () => {
-        vi.advanceTimersByTime(15000);
-        await Promise.resolve();
-      });
-      // Only initial call — no polling after unmount
-      expect(mockGetHistory).toHaveBeenCalledTimes(1);
-    } finally {
-      vi.useRealTimers();
-    }
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15000);
+    });
+    // Only initial call — no polling after unmount
+    expect(mockGetHistory).toHaveBeenCalledTimes(1);
   });
 });

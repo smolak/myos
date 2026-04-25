@@ -1,2 +1,2 @@
 [test]
-pathIgnorePatterns = ["**/*.test.tsx"]
+pathIgnorePatterns = ["**/*.test.tsx", "src/shell/view/**", "src/features/*/view/**", "src/core/ui/**"]
