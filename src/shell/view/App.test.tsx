@@ -1,7 +1,16 @@
 import { render, screen } from "@testing-library/react";
-import { describe, test, expect, beforeEach, vi } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import type { DashboardPage } from "@core/types";
 import App from "./App";
+
+vi.mock("./electrobun", () => ({
+  rpc: {
+    request: {
+      "dashboard:get-layout": vi.fn().mockResolvedValue({ version: 0, pages: [] }),
+      "dashboard:save-layout": vi.fn().mockResolvedValue({ success: true }),
+    },
+  },
+}));
 
 vi.mock("./DashboardGrid", () => ({
   DashboardGrid: ({ page }: { page: DashboardPage }) => (
@@ -10,19 +19,17 @@ vi.mock("./DashboardGrid", () => ({
 }));
 
 describe("App", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  test("renders the default dashboard page when nothing is stored", () => {
+  test("renders the default dashboard page when no layout is stored", () => {
     render(<App />);
     expect(screen.getByTestId("dashboard-grid")).toHaveAttribute("data-page-name", "Dashboard");
   });
 
-  test("loads persisted pages from localStorage on mount", () => {
+  test("loads persisted pages from the RPC layer on mount", async () => {
+    const { rpc } = await import("./electrobun");
     const saved: DashboardPage[] = [{ id: "work", name: "Work", layout: [], order: 0 }];
-    localStorage.setItem("dashboard:pages", JSON.stringify(saved));
+    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 4, pages: saved });
+
     render(<App />);
-    expect(screen.getByTestId("dashboard-grid")).toHaveAttribute("data-page-name", "Work");
+    expect(await screen.findByTestId("dashboard-grid")).toHaveAttribute("data-page-name", "Work");
   });
 });
