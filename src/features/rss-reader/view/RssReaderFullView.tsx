@@ -1,3 +1,4 @@
+import { rpc } from "@shell/view/electrobun";
 import { useState } from "react";
 import type { StoredEntry, StoredFeed } from "./useRssReader";
 import { useRssReader } from "./useRssReader";
@@ -29,17 +30,18 @@ function EntryItem({
       {!entry.isRead && <span className="w-1.5 h-1.5 mt-1.5 shrink-0 rounded-full bg-blue-400" aria-hidden />}
       {entry.isRead && <span className="w-1.5 mt-1.5 shrink-0" aria-hidden />}
       <div className="flex-1 min-w-0">
-        <a
-          href={entry.link}
-          target="_blank"
-          rel="noreferrer"
-          onClick={() => onMarkRead(entry.id)}
-          className={`text-sm block hover:text-zinc-200 transition-colors leading-snug ${
+        <button
+          type="button"
+          onClick={() => {
+            if (entry.link) void rpc.request["shell:open-url"]({ url: entry.link });
+            onMarkRead(entry.id);
+          }}
+          className={`text-sm block text-left hover:text-zinc-200 transition-colors leading-snug ${
             entry.isRead ? "text-zinc-600" : "text-zinc-200"
           }`}
         >
           {entry.title}
-        </a>
+        </button>
         {entry.publishedAt && (
           <span className="text-xs text-zinc-600 mt-0.5 block">{formatDate(entry.publishedAt)}</span>
         )}

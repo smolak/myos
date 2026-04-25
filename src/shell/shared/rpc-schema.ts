@@ -80,6 +80,9 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "journal:get-note-by-date": { params: { date: string }; response: JournalNote | null };
       "journal:get-timeline": { params: { date: string }; response: TimelineEvent[] };
 
+      // Shell
+      "shell:open-url": { params: { url: string }; response: { success: boolean } };
+
       // Notifications
       "notification:get-history": { params: Record<string, never>; response: AppNotification[] };
       "notification:mark-read": { params: { id: string }; response: { success: boolean } };

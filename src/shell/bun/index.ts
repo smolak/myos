@@ -297,6 +297,11 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return [...getTimelineEvents(coreDb, params.date)];
       },
 
+      // Shell
+      "shell:open-url": async ({ url }) => {
+        return { success: Utils.openExternal(url) };
+      },
+
       // Notifications
       "notification:get-history": async (_params) => {
         return settingsManager.get<AppNotification[]>(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, []);

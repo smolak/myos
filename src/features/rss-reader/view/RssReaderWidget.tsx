@@ -1,3 +1,4 @@
+import { rpc } from "@shell/view/electrobun";
 import type { StoredEntry } from "./useRssReader";
 import { useRssReader } from "./useRssReader";
 
@@ -15,18 +16,19 @@ function EntryRow({ entry, onRead }: { entry: StoredEntry; onRead: (id: string) 
   return (
     <li className="flex items-start gap-2 py-1.5 border-b border-zinc-800 last:border-0">
       <div className="flex-1 min-w-0">
-        <a
-          href={entry.link}
-          target="_blank"
-          rel="noreferrer"
-          onClick={() => onRead(entry.id)}
-          className={`text-xs truncate block hover:text-zinc-200 transition-colors ${
+        <button
+          type="button"
+          onClick={() => {
+            void rpc.request["shell:open-url"]({ url: entry.link });
+            onRead(entry.id);
+          }}
+          className={`text-xs truncate block text-left hover:text-zinc-200 transition-colors ${
             entry.isRead ? "text-zinc-600" : "text-zinc-300"
           }`}
           aria-label={entry.title}
         >
           {entry.title}
-        </a>
+        </button>
         {entry.publishedAt && <span className="text-xs text-zinc-600">{formatDate(entry.publishedAt)}</span>}
       </div>
       {!entry.isRead && <span className="w-1.5 h-1.5 mt-1.5 shrink-0 rounded-full bg-blue-400" aria-hidden />}
