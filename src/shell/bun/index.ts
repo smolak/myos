@@ -15,7 +15,8 @@ import { pomodoroFeature } from "../../features/pomodoro/bun/index";
 import { rssReaderFeature } from "../../features/rss-reader/bun/index";
 import { todoFeature } from "../../features/todo/bun/index";
 import { weatherFeature } from "../../features/weather/bun/index";
-import type { AppRPCSchema } from "../shared/rpc-schema";
+import type { AppNotification } from "../shared/notification-types";
+import type { AppRPCSchema, ThemeMode } from "../shared/rpc-schema";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
@@ -24,6 +25,14 @@ const LAYOUT_VERSION = 4;
 const POMODORO_SETTINGS_SCOPE = "pomodoro";
 const DEFAULT_WORK_MINUTES = 25;
 const DEFAULT_BREAK_MINUTES = 5;
+
+const THEME_SCOPE = "theme";
+const DEFAULT_THEME_MODE: ThemeMode = "dark";
+const DEFAULT_ACCENT_COLOR = "#6366f1";
+const MAX_NOTIFICATIONS = 50;
+
+const NOTIFICATIONS_SCOPE = "notifications";
+const NOTIFICATIONS_KEY = "history";
 
 // Bootstrap core services
 const dataDir = process.env.MYOS_DATA_DIR?.trim() || join(Utils.paths.userData, "data");
@@ -239,8 +248,72 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         await settingsManager.set(LAYOUT_SETTING_SCOPE, LAYOUT_SETTING_KEY, params);
         return { success: true };
       },
+
+      // Theme
+      "theme:get": async (_params) => {
+        return {
+          mode: settingsManager.get<ThemeMode>(THEME_SCOPE, "mode", DEFAULT_THEME_MODE),
+          accentColor: settingsManager.get<string>(THEME_SCOPE, "accentColor", DEFAULT_ACCENT_COLOR),
+        };
+      },
+      "theme:update": async (params) => {
+        if (params.mode !== undefined) {
+          await settingsManager.set(THEME_SCOPE, "mode", params.mode);
+        }
+        if (params.accentColor !== undefined) {
+          await settingsManager.set(THEME_SCOPE, "accentColor", params.accentColor);
+        }
+        return { success: true };
+      },
+
+      // Notifications
+      "notification:get-history": async (_params) => {
+        return settingsManager.get<AppNotification[]>(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, []);
+      },
+      "notification:mark-read": async ({ id }) => {
+        const history = settingsManager.get<AppNotification[]>(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, []);
+        const updated = history.map((n) => (n.id === id ? { ...n, read: true } : n));
+        await settingsManager.set(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, updated);
+        return { success: true };
+      },
+      "notification:clear": async (_params) => {
+        await settingsManager.set(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, []);
+        return { success: true };
+      },
     },
   },
+});
+
+async function addNotification(notif: AppNotification) {
+  const history = settingsManager.get<AppNotification[]>(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, []);
+  const updated = [notif, ...history].slice(0, MAX_NOTIFICATIONS);
+  await settingsManager.set(NOTIFICATIONS_SCOPE, NOTIFICATIONS_KEY, updated);
+}
+
+void startupPromise.then(() => {
+  eventBus.subscribe("pomodoro:session-ended", async (payload) => {
+    const p = payload as { type?: string };
+    await addNotification({
+      id: crypto.randomUUID(),
+      title: "Pomodoro session ended",
+      body: p.type === "work" ? "Time for a break!" : "Back to work!",
+      featureId: "pomodoro",
+      timestamp: Date.now(),
+      read: false,
+    });
+  });
+
+  eventBus.subscribe("todo:item-completed", async (payload) => {
+    const p = payload as { title?: string };
+    await addNotification({
+      id: crypto.randomUUID(),
+      title: "Todo completed",
+      body: p.title,
+      featureId: "todo",
+      timestamp: Date.now(),
+      read: false,
+    });
+  });
 });
 
 const APP_TITLE = "MyOS";

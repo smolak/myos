@@ -8,6 +8,11 @@ vi.mock("./electrobun", () => ({
     request: {
       "dashboard:get-layout": vi.fn().mockResolvedValue({ version: 0, pages: [] }),
       "dashboard:save-layout": vi.fn().mockResolvedValue({ success: true }),
+      "theme:get": vi.fn().mockResolvedValue({ mode: "dark", accentColor: "#6366f1" }),
+      "theme:update": vi.fn().mockResolvedValue({ success: true }),
+      "notification:get-history": vi.fn().mockResolvedValue([]),
+      "notification:mark-read": vi.fn().mockResolvedValue({ success: true }),
+      "notification:clear": vi.fn().mockResolvedValue({ success: true }),
     },
   },
 }));

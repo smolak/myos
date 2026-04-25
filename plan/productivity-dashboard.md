@@ -398,15 +398,15 @@ The Architectural Decisions section at the top of this document was correct. The
 
 ### Acceptance criteria
 
-- [ ] `Cmd+K` opens command palette
-- [ ] Palette searches registered commands across features
-- [ ] Selecting command executes associated action
-- [ ] Native notifications fire for important events
-- [ ] Bell icon shows notification history
-- [ ] Theme toggle switches light/dark/system
-- [ ] Accent color is configurable
-- [ ] Theme persists across restarts
-- [ ] Tests cover command registration, theme switching
+- [x] `Cmd+K` opens command palette
+- [x] Palette searches registered commands across features
+- [x] Selecting command executes associated action
+- [x] Native notifications fire for important events
+- [x] Bell icon shows notification history
+- [x] Theme toggle switches light/dark/system
+- [x] Accent color is configurable
+- [x] Theme persists across restarts
+- [x] Tests cover command registration, theme switching
 
 ---
 

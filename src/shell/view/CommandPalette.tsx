@@ -99,8 +99,9 @@ export function CommandPalette({ open, onClose, commands }: Props) {
                   tabIndex={-1}
                   aria-selected={i === activeIndex}
                   className={`px-4 py-2.5 cursor-pointer flex items-center gap-3 text-sm select-none ${
-                    i === activeIndex ? "bg-zinc-700 text-zinc-100" : "text-zinc-300 hover:bg-zinc-800"
+                    i === activeIndex ? "text-white" : "text-zinc-300 hover:bg-zinc-800"
                   }`}
+                  style={i === activeIndex ? { backgroundColor: "var(--accent-color)" } : undefined}
                   onClick={() => execute(cmd)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") execute(cmd);

@@ -1,1 +1,89 @@
 @import "tailwindcss";
+
+:root {
+  --accent-color: #6366f1;
+  --bg-app: #09090b;
+  --bg-header: #18181b;
+  --bg-surface: #27272a;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --border-color: #3f3f46;
+}
+
+html[data-effective-theme="light"] {
+  --bg-app: #f9fafb;
+  --bg-header: #ffffff;
+  --bg-surface: #f4f4f5;
+  --text-primary: #09090b;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+
+  color-scheme: light;
+}
+
+/* Remap zinc background utilities in light mode.
+   Tailwind v4 places utilities in @layer utilities, so rules outside
+   any layer have higher specificity and override them. */
+html[data-effective-theme="light"] .bg-zinc-950 {
+  background-color: #f9fafb;
+}
+html[data-effective-theme="light"] .bg-zinc-900 {
+  background-color: #ffffff;
+}
+html[data-effective-theme="light"] .bg-zinc-800 {
+  background-color: #f4f4f5;
+}
+html[data-effective-theme="light"] .bg-zinc-700 {
+  background-color: #e4e4e7;
+}
+
+/* Opacity-modified variants used in the header backdrop */
+html[data-effective-theme="light"] .bg-zinc-900\/80 {
+  background-color: rgb(255 255 255 / 0.9);
+}
+
+/* Text utilities */
+html[data-effective-theme="light"] .text-zinc-100 {
+  color: #18181b;
+}
+html[data-effective-theme="light"] .text-zinc-200 {
+  color: #27272a;
+}
+html[data-effective-theme="light"] .text-zinc-300 {
+  color: #3f3f46;
+}
+html[data-effective-theme="light"] .text-zinc-400 {
+  color: #52525b;
+}
+html[data-effective-theme="light"] .text-zinc-500 {
+  color: #71717a;
+}
+html[data-effective-theme="light"] .text-zinc-600 {
+  color: #a1a1aa;
+}
+
+/* Border utilities */
+html[data-effective-theme="light"] .border-zinc-800 {
+  border-color: #e4e4e7;
+}
+html[data-effective-theme="light"] .border-zinc-700 {
+  border-color: #d4d4d8;
+}
+
+/* Hover variants — specificity must beat Tailwind's generated :hover rules */
+html[data-effective-theme="light"] .hover\:bg-zinc-800:hover {
+  background-color: #f4f4f5;
+}
+html[data-effective-theme="light"] .hover\:border-zinc-500:hover {
+  border-color: #a1a1aa;
+}
+
+/* Active / selected state inside CommandPalette */
+html[data-effective-theme="light"] .bg-zinc-700 {
+  background-color: #e4e4e7;
+}
+
+/* Divide color used in notification list */
+html[data-effective-theme="light"] .divide-zinc-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e4e4e7;
+}

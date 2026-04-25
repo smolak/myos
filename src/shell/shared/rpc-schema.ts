@@ -5,6 +5,9 @@ import type { RssEntry, RssFeed } from "@features/rss-reader/shared/types";
 import type { TodoItem } from "@features/todo/shared/types";
 import type { WeatherData } from "@features/weather/shared/types";
 import type { ElectrobunRPCSchema } from "electrobun/bun";
+import type { AppNotification } from "./notification-types";
+
+export type ThemeMode = "dark" | "light" | "system";
 
 export interface AppRPCSchema extends ElectrobunRPCSchema {
   bun: {
@@ -63,6 +66,15 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       // Dashboard
       "dashboard:get-layout": { params: Record<string, never>; response: { version: number; pages: DashboardPage[] } };
       "dashboard:save-layout": { params: { version: number; pages: DashboardPage[] }; response: { success: boolean } };
+
+      // Theme
+      "theme:get": { params: Record<string, never>; response: { mode: ThemeMode; accentColor: string } };
+      "theme:update": { params: { mode?: ThemeMode; accentColor?: string }; response: { success: boolean } };
+
+      // Notifications
+      "notification:get-history": { params: Record<string, never>; response: AppNotification[] };
+      "notification:mark-read": { params: { id: string }; response: { success: boolean } };
+      "notification:clear": { params: Record<string, never>; response: { success: boolean } };
     };
     messages: Record<never, never>;
   };
