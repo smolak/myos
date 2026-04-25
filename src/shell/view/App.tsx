@@ -8,8 +8,11 @@ import { TodoFullView } from "@features/todo/view/TodoFullView";
 import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { WeatherWidget } from "@features/weather/view/WeatherWidget";
 import { useCallback, useEffect, useState } from "react";
+import { CommandPalette } from "./CommandPalette";
+import { commandRegistry } from "./command-registry";
 import { DashboardGrid } from "./DashboardGrid";
 import { rpc } from "./electrobun";
+import { registerHotkey } from "./hotkeys";
 
 const LAYOUT_VERSION = 4;
 
@@ -31,6 +34,7 @@ const DEFAULT_PAGES: DashboardPage[] = [
 function App() {
   const [pages, setPages] = useState<DashboardPage[]>(DEFAULT_PAGES);
   const [fullViewFeature, setFullViewFeature] = useState<string | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const currentPage = pages[0] as DashboardPage;
 
   useEffect(() => {
@@ -39,6 +43,49 @@ function App() {
         setPages(stored.pages);
       }
     });
+  }, []);
+
+  // Register global Cmd+K hotkey
+  useEffect(() => {
+    return registerHotkey("cmd+k", () => setPaletteOpen(true));
+  }, []);
+
+  // Register built-in navigation commands
+  useEffect(() => {
+    return commandRegistry.registerMany([
+      {
+        id: "nav:todo",
+        label: "Open Todo",
+        description: "View and manage todos",
+        group: "Navigation",
+        keywords: ["task", "tasks"],
+        action: () => setFullViewFeature("todo"),
+      },
+      {
+        id: "nav:pomodoro",
+        label: "Open Pomodoro",
+        description: "Focus timer",
+        group: "Navigation",
+        keywords: ["timer", "focus", "session"],
+        action: () => setFullViewFeature("pomodoro"),
+      },
+      {
+        id: "nav:rss",
+        label: "Open RSS Reader",
+        description: "Browse feed entries",
+        group: "Navigation",
+        keywords: ["feed", "articles", "news"],
+        action: () => setFullViewFeature("rss-reader"),
+      },
+      {
+        id: "nav:weather",
+        label: "Open Weather",
+        description: "Current conditions",
+        group: "Navigation",
+        keywords: ["forecast", "temperature"],
+        action: () => setFullViewFeature("weather"),
+      },
+    ]);
   }, []);
 
   const handleLayoutChange = useCallback(
@@ -77,12 +124,22 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-      <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur">
+      <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight">MyOS</h1>
+        <button
+          type="button"
+          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
+          onClick={() => setPaletteOpen(true)}
+          aria-label="Open command palette"
+        >
+          ⌘K
+        </button>
       </header>
       <main className="flex-1 overflow-auto p-4">
         <DashboardGrid page={currentPage} onLayoutChange={handleLayoutChange} renderWidget={renderWidget} />
       </main>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commandRegistry.getAll()} />
 
       {fullViewFeature === "todo" && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
