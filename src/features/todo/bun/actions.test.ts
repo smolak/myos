@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
+import { completeTodo, createTodo, deleteTodo, updateTodo } from "./actions";
 import { todoMigrations } from "./migrations";
-import { createTodo, updateTodo, completeTodo, deleteTodo } from "./actions";
 
 describe("Todo actions", () => {
   let db: Database;
@@ -67,7 +67,7 @@ describe("Todo actions", () => {
         .get(id);
       expect(row!.created_at >= before).toBe(true);
       expect(row!.created_at <= after).toBe(true);
-      expect(row!.updated_at).toBe(row!.created_at);
+      expect(row?.updated_at).toBe(row?.created_at);
     });
 
     test("two creates produce different ids", async () => {
@@ -139,7 +139,7 @@ describe("Todo actions", () => {
       const row = db
         .query<{ completed_at: string | null }, [string]>("SELECT completed_at FROM todos WHERE id = ?")
         .get(id);
-      expect(row!.completed_at).not.toBeNull();
+      expect(row?.completed_at).not.toBeNull();
       expect(row!.completed_at! >= before).toBe(true);
       expect(row!.completed_at! <= after).toBe(true);
     });

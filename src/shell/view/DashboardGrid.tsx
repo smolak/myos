@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
-import { GridLayout, useContainerWidth } from "react-grid-layout";
-import type { Layout as RGLLayout } from "react-grid-layout";
 import type { DashboardPage, LayoutItem, WidgetSize } from "@core/types";
+import type { ReactNode } from "react";
+import type { Layout as RGLLayout } from "react-grid-layout";
+import { GridLayout, useContainerWidth } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -36,9 +36,9 @@ export function DashboardGrid({ page, onLayoutChange, renderWidget }: Props) {
 
   function handleLayoutChange(newLayout: RGLLayout): void {
     if (!onLayoutChange) return;
-    const items: LayoutItem[] = newLayout.map((rglItem) => {
-      const original = page.layout.find((l) => l.i === rglItem.i)!;
-      return { ...original, x: rglItem.x, y: rglItem.y, w: rglItem.w, h: rglItem.h };
+    const items: LayoutItem[] = newLayout.flatMap((rglItem) => {
+      const original = page.layout.find((l) => l.i === rglItem.i);
+      return original ? [{ ...original, x: rglItem.x, y: rglItem.y, w: rglItem.w, h: rglItem.h }] : [];
     });
     onLayoutChange(items);
   }

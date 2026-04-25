@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import type { RssFeed, RssEntry, RssReaderQueries } from "../shared/types";
+import type { RssEntry, RssFeed, RssReaderQueries } from "../shared/types";
 
 interface FeedRow {
   readonly id: string;

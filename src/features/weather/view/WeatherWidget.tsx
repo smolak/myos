@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useWeather } from "./useWeather";
 import type { WeatherUnits } from "../shared/types";
+import { useWeather } from "./useWeather";
 
 interface Props {
   onOpenFullView?: () => void;
@@ -84,6 +84,7 @@ export function WeatherWidget({ onOpenFullView }: Props) {
         <div className="flex items-center gap-2">
           {!isLoading && (
             <button
+              type="button"
               onClick={() => void refresh()}
               className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
               aria-label="Refresh weather"
@@ -92,7 +93,11 @@ export function WeatherWidget({ onOpenFullView }: Props) {
             </button>
           )}
           {onOpenFullView && (
-            <button onClick={onOpenFullView} className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
+            <button
+              type="button"
+              onClick={onOpenFullView}
+              className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
               Open
             </button>
           )}
@@ -109,6 +114,7 @@ export function WeatherWidget({ onOpenFullView }: Props) {
         <div className="flex flex-1 flex-col items-center justify-center gap-1">
           <p className="text-xs text-red-400 text-center">{error}</p>
           <button
+            type="button"
             onClick={() => void refresh()}
             className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
           >

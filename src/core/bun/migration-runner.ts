@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
 import type { Migration } from "@core/types";
 
 const BOOTSTRAP_SQL = `

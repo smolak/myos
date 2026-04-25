@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { usePomodoro, formatTime } from "./usePomodoro";
 import type { PomodoroSession } from "../shared/types";
+import { formatTime, usePomodoro } from "./usePomodoro";
 
 interface Props {
   onClose?: () => void;
@@ -46,7 +46,12 @@ export function PomodoroFullView({ onClose }: Props) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
         <h2 className="text-lg font-semibold">Pomodoro</h2>
         {onClose && (
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 text-sm" aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-200 text-sm"
+            aria-label="Close"
+          >
             Close
           </button>
         )}
@@ -55,6 +60,7 @@ export function PomodoroFullView({ onClose }: Props) {
       <div className="flex border-b border-zinc-800 px-6">
         {(["timer", "history", "settings"] as const).map((tab) => (
           <button
+            type="button"
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`py-2 mr-4 text-sm border-b-2 transition-colors ${
@@ -91,12 +97,14 @@ export function PomodoroFullView({ onClose }: Props) {
               {isIdle && (
                 <>
                   <button
+                    type="button"
                     onClick={() => start("work")}
                     className="bg-zinc-700 hover:bg-zinc-600 px-6 py-2 rounded text-sm transition-colors"
                   >
                     Start Work
                   </button>
                   <button
+                    type="button"
                     onClick={() => start("break")}
                     className="bg-zinc-800 hover:bg-zinc-700 px-6 py-2 rounded text-sm transition-colors text-zinc-400"
                   >
@@ -107,6 +115,7 @@ export function PomodoroFullView({ onClose }: Props) {
               {isRunning && (
                 <>
                   <button
+                    type="button"
                     onClick={pause}
                     className="bg-zinc-700 hover:bg-zinc-600 px-6 py-2 rounded text-sm transition-colors"
                     aria-label="Pause session"
@@ -114,6 +123,7 @@ export function PomodoroFullView({ onClose }: Props) {
                     Pause
                   </button>
                   <button
+                    type="button"
                     onClick={complete}
                     className="bg-zinc-800 hover:bg-zinc-700 px-6 py-2 rounded text-sm transition-colors text-zinc-400"
                     aria-label="Complete session"
@@ -121,6 +131,7 @@ export function PomodoroFullView({ onClose }: Props) {
                     Done
                   </button>
                   <button
+                    type="button"
                     onClick={cancel}
                     className="bg-zinc-900 hover:bg-zinc-800 px-6 py-2 rounded text-sm transition-colors text-zinc-600"
                     aria-label="Cancel session"
@@ -132,6 +143,7 @@ export function PomodoroFullView({ onClose }: Props) {
               {isPaused && (
                 <>
                   <button
+                    type="button"
                     onClick={resume}
                     className="bg-zinc-700 hover:bg-zinc-600 px-6 py-2 rounded text-sm transition-colors"
                     aria-label="Resume session"
@@ -139,6 +151,7 @@ export function PomodoroFullView({ onClose }: Props) {
                     Resume
                   </button>
                   <button
+                    type="button"
                     onClick={cancel}
                     className="bg-zinc-900 hover:bg-zinc-800 px-6 py-2 rounded text-sm transition-colors text-zinc-600"
                     aria-label="Cancel session"
@@ -150,12 +163,14 @@ export function PomodoroFullView({ onClose }: Props) {
               {isDone && (
                 <>
                   <button
+                    type="button"
                     onClick={() => start("work")}
                     className="bg-zinc-700 hover:bg-zinc-600 px-6 py-2 rounded text-sm transition-colors"
                   >
                     New Work Session
                   </button>
                   <button
+                    type="button"
                     onClick={() => start("break")}
                     className="bg-zinc-800 hover:bg-zinc-700 px-6 py-2 rounded text-sm transition-colors text-zinc-400"
                   >
@@ -242,8 +257,8 @@ function SettingsTab({ workMinutes, breakMinutes, onUpdate }: SettingsTabProps) 
   function handleSave() {
     const w = parseInt(work, 10);
     const b = parseInt(brk, 10);
-    if (!isNaN(w) && w > 0) onUpdate({ workDurationMinutes: w });
-    if (!isNaN(b) && b > 0) onUpdate({ breakDurationMinutes: b });
+    if (!Number.isNaN(w) && w > 0) onUpdate({ workDurationMinutes: w });
+    if (!Number.isNaN(b) && b > 0) onUpdate({ breakDurationMinutes: b });
   }
 
   return (
@@ -278,6 +293,7 @@ function SettingsTab({ workMinutes, breakMinutes, onUpdate }: SettingsTabProps) 
         />
       </div>
       <button
+        type="button"
         onClick={handleSave}
         className="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded text-sm transition-colors"
       >

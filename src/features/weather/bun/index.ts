@@ -1,7 +1,7 @@
 import type { FeatureDefinition } from "@core/types";
-import type { WeatherEvents, WeatherActions, WeatherQueries } from "../shared/types";
-import { weatherMigrations } from "./migrations";
+import type { WeatherActions, WeatherEvents, WeatherQueries } from "../shared/types";
 import { fetchWeather } from "./actions";
+import { weatherMigrations } from "./migrations";
 import { getCurrentWeather } from "./queries";
 
 const FETCH_INTERVAL_MS = 30 * 60 * 1000;

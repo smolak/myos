@@ -1,9 +1,9 @@
-import { AsyncLocalStorage } from "node:async_hooks";
 import type { Database } from "bun:sqlite";
-import { nanoid } from "nanoid";
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { ScriptContext } from "@core/types";
-import type { EventBus } from "./event-bus";
+import { nanoid } from "nanoid";
 import type { ActionQueue } from "./action-queue";
+import type { EventBus } from "./event-bus";
 
 interface ScriptRow {
   id: string;
@@ -37,8 +37,7 @@ export class ScriptEngine {
     let scriptFn: (ctx: ScriptContext) => void;
     try {
       scriptFn = evalScript(script.code);
-    } catch (err) {
-      console.error(`[script-engine] Failed to compile script "${script.name}":`, err);
+    } catch (_err) {
       return;
     }
 
@@ -53,15 +52,14 @@ export class ScriptEngine {
       },
       queries: buildQueriesProxy(this.actionQueue),
       actions: this.buildActionsProxy(),
-      log: (msg: string) => console.log(`[script:${script.name}] ${msg}`),
+      log: (_msg: string) => {},
       store: this.buildStore(script.id),
       match: matchPatterns,
     };
 
     try {
       scriptFn(ctx);
-    } catch (err) {
-      console.error(`[script-engine] Script "${script.name}" threw during initialization:`, err);
+    } catch (_err) {
       return;
     }
 
@@ -72,7 +70,7 @@ export class ScriptEngine {
 
   private async runHandler(
     scriptId: string,
-    scriptName: string,
+    _scriptName: string,
     eventName: string,
     payload: unknown,
     handler: (payload: unknown) => Promise<void>,
@@ -93,8 +91,7 @@ export class ScriptEngine {
       this.coreDb
         .query("UPDATE script_executions SET status = 'completed', completed_at = ? WHERE id = ?")
         .run(new Date().toISOString(), executionId);
-    } catch (err) {
-      console.error(`[script-engine] Script "${scriptName}" handler failed for "${eventName}":`, err);
+    } catch (_err) {
       this.coreDb
         .query("UPDATE script_executions SET status = 'failed', completed_at = ? WHERE id = ?")
         .run(new Date().toISOString(), executionId);

@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { nanoid } from "nanoid";
-import { encrypt, decrypt } from "./crypto";
+import { decrypt, encrypt } from "./crypto";
 
 export interface ScopedCredentials {
   store(serviceName: string, credentialType: string, value: string): Promise<void>;

@@ -1,15 +1,15 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseManager } from "@core/bun/database-manager";
-import { SettingsManager } from "@core/bun/settings-manager";
-import { CredentialStore } from "@core/bun/credential-store";
-import { FeatureRegistry } from "@core/bun/feature-registry";
-import { EventBus } from "@core/bun/event-bus";
 import { ActionQueue } from "@core/bun/action-queue";
+import { CredentialStore } from "@core/bun/credential-store";
+import { DatabaseManager } from "@core/bun/database-manager";
+import { EventBus } from "@core/bun/event-bus";
+import { FeatureRegistry } from "@core/bun/feature-registry";
 import { Scheduler } from "@core/bun/scheduler";
 import { ScriptEngine } from "@core/bun/script-engine";
+import { SettingsManager } from "@core/bun/settings-manager";
 import { rssReaderFeature } from "./index";
 
 describe("rssReaderFeature definition", () => {
@@ -27,8 +27,8 @@ describe("rssReaderFeature definition", () => {
 
   test("has migrations for feeds and entries tables", () => {
     expect(rssReaderFeature.migrations).toHaveLength(2);
-    expect(rssReaderFeature.migrations[0]!.up).toContain("CREATE TABLE rss_feeds");
-    expect(rssReaderFeature.migrations[1]!.up).toContain("CREATE TABLE rss_entries");
+    expect(rssReaderFeature.migrations[0]?.up).toContain("CREATE TABLE rss_feeds");
+    expect(rssReaderFeature.migrations[1]?.up).toContain("CREATE TABLE rss_entries");
   });
 
   test("manifest declares all actions", () => {
@@ -58,8 +58,8 @@ describe("rssReaderFeature definition", () => {
   test("manifest declares feed-list widget with medium and wide sizes", () => {
     const widget = rssReaderFeature.manifest.widgets.find((w) => w.id === "feed-list");
     expect(widget).toBeDefined();
-    expect(widget!.sizes).toContain("medium");
-    expect(widget!.sizes).toContain("wide");
+    expect(widget?.sizes).toContain("medium");
+    expect(widget?.sizes).toContain("wide");
   });
 
   test("manifest declares network permission", () => {
@@ -70,7 +70,7 @@ describe("rssReaderFeature definition", () => {
   test("manifest declares scheduled fetch task", () => {
     const task = rssReaderFeature.manifest.scheduledTasks.find((t) => t.id === "rss-reader:fetch-feeds");
     expect(task).toBeDefined();
-    expect(task!.defaultSchedule.type).toBe("interval");
+    expect(task?.defaultSchedule.type).toBe("interval");
   });
 });
 

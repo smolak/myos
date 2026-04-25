@@ -1,10 +1,10 @@
-import type { ElectrobunRPCSchema } from "electrobun/bun";
-import type { TodoItem } from "@features/todo/shared/types";
-import type { RssFeed, RssEntry } from "@features/rss-reader/shared/types";
-import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
-import type { WeatherData } from "@features/weather/shared/types";
-import type { TimeFormat } from "@features/clock/shared/types";
 import type { DashboardPage } from "@core/types";
+import type { TimeFormat } from "@features/clock/shared/types";
+import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
+import type { RssEntry, RssFeed } from "@features/rss-reader/shared/types";
+import type { TodoItem } from "@features/todo/shared/types";
+import type { WeatherData } from "@features/weather/shared/types";
+import type { ElectrobunRPCSchema } from "electrobun/bun";
 
 export interface AppRPCSchema extends ElectrobunRPCSchema {
   bun: {

@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
+import { cancelSession, completeSession, pauseSession, resumeSession, startSession } from "./actions";
 import { pomodoroMigrations } from "./migrations";
-import { startSession, pauseSession, resumeSession, completeSession, cancelSession } from "./actions";
 
 describe("Pomodoro actions", () => {
   let db: Database;
@@ -181,7 +181,7 @@ describe("Pomodoro actions", () => {
       const row = db
         .query<{ ended_at: string | null }, [string]>("SELECT ended_at FROM pomodoro_sessions WHERE id = ?")
         .get(id);
-      expect(row!.ended_at).not.toBeNull();
+      expect(row?.ended_at).not.toBeNull();
       expect(row!.ended_at! >= before).toBe(true);
       expect(row!.ended_at! <= after).toBe(true);
     });
@@ -258,7 +258,7 @@ describe("Pomodoro actions", () => {
       const row = db
         .query<{ ended_at: string | null }, [string]>("SELECT ended_at FROM pomodoro_sessions WHERE id = ?")
         .get(id);
-      expect(row!.ended_at).not.toBeNull();
+      expect(row?.ended_at).not.toBeNull();
       expect(row!.ended_at! >= before).toBe(true);
       expect(row!.ended_at! <= after).toBe(true);
     });

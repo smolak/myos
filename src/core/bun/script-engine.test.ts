@@ -1,7 +1,7 @@
-import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
-import { EventBus } from "./event-bus";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { ActionQueue } from "./action-queue";
+import { EventBus } from "./event-bus";
 import { ScriptEngine } from "./script-engine";
 
 function setupDb(): Database {

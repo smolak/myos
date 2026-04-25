@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
-import type { RssFeed, RssEntry } from "../shared/types";
 import { rpc } from "@shell/view/electrobun";
+import { useCallback, useEffect, useState } from "react";
+import type { RssEntry, RssFeed } from "../shared/types";
 
 // Type aliases preserved for component compatibility
 export type StoredFeed = RssFeed;

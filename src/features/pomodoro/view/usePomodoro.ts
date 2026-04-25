@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { SessionType, SessionStatus, PomodoroSession } from "../shared/types";
 import { rpc } from "@shell/view/electrobun";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PomodoroSession, SessionStatus, SessionType } from "../shared/types";
 
 export interface PomodoroSessionState {
   readonly id: string;

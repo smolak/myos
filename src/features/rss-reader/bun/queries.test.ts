@@ -1,12 +1,12 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
-import { rssReaderMigrations } from "./migrations";
 import { addFeed, fetchAllFeeds, markRead } from "./actions";
-import { getFeeds, getEntries, getUnreadCount } from "./queries";
+import { rssReaderMigrations } from "./migrations";
+import { getEntries, getFeeds, getUnreadCount } from "./queries";
 
 const RSS_XML_A = `<rss version="2.0"><channel>
   <title>Feed A</title>
@@ -125,7 +125,7 @@ describe("getEntries", () => {
 
   test("filters unread only", async () => {
     const all = await getEntries(db, {});
-    await markRead(db, { id: all[0]!.id });
+    await markRead(db, { id: all[0]?.id });
     const unread = await getEntries(db, { unreadOnly: true });
     expect(unread).toHaveLength(2);
     expect(unread.every((e) => !e.isRead)).toBe(true);
@@ -133,11 +133,11 @@ describe("getEntries", () => {
 
   test("filters by feedId and unreadOnly together", async () => {
     const aEntries = await getEntries(db, { feedId: feedAId });
-    await markRead(db, { id: aEntries[0]!.id });
+    await markRead(db, { id: aEntries[0]?.id });
     const unread = await getEntries(db, { feedId: feedAId, unreadOnly: true });
     expect(unread).toHaveLength(1);
-    expect(unread[0]!.feedId).toBe(feedAId);
-    expect(unread[0]!.isRead).toBe(false);
+    expect(unread[0]?.feedId).toBe(feedAId);
+    expect(unread[0]?.isRead).toBe(false);
   });
 
   test("respects limit parameter", async () => {
@@ -194,7 +194,7 @@ describe("getUnreadCount", () => {
       db,
       async () => new Response(RSS_XML_A, { headers: { "content-type": "application/rss+xml" } }),
     );
-    await markRead(db, { id: newEntries[0]!.id });
+    await markRead(db, { id: newEntries[0]?.id });
     const result = await getUnreadCount(db, {});
     expect(result.count).toBe(1);
   });

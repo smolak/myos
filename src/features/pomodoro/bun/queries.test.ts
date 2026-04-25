@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
+import { cancelSession, completeSession, pauseSession, startSession } from "./actions";
 import { pomodoroMigrations } from "./migrations";
-import { startSession, pauseSession, completeSession, cancelSession } from "./actions";
 import { getCurrentSession, getSessionHistory } from "./queries";
 
 describe("Pomodoro queries", () => {
@@ -35,10 +35,10 @@ describe("Pomodoro queries", () => {
       const { id } = await startSession(db, { type: "work", durationSeconds: 1500 });
       const session = await getCurrentSession(db, {} as Record<string, never>);
       expect(session).not.toBeNull();
-      expect(session!.id).toBe(id);
-      expect(session!.status).toBe("running");
-      expect(session!.type).toBe("work");
-      expect(session!.durationSeconds).toBe(1500);
+      expect(session?.id).toBe(id);
+      expect(session?.status).toBe("running");
+      expect(session?.type).toBe("work");
+      expect(session?.durationSeconds).toBe(1500);
     });
 
     test("returns the paused session", async () => {
@@ -46,9 +46,9 @@ describe("Pomodoro queries", () => {
       await pauseSession(db, { id, elapsedSeconds: 300 });
       const session = await getCurrentSession(db, {} as Record<string, never>);
       expect(session).not.toBeNull();
-      expect(session!.id).toBe(id);
-      expect(session!.status).toBe("paused");
-      expect(session!.elapsedSeconds).toBe(300);
+      expect(session?.id).toBe(id);
+      expect(session?.status).toBe("paused");
+      expect(session?.elapsedSeconds).toBe(300);
     });
 
     test("returns null after session is completed", async () => {
@@ -68,15 +68,15 @@ describe("Pomodoro queries", () => {
     test("maps all fields correctly", async () => {
       const { id } = await startSession(db, { type: "break", durationSeconds: 300 });
       const session = await getCurrentSession(db, {} as Record<string, never>);
-      expect(session!.id).toBe(id);
-      expect(session!.type).toBe("break");
-      expect(session!.durationSeconds).toBe(300);
-      expect(session!.elapsedSeconds).toBe(0);
-      expect(session!.status).toBe("running");
-      expect(session!.endedAt).toBeNull();
-      expect(typeof session!.startedAt).toBe("string");
-      expect(typeof session!.createdAt).toBe("string");
-      expect(typeof session!.updatedAt).toBe("string");
+      expect(session?.id).toBe(id);
+      expect(session?.type).toBe("break");
+      expect(session?.durationSeconds).toBe(300);
+      expect(session?.elapsedSeconds).toBe(0);
+      expect(session?.status).toBe("running");
+      expect(session?.endedAt).toBeNull();
+      expect(typeof session?.startedAt).toBe("string");
+      expect(typeof session?.createdAt).toBe("string");
+      expect(typeof session?.updatedAt).toBe("string");
     });
   });
 
@@ -95,8 +95,8 @@ describe("Pomodoro queries", () => {
 
       const history = await getSessionHistory(db, {});
       expect(history).toHaveLength(1);
-      expect(history[0]!.id).toBe(a);
-      expect(history[0]!.status).toBe("completed");
+      expect(history[0]?.id).toBe(a);
+      expect(history[0]?.status).toBe("completed");
     });
 
     test("orders by most recent first", async () => {
@@ -107,8 +107,8 @@ describe("Pomodoro queries", () => {
       await completeSession(db, { id: second });
 
       const history = await getSessionHistory(db, {});
-      expect(history[0]!.id).toBe(second);
-      expect(history[1]!.id).toBe(first);
+      expect(history[0]?.id).toBe(second);
+      expect(history[1]?.id).toBe(first);
     });
 
     test("respects limit", async () => {

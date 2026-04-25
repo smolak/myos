@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
-import { describe, test, expect, vi } from "vitest";
 import type { DashboardPage } from "@core/types";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, test, vi } from "vitest";
 import App from "./App";
 
 vi.mock("./electrobun", () => ({

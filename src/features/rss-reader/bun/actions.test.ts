@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
-import { rssReaderMigrations } from "./migrations";
 import { addFeed, deleteFeed, fetchAllFeeds, markRead, markUnread } from "./actions";
+import { rssReaderMigrations } from "./migrations";
 
 const RSS_XML = `<rss version="2.0"><channel>
   <title>Test Feed</title>
@@ -238,7 +238,7 @@ describe("markRead / markUnread", () => {
 
     const { id: feedId } = await addFeed(db, { url: "https://example.com/feed" });
     const { newEntries } = await fetchAllFeeds(db, makeFetchFn(RSS_XML));
-    entryId = newEntries[0]!.id;
+    entryId = newEntries[0]?.id;
     void feedId;
   });
 

@@ -1,5 +1,5 @@
 import type { FeatureDefinition } from "@core/types";
-import type { ClockEvents, ClockActions, ClockQueries } from "../shared/types";
+import type { ClockActions, ClockEvents, ClockQueries } from "../shared/types";
 import { clockMigrations } from "./migrations";
 
 export const clockFeature: FeatureDefinition<ClockEvents, ClockActions, ClockQueries> = {

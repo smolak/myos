@@ -1,4 +1,4 @@
-import { usePomodoro, formatTime } from "./usePomodoro";
+import { formatTime, usePomodoro } from "./usePomodoro";
 
 interface Props {
   onOpenFullView?: () => void;
@@ -28,18 +28,20 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-semibold text-zinc-200">Pomodoro</h2>
-        <button onClick={onOpenFullView} className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
+        <button
+          type="button"
+          onClick={onOpenFullView}
+          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+        >
           Open
         </button>
       </div>
 
       <div className="flex flex-1 items-center gap-4">
-        <div
+        <button
+          type="button"
           className="flex flex-col items-center cursor-pointer"
           onClick={onOpenFullView}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && onOpenFullView?.()}
           aria-label="Open Pomodoro"
         >
           <span className={`text-3xl font-mono font-bold tabular-nums ${isDone ? "text-green-400" : "text-zinc-100"}`}>
@@ -54,18 +56,20 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
           ) : (
             <span className="text-xs text-zinc-600 mt-0.5">Ready</span>
           )}
-        </div>
+        </button>
 
         <div className="flex flex-col gap-1.5 ml-auto">
           {isIdle && (
             <>
               <button
+                type="button"
                 onClick={() => start("work")}
                 className="text-xs bg-zinc-700 hover:bg-zinc-600 px-3 py-1.5 rounded transition-colors text-zinc-200"
               >
                 Work
               </button>
               <button
+                type="button"
                 onClick={() => start("break")}
                 className="text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded transition-colors text-zinc-400"
               >
@@ -76,6 +80,7 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
           {isRunning && (
             <>
               <button
+                type="button"
                 onClick={pause}
                 className="text-xs bg-zinc-700 hover:bg-zinc-600 px-3 py-1.5 rounded transition-colors text-zinc-200"
                 aria-label="Pause"
@@ -83,6 +88,7 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
                 Pause
               </button>
               <button
+                type="button"
                 onClick={cancel}
                 className="text-xs bg-zinc-900 hover:bg-zinc-800 px-3 py-1.5 rounded transition-colors text-zinc-500"
                 aria-label="Cancel"
@@ -94,6 +100,7 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
           {isPaused && (
             <>
               <button
+                type="button"
                 onClick={resume}
                 className="text-xs bg-zinc-700 hover:bg-zinc-600 px-3 py-1.5 rounded transition-colors text-zinc-200"
                 aria-label="Resume"
@@ -101,6 +108,7 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
                 Resume
               </button>
               <button
+                type="button"
                 onClick={cancel}
                 className="text-xs bg-zinc-900 hover:bg-zinc-800 px-3 py-1.5 rounded transition-colors text-zinc-500"
                 aria-label="Cancel"
@@ -111,6 +119,7 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
           )}
           {isDone && (
             <button
+              type="button"
               onClick={() => start("work")}
               className="text-xs bg-zinc-700 hover:bg-zinc-600 px-3 py-1.5 rounded transition-colors text-zinc-200"
             >

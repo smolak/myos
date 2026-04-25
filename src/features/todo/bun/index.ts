@@ -1,7 +1,7 @@
 import type { FeatureDefinition } from "@core/types";
-import type { TodoEvents, TodoActions, TodoQueries } from "../shared/types";
+import type { TodoActions, TodoEvents, TodoQueries } from "../shared/types";
+import { completeTodo, createTodo, deleteTodo, updateTodo } from "./actions";
 import { todoMigrations } from "./migrations";
-import { createTodo, updateTodo, completeTodo, deleteTodo } from "./actions";
 import { findTodos, getTodoById } from "./queries";
 
 export const todoFeature: FeatureDefinition<TodoEvents, TodoActions, TodoQueries> = {

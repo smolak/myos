@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { EventBus } from "./event-bus";
 
 describe("EventBus", () => {

@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import type { PomodoroSession, PomodoroQueries, SessionType, SessionStatus } from "../shared/types";
+import type { PomodoroQueries, PomodoroSession, SessionStatus, SessionType } from "../shared/types";
 
 interface SessionRow {
   readonly id: string;

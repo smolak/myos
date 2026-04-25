@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useRssReader } from "./useRssReader";
 import type { StoredEntry, StoredFeed } from "./useRssReader";
+import { useRssReader } from "./useRssReader";
 
 interface Props {
   onClose?: () => void;
@@ -45,6 +45,7 @@ function EntryItem({
         )}
       </div>
       <button
+        type="button"
         onClick={() => (entry.isRead ? onMarkUnread(entry.id) : onMarkRead(entry.id))}
         className="shrink-0 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
         aria-label={entry.isRead ? "Mark unread" : "Mark read"}
@@ -102,6 +103,7 @@ function FeedRow({ feed, onDelete }: { feed: StoredFeed; onDelete: (id: string) 
         )}
       </div>
       <button
+        type="button"
         onClick={() => onDelete(feed.id)}
         className="shrink-0 text-xs text-zinc-600 hover:text-red-400 transition-colors"
         aria-label={`Remove ${feed.title}`}
@@ -149,6 +151,7 @@ function ManageTab() {
             aria-label="Feed URL"
           />
           <button
+            type="button"
             onClick={() => void handleAdd()}
             disabled={!urlInput.trim() || isLoading}
             className="bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 px-4 py-2 rounded text-sm transition-colors text-zinc-200"
@@ -163,6 +166,7 @@ function ManageTab() {
         <h3 className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Configured Feeds ({feeds.length})</h3>
         {feeds.length > 0 && (
           <button
+            type="button"
             onClick={() => void refresh()}
             disabled={isLoading}
             className="text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50 transition-colors"
@@ -193,7 +197,12 @@ export function RssReaderFullView({ onClose }: Props) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
         <h2 className="text-lg font-semibold">RSS Reader</h2>
         {onClose && (
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 text-sm" aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-200 text-sm"
+            aria-label="Close"
+          >
             Close
           </button>
         )}
@@ -202,6 +211,7 @@ export function RssReaderFullView({ onClose }: Props) {
       <div className="flex border-b border-zinc-800 px-6">
         {(["feed", "manage"] as const).map((tab) => (
           <button
+            type="button"
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`py-2 mr-4 text-sm border-b-2 transition-colors capitalize ${

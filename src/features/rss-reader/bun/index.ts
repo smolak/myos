@@ -1,8 +1,8 @@
 import type { FeatureDefinition } from "@core/types";
-import type { RssReaderEvents, RssReaderActions, RssReaderQueries } from "../shared/types";
-import { rssReaderMigrations } from "./migrations";
+import type { RssReaderActions, RssReaderEvents, RssReaderQueries } from "../shared/types";
 import { addFeed, deleteFeed, fetchAllFeeds, markRead, markUnread } from "./actions";
-import { getFeeds, getEntries, getUnreadCount } from "./queries";
+import { rssReaderMigrations } from "./migrations";
+import { getEntries, getFeeds, getUnreadCount } from "./queries";
 
 const FETCH_INTERVAL_MS = 30 * 60 * 1000;
 

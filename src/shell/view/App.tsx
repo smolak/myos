@@ -1,14 +1,14 @@
-import { useState, useCallback, useEffect } from "react";
 import type { DashboardPage, LayoutItem } from "@core/types";
-import { DashboardGrid } from "./DashboardGrid";
-import { TodoWidget } from "@features/todo/view/TodoWidget";
-import { TodoFullView } from "@features/todo/view/TodoFullView";
-import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
-import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
-import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
-import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { ClockWidget } from "@features/clock/view/ClockWidget";
+import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
+import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
+import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
+import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
+import { TodoFullView } from "@features/todo/view/TodoFullView";
+import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { WeatherWidget } from "@features/weather/view/WeatherWidget";
+import { useCallback, useEffect, useState } from "react";
+import { DashboardGrid } from "./DashboardGrid";
 import { rpc } from "./electrobun";
 
 const LAYOUT_VERSION = 4;
@@ -31,7 +31,7 @@ const DEFAULT_PAGES: DashboardPage[] = [
 function App() {
   const [pages, setPages] = useState<DashboardPage[]>(DEFAULT_PAGES);
   const [fullViewFeature, setFullViewFeature] = useState<string | null>(null);
-  const currentPage = pages[0]!;
+  const currentPage = pages[0] as DashboardPage;
 
   useEffect(() => {
     void rpc.request["dashboard:get-layout"]({}).then((stored) => {

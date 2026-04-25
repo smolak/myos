@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { parseFeed } from "../shared/feed-parser";
 
 const RSS_FEED = `<?xml version="1.0" encoding="UTF-8"?>
@@ -122,20 +122,20 @@ describe("parseFeed — edge cases", () => {
     const xml = `<rss version="2.0"><channel><title>T</title>
       <item><title>I</title><link>https://x.com/1</link></item>
     </channel></rss>`;
-    expect(parseFeed(xml).entries[0]!.guid).toBe("https://x.com/1");
+    expect(parseFeed(xml).entries[0]?.guid).toBe("https://x.com/1");
   });
 
   test("null publishedAt when no date present", () => {
     const xml = `<rss version="2.0"><channel><title>T</title>
       <item><title>I</title><link>https://x.com/1</link><guid>g1</guid></item>
     </channel></rss>`;
-    expect(parseFeed(xml).entries[0]!.publishedAt).toBeNull();
+    expect(parseFeed(xml).entries[0]?.publishedAt).toBeNull();
   });
 
   test("null description when missing", () => {
     const xml = `<rss version="2.0"><channel><title>T</title>
       <item><title>I</title><link>https://x.com/1</link><guid>g1</guid></item>
     </channel></rss>`;
-    expect(parseFeed(xml).entries[0]!.description).toBeNull();
+    expect(parseFeed(xml).entries[0]?.description).toBeNull();
   });
 });

@@ -1,11 +1,4 @@
 import type { Database } from "bun:sqlite";
-import { runMigrations } from "./migration-runner";
-import type { DatabaseManager } from "./database-manager";
-import type { SettingsManager } from "./settings-manager";
-import type { CredentialStore } from "./credential-store";
-import type { EventBus } from "./event-bus";
-import type { ActionQueue } from "./action-queue";
-import type { Scheduler } from "./scheduler";
 import type {
   ActionMap,
   ActionMeta,
@@ -17,15 +10,20 @@ import type {
   ScheduleConfig,
   ScopedLogger,
 } from "@core/types";
+import type { ActionQueue } from "./action-queue";
+import type { CredentialStore } from "./credential-store";
+import type { DatabaseManager } from "./database-manager";
+import type { EventBus } from "./event-bus";
+import { runMigrations } from "./migration-runner";
+import type { Scheduler } from "./scheduler";
+import type { SettingsManager } from "./settings-manager";
 
 export class FeatureRegistry {
   private readonly coreDb: Database;
   private readonly dbManager: DatabaseManager;
   private readonly settingsManager: SettingsManager;
   private readonly credentialStore: CredentialStore;
-  private readonly eventBus: EventBus;
   private readonly actionQueue: ActionQueue;
-  private readonly scheduler: Scheduler;
 
   constructor(
     dbManager: DatabaseManager,
@@ -84,7 +82,7 @@ export class FeatureRegistry {
       .query<{ enabled: number }, [string]>("SELECT enabled FROM features WHERE id = ?")
       .get(feature.id);
 
-    if (!row || !row.enabled) {
+    if (!row?.enabled) {
       return;
     }
 
@@ -163,12 +161,12 @@ export class FeatureRegistry {
     };
   }
 
-  private buildLogger(featureId: string): ScopedLogger {
+  private buildLogger(_featureId: string): ScopedLogger {
     return {
-      info: (msg, ...args) => console.log(`[${featureId}] INFO: ${msg}`, ...args),
-      warn: (msg, ...args) => console.warn(`[${featureId}] WARN: ${msg}`, ...args),
-      error: (msg, ...args) => console.error(`[${featureId}] ERROR: ${msg}`, ...args),
-      debug: (msg, ...args) => console.debug(`[${featureId}] DEBUG: ${msg}`, ...args),
+      info: (_msg, ..._args) => {},
+      warn: (_msg, ..._args) => {},
+      error: (_msg, ..._args) => {},
+      debug: (_msg, ..._args) => {},
     };
   }
 }

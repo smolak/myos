@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
-import { Scheduler, nextCronDate } from "./scheduler";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { nextCronDate, Scheduler } from "./scheduler";
 
 function setupDb(): Database {
   const db = new Database(":memory:");
@@ -171,7 +171,7 @@ describe("Scheduler", () => {
       });
 
       const row = db.query<{ next_run_at: string }, []>("SELECT next_run_at FROM scheduled_tasks").get();
-      const nextRun = new Date(row!.next_run_at).getTime();
+      const nextRun = new Date(row?.next_run_at).getTime();
       expect(nextRun).toBeGreaterThanOrEqual(before + 60_000);
     });
 
@@ -186,7 +186,7 @@ describe("Scheduler", () => {
       });
 
       const row = db.query<{ next_run_at: string }, []>("SELECT next_run_at FROM scheduled_tasks").get();
-      const nextRun = new Date(row!.next_run_at).getTime();
+      const nextRun = new Date(row?.next_run_at).getTime();
       const now = Date.now();
       expect(nextRun).toBeGreaterThan(now);
       expect(nextRun).toBeLessThanOrEqual(now + 60_000 + 1000);
@@ -354,7 +354,7 @@ describe("Scheduler", () => {
       const before = Date.now();
       await scheduler.processNow();
 
-      const nextRun = new Date(getTask(db)!.next_run_at).getTime();
+      const nextRun = new Date(getTask(db)?.next_run_at).getTime();
       expect(nextRun).toBeGreaterThanOrEqual(before + intervalMs);
     });
 
@@ -364,7 +364,7 @@ describe("Scheduler", () => {
 
       await scheduler.processNow();
 
-      const nextRun = new Date(getTask(db)!.next_run_at).getTime();
+      const nextRun = new Date(getTask(db)?.next_run_at).getTime();
       expect(nextRun).toBeGreaterThan(Date.now());
       expect(nextRun).toBeLessThanOrEqual(Date.now() + 60_000 + 1000);
     });
@@ -414,7 +414,7 @@ describe("Scheduler", () => {
       const before = Date.now();
       await schedulerWithBackoff.processNow();
 
-      const nextRun = new Date(getTask(db)!.next_run_at).getTime();
+      const nextRun = new Date(getTask(db)?.next_run_at).getTime();
       // backoff = 1000 * 2^(1-1) = 1000ms
       expect(nextRun).toBeGreaterThanOrEqual(before + 1000 - 50);
       schedulerWithBackoff.stop();
@@ -470,7 +470,7 @@ describe("Scheduler", () => {
       const before = Date.now();
       await scheduler.processNow();
 
-      const nextRun = new Date(getTask(db)!.next_run_at).getTime();
+      const nextRun = new Date(getTask(db)?.next_run_at).getTime();
       expect(nextRun).toBeGreaterThanOrEqual(before + intervalMs);
       expect(nextRun).toBeLessThan(before + intervalMs + 2000);
     });
@@ -482,7 +482,7 @@ describe("Scheduler", () => {
       const before = Date.now();
       await scheduler.processNow();
 
-      const nextRun = new Date(getTask(db)!.next_run_at).getTime();
+      const nextRun = new Date(getTask(db)?.next_run_at).getTime();
       expect(nextRun).toBeGreaterThanOrEqual(before + 5000);
     });
   });
@@ -511,7 +511,7 @@ describe("Scheduler", () => {
 
       await scheduler.processNow();
 
-      const nextRun = new Date(getTask(db)!.next_run_at).getTime();
+      const nextRun = new Date(getTask(db)?.next_run_at).getTime();
       expect(nextRun).toBeGreaterThan(Date.now());
     });
   });

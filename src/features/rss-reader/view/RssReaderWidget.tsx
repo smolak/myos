@@ -1,5 +1,5 @@
-import { useRssReader } from "./useRssReader";
 import type { StoredEntry } from "./useRssReader";
+import { useRssReader } from "./useRssReader";
 
 interface Props {
   onOpenFullView?: () => void;
@@ -49,7 +49,11 @@ export function RssReaderWidget({ onOpenFullView }: Props) {
             <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">{unreadCount}</span>
           )}
         </div>
-        <button onClick={onOpenFullView} className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
+        <button
+          type="button"
+          onClick={onOpenFullView}
+          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+        >
           Open
         </button>
       </div>
@@ -57,12 +61,10 @@ export function RssReaderWidget({ onOpenFullView }: Props) {
       {isLoading && <p className="text-xs text-zinc-500 mb-1">Fetching feeds…</p>}
 
       {isEmpty ? (
-        <div
+        <button
+          type="button"
           className="flex flex-1 items-center justify-center cursor-pointer"
           onClick={onOpenFullView}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && onOpenFullView?.()}
           aria-label="Open RSS Reader to add feeds"
         >
           <p className="text-xs text-zinc-600 text-center">
@@ -70,7 +72,7 @@ export function RssReaderWidget({ onOpenFullView }: Props) {
             <br />
             Click to add feeds.
           </p>
-        </div>
+        </button>
       ) : recentEntries.length === 0 ? (
         <p className="text-xs text-zinc-600 text-center flex-1 flex items-center justify-center">No entries yet</p>
       ) : (

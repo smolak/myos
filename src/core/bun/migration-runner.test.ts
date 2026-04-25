@@ -1,7 +1,7 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
-import { bootstrapMigrationsTable, runMigrations, getAppliedMigrations } from "./migration-runner";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import type { Migration } from "@core/types";
+import { bootstrapMigrationsTable, getAppliedMigrations, runMigrations } from "./migration-runner";
 
 describe("bootstrapMigrationsTable", () => {
   let db: Database;

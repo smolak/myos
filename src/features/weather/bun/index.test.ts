@@ -1,16 +1,16 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseManager } from "@core/bun/database-manager";
-import { SettingsManager } from "@core/bun/settings-manager";
-import { CredentialStore } from "@core/bun/credential-store";
-import { FeatureRegistry } from "@core/bun/feature-registry";
-import { EventBus } from "@core/bun/event-bus";
 import { ActionQueue } from "@core/bun/action-queue";
+import { CredentialStore } from "@core/bun/credential-store";
+import { DatabaseManager } from "@core/bun/database-manager";
+import { EventBus } from "@core/bun/event-bus";
+import { FeatureRegistry } from "@core/bun/feature-registry";
 import { Scheduler } from "@core/bun/scheduler";
+import { SettingsManager } from "@core/bun/settings-manager";
+import { fetchWeather, overrideFetch } from "./actions";
 import { weatherFeature } from "./index";
-import { overrideFetch, fetchWeather } from "./actions";
 
 const MOCK_RESPONSE = JSON.stringify({
   name: "London",
@@ -33,8 +33,8 @@ describe("weatherFeature definition", () => {
 
   test("has the weather_cache migration at version 001", () => {
     expect(weatherFeature.migrations).toHaveLength(1);
-    expect(weatherFeature.migrations[0]!.version).toBe("001");
-    expect(weatherFeature.migrations[0]!.up).toContain("CREATE TABLE weather_cache");
+    expect(weatherFeature.migrations[0]?.version).toBe("001");
+    expect(weatherFeature.migrations[0]?.up).toContain("CREATE TABLE weather_cache");
   });
 
   test("manifest declares fetch action", () => {
@@ -52,8 +52,8 @@ describe("weatherFeature definition", () => {
   test("manifest declares conditions widget with small and medium sizes", () => {
     const widget = weatherFeature.manifest.widgets.find((w) => w.id === "conditions");
     expect(widget).toBeDefined();
-    expect(widget!.sizes).toContain("small");
-    expect(widget!.sizes).toContain("medium");
+    expect(widget?.sizes).toContain("small");
+    expect(widget?.sizes).toContain("medium");
   });
 
   test("manifest declares network permission", () => {
@@ -125,7 +125,7 @@ describe("weatherFeature lifecycle via FeatureRegistry", () => {
       tempCelsius: number;
     } | null;
     expect(data).not.toBeNull();
-    expect(data!.location).toBe("London");
-    expect(data!.tempCelsius).toBe(15.2);
+    expect(data?.location).toBe("London");
+    expect(data?.tempCelsius).toBe(15.2);
   });
 });

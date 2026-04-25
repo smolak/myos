@@ -1,16 +1,16 @@
-import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
+import type { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Database } from "bun:sqlite";
 import type { FeatureContext, FeatureDefinition, FeatureLifecycleContext } from "@core/types";
-import { DatabaseManager } from "./database-manager";
-import { SettingsManager } from "./settings-manager";
-import { CredentialStore } from "./credential-store";
-import { FeatureRegistry } from "./feature-registry";
-import { EventBus } from "./event-bus";
 import { ActionQueue } from "./action-queue";
+import { CredentialStore } from "./credential-store";
+import { DatabaseManager } from "./database-manager";
+import { EventBus } from "./event-bus";
+import { FeatureRegistry } from "./feature-registry";
 import { Scheduler } from "./scheduler";
+import { SettingsManager } from "./settings-manager";
 
 const EMPTY_MANIFEST = {
   events: {},
@@ -99,8 +99,8 @@ describe("FeatureRegistry", () => {
       });
       await registry.startup([feature]);
       expect(capturedCtx).toBeDefined();
-      expect(capturedCtx!.db).toBeDefined();
-      expect(typeof capturedCtx!.log.info).toBe("function");
+      expect(capturedCtx?.db).toBeDefined();
+      expect(typeof capturedCtx?.log.info).toBe("function");
     });
 
     test("feature migrations are run on first registration", async () => {
@@ -179,14 +179,14 @@ describe("FeatureRegistry", () => {
       });
       await registry.startup([feature]);
       expect(capturedCtx).toBeDefined();
-      expect(capturedCtx!.db).toBeDefined();
-      expect(typeof capturedCtx!.events.emit).toBe("function");
-      expect(typeof capturedCtx!.actions.handle).toBe("function");
-      expect(typeof capturedCtx!.queries.handle).toBe("function");
-      expect(typeof capturedCtx!.scheduler.register).toBe("function");
-      expect(typeof capturedCtx!.settings.get).toBe("function");
-      expect(typeof capturedCtx!.settings.set).toBe("function");
-      expect(typeof capturedCtx!.log.info).toBe("function");
+      expect(capturedCtx?.db).toBeDefined();
+      expect(typeof capturedCtx?.events.emit).toBe("function");
+      expect(typeof capturedCtx?.actions.handle).toBe("function");
+      expect(typeof capturedCtx?.queries.handle).toBe("function");
+      expect(typeof capturedCtx?.scheduler.register).toBe("function");
+      expect(typeof capturedCtx?.settings.get).toBe("function");
+      expect(typeof capturedCtx?.settings.set).toBe("function");
+      expect(typeof capturedCtx?.log.info).toBe("function");
     });
 
     test("context db is the feature's own database", async () => {
@@ -302,7 +302,7 @@ describe("FeatureRegistry", () => {
       });
       await registry.startup([provider, consumer]);
 
-      const result = await querierCtx!.query("provider-feature", "greet", { name: "world" });
+      const result = await querierCtx?.query("provider-feature", "greet", { name: "world" });
       expect(result).toBe("hello world");
     });
   });

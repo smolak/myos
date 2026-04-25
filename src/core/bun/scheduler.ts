@@ -66,9 +66,9 @@ export class Scheduler {
   start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
-    this.processNow().catch((err) => console.error("[scheduler] Poll error:", err));
+    this.processNow().catch((_err) => {});
     this.pollTimer = setInterval(() => {
-      this.processNow().catch((err) => console.error("[scheduler] Poll error:", err));
+      this.processNow().catch((_err) => {});
     }, this.pollIntervalMs);
   }
 
@@ -124,7 +124,7 @@ export class Scheduler {
           )
           .run(error.message, newRetryCount, task.id);
       } else {
-        const backoffMs = this.baseBackoffMs * Math.pow(2, newRetryCount - 1);
+        const backoffMs = this.baseBackoffMs * 2 ** (newRetryCount - 1);
         const retryAt = new Date(Date.now() + backoffMs).toISOString();
         this.db
           .query(

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useTodos } from "./useTodos";
 import type { TodoItem } from "../shared/types";
+import { useTodos } from "./useTodos";
 
 interface Props {
   onClose?: () => void;
@@ -45,7 +45,12 @@ export function TodoFullView({ onClose }: Props) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
         <h2 className="text-lg font-semibold">Todos</h2>
         {onClose && (
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 text-sm" aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-200 text-sm"
+            aria-label="Close"
+          >
             Close
           </button>
         )}
@@ -72,6 +77,7 @@ export function TodoFullView({ onClose }: Props) {
               {activeTodos.map((todo) => (
                 <li key={todo.id} className="flex items-center gap-3 group">
                   <button
+                    type="button"
                     onClick={() => complete(todo.id)}
                     className="w-4 h-4 rounded-full border border-zinc-500 shrink-0 hover:border-zinc-300 hover:bg-zinc-700 transition-colors"
                     aria-label={`Complete: ${todo.title}`}
@@ -84,14 +90,15 @@ export function TodoFullView({ onClose }: Props) {
                       onBlur={commitEdit}
                       onKeyDown={handleEditKeyDown}
                       className="flex-1 bg-zinc-800 rounded px-2 py-1 text-sm outline-none border border-zinc-600"
-                      autoFocus
                     />
                   ) : (
+                    // biome-ignore lint/a11y/noStaticElementInteractions: double-click to edit is intentional
                     <span onDoubleClick={() => startEdit(todo)} className="flex-1 text-sm text-zinc-200 cursor-default">
                       {todo.title}
                     </span>
                   )}
                   <button
+                    type="button"
                     onClick={() => remove(todo.id)}
                     className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 text-xs transition-all"
                     aria-label={`Delete: ${todo.title}`}
@@ -115,6 +122,7 @@ export function TodoFullView({ onClose }: Props) {
                   </div>
                   <span className="flex-1 text-sm text-zinc-500 line-through">{todo.title}</span>
                   <button
+                    type="button"
                     onClick={() => remove(todo.id)}
                     className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 text-xs transition-all"
                     aria-label={`Delete: ${todo.title}`}

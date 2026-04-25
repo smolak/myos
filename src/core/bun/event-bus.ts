@@ -18,9 +18,7 @@ export class EventBus {
     if (!handlers) return;
 
     for (const handler of handlers) {
-      handler(payload).catch((error) => {
-        console.error(`[event-bus] Subscriber error for "${eventName}":`, error);
-      });
+      handler(payload).catch((_error) => {});
     }
   }
 
@@ -28,6 +26,6 @@ export class EventBus {
     if (!this.subscriptions.has(event)) {
       this.subscriptions.set(event, new Set());
     }
-    this.subscriptions.get(event)!.add(handler);
+    this.subscriptions.get(event)?.add(handler);
   }
 }

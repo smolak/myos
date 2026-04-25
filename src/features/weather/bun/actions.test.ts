@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
-import { weatherMigrations } from "./migrations";
 import { fetchWeather, overrideFetch } from "./actions";
+import { weatherMigrations } from "./migrations";
 
 const MOCK_RESPONSE = JSON.stringify({
   name: "London",
@@ -59,7 +59,7 @@ describe("fetchWeather", () => {
     );
     await fetchWeather(db, "fake-key", "Paris");
     const count = db.query<{ c: number }, []>("SELECT COUNT(*) as c FROM weather_cache").get();
-    expect(count!.c).toBe(1);
+    expect(count?.c).toBe(1);
     const row = db.query<{ location: string }, []>("SELECT location FROM weather_cache WHERE id = 'current'").get();
     expect(row?.location).toBe("Paris");
   });

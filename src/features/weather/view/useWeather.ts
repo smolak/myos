@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
-import type { WeatherData, WeatherSettings } from "../shared/types";
 import { rpc } from "@shell/view/electrobun";
+import { useCallback, useEffect, useState } from "react";
+import type { WeatherData, WeatherSettings } from "../shared/types";
 
 const DEFAULT_SETTINGS: WeatherSettings = {
   apiKey: "",

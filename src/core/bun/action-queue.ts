@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
-import { nanoid } from "nanoid";
 import type { ActionMeta } from "@core/types";
+import { nanoid } from "nanoid";
 
 type ActionHandler = (params: unknown, meta: ActionMeta) => Promise<unknown>;
 type QueryHandler = (params: unknown) => Promise<unknown>;
@@ -221,7 +221,7 @@ export class ActionQueue {
 
         // Set pending for crash resilience during backoff sleep
         this.db.query("UPDATE execution_actions SET status = 'pending' WHERE id = ?").run(action.id);
-        await Bun.sleep(this.baseBackoffMs * Math.pow(2, currentRetryCount - 1));
+        await Bun.sleep(this.baseBackoffMs * 2 ** (currentRetryCount - 1));
         this.db.query("UPDATE execution_actions SET status = 'running' WHERE id = ?").run(action.id);
       }
     }
@@ -245,8 +245,8 @@ function resolveRefs(value: unknown, outputCache: Map<string, unknown>): unknown
   if (Array.isArray(value)) return value.map((item) => resolveRefs(item, outputCache));
 
   const obj = value as Record<string, unknown>;
-  if ("$ref" in obj && typeof obj["$ref"] === "string" && Object.keys(obj).length === 1) {
-    const key = obj["$ref"];
+  if ("$ref" in obj && typeof obj.$ref === "string" && Object.keys(obj).length === 1) {
+    const key = obj.$ref;
     return outputCache.has(key) ? outputCache.get(key) : obj;
   }
 

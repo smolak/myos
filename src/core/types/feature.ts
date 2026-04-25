@@ -1,4 +1,4 @@
-import type { EventMap, ActionMap, QueryMap } from "./common";
+import type { ActionMap, EventMap, QueryMap } from "./common";
 import type { FeatureContext, FeatureLifecycleContext } from "./context";
 
 export interface Migration {

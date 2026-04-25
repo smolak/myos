@@ -1,4 +1,4 @@
-import type { EventMap, ActionMap, QueryMap } from "@core/types";
+import type { ActionMap, EventMap, QueryMap } from "@core/types";
 
 export type WeatherUnits = "metric" | "imperial";
 

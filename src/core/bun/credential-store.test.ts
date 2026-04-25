@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseManager } from "./database-manager";
 import { CredentialStore } from "./credential-store";
+import { DatabaseManager } from "./database-manager";
 
 describe("CredentialStore", () => {
   let dbManager: DatabaseManager;
@@ -46,7 +46,7 @@ describe("CredentialStore", () => {
         .query<{ encrypted_value: string }, []>("SELECT encrypted_value FROM credentials")
         .get();
       expect(row).not.toBeNull();
-      expect(row!.encrypted_value).not.toBe("secret123");
+      expect(row?.encrypted_value).not.toBe("secret123");
     });
 
     test("overwrites existing credential on store", async () => {
@@ -55,7 +55,7 @@ describe("CredentialStore", () => {
       const val = await store.retrieve("weather", "openweathermap", "api-key");
       expect(val).toBe("new-key");
       const count = dbManager.getCoreDatabase().query<{ c: number }, []>("SELECT COUNT(*) as c FROM credentials").get();
-      expect(count!.c).toBe(1);
+      expect(count?.c).toBe(1);
     });
 
     test("different credential types are independent", async () => {

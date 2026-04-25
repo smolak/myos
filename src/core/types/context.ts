@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import type { EventMap, ActionMap, QueryMap } from "./common";
+import type { ActionMap, EventMap, QueryMap } from "./common";
 
 export interface ScheduleConfig {
   readonly type: "cron" | "interval";

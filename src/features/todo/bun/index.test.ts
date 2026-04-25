@@ -1,14 +1,14 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseManager } from "@core/bun/database-manager";
-import { SettingsManager } from "@core/bun/settings-manager";
-import { CredentialStore } from "@core/bun/credential-store";
-import { FeatureRegistry } from "@core/bun/feature-registry";
-import { EventBus } from "@core/bun/event-bus";
 import { ActionQueue } from "@core/bun/action-queue";
+import { CredentialStore } from "@core/bun/credential-store";
+import { DatabaseManager } from "@core/bun/database-manager";
+import { EventBus } from "@core/bun/event-bus";
+import { FeatureRegistry } from "@core/bun/feature-registry";
 import { Scheduler } from "@core/bun/scheduler";
+import { SettingsManager } from "@core/bun/settings-manager";
 import { todoFeature } from "./index";
 
 describe("todoFeature definition", () => {
@@ -26,8 +26,8 @@ describe("todoFeature definition", () => {
 
   test("has the todos migration at version 001", () => {
     expect(todoFeature.migrations).toHaveLength(1);
-    expect(todoFeature.migrations[0]!.version).toBe("001");
-    expect(todoFeature.migrations[0]!.up).toContain("CREATE TABLE todos");
+    expect(todoFeature.migrations[0]?.version).toBe("001");
+    expect(todoFeature.migrations[0]?.up).toContain("CREATE TABLE todos");
   });
 
   test("manifest declares all actions", () => {
@@ -55,7 +55,7 @@ describe("todoFeature definition", () => {
   test("manifest declares task-list widget in wide size", () => {
     const widget = todoFeature.manifest.widgets.find((w) => w.id === "task-list");
     expect(widget).toBeDefined();
-    expect(widget!.sizes).toContain("wide");
+    expect(widget?.sizes).toContain("wide");
   });
 });
 

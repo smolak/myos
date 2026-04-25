@@ -1,4 +1,4 @@
-import type { EventMap, ActionMap, QueryMap } from "@core/types";
+import type { ActionMap, EventMap, QueryMap } from "@core/types";
 
 export type SessionType = "work" | "break";
 export type SessionStatus = "running" | "paused" | "completed" | "cancelled";

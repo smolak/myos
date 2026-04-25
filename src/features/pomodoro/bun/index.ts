@@ -1,7 +1,7 @@
 import type { FeatureDefinition } from "@core/types";
-import type { PomodoroEvents, PomodoroActions, PomodoroQueries } from "../shared/types";
+import type { PomodoroActions, PomodoroEvents, PomodoroQueries } from "../shared/types";
+import { cancelSession, completeSession, pauseSession, resumeSession, startSession } from "./actions";
 import { pomodoroMigrations } from "./migrations";
-import { startSession, pauseSession, resumeSession, completeSession, cancelSession } from "./actions";
 import { getCurrentSession, getSessionHistory } from "./queries";
 
 export const pomodoroFeature: FeatureDefinition<PomodoroEvents, PomodoroActions, PomodoroQueries> = {

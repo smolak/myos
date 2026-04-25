@@ -1,14 +1,14 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseManager } from "@core/bun/database-manager";
-import { SettingsManager } from "@core/bun/settings-manager";
-import { CredentialStore } from "@core/bun/credential-store";
-import { FeatureRegistry } from "@core/bun/feature-registry";
-import { EventBus } from "@core/bun/event-bus";
 import { ActionQueue } from "@core/bun/action-queue";
+import { CredentialStore } from "@core/bun/credential-store";
+import { DatabaseManager } from "@core/bun/database-manager";
+import { EventBus } from "@core/bun/event-bus";
+import { FeatureRegistry } from "@core/bun/feature-registry";
 import { Scheduler } from "@core/bun/scheduler";
+import { SettingsManager } from "@core/bun/settings-manager";
 import { clockFeature } from "./index";
 
 describe("clockFeature definition", () => {
@@ -31,7 +31,7 @@ describe("clockFeature definition", () => {
   test("manifest declares display widget with small size", () => {
     const widget = clockFeature.manifest.widgets.find((w) => w.id === "display");
     expect(widget).toBeDefined();
-    expect(widget!.sizes).toContain("small");
+    expect(widget?.sizes).toContain("small");
   });
 
   test("manifest declares no actions", () => {

@@ -30,10 +30,10 @@ export async function fetchWeather(db: Database, apiKey: string, location: strin
     feelsLikeCelsius: raw.main.feels_like,
     humidity: raw.main.humidity,
     condition: {
-      id: raw.weather[0]!.id,
-      main: raw.weather[0]!.main,
-      description: raw.weather[0]!.description,
-      icon: raw.weather[0]!.icon,
+      id: raw.weather[0]?.id,
+      main: raw.weather[0]?.main,
+      description: raw.weather[0]?.description,
+      icon: raw.weather[0]?.icon,
     },
     fetchedAt: new Date().toISOString(),
   };

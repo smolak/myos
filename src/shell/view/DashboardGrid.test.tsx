@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
-import { describe, test, expect, vi } from "vitest";
 import type { DashboardPage, LayoutItem } from "@core/types";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, test, vi } from "vitest";
 import { DashboardGrid, WIDGET_SIZES } from "./DashboardGrid";
 
 vi.mock("react-grid-layout", () => ({

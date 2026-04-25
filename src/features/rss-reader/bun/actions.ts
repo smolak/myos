@@ -1,8 +1,8 @@
 import type { Database } from "bun:sqlite";
 import { nanoid } from "nanoid";
-import type { RssReaderActions } from "../shared/types";
 import type { ParsedEntry } from "../shared/feed-parser";
 import { parseFeed } from "../shared/feed-parser";
+import type { RssReaderActions } from "../shared/types";
 
 const DEFAULT_FETCH_INTERVAL_MINUTES = 30;
 

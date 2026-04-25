@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
+import { completeTodo, createTodo } from "./actions";
 import { todoMigrations } from "./migrations";
-import { createTodo, completeTodo } from "./actions";
 import { findTodos, getTodoById } from "./queries";
 
 describe("Todo queries", () => {
@@ -44,7 +44,7 @@ describe("Todo queries", () => {
       await completeTodo(db, { id });
       const result = await findTodos(db, { completed: false });
       expect(result).toHaveLength(1);
-      expect(result[0]!.completed).toBe(false);
+      expect(result[0]?.completed).toBe(false);
     });
 
     test("filters to completed todos with completed=true", async () => {
@@ -53,7 +53,7 @@ describe("Todo queries", () => {
       await completeTodo(db, { id });
       const result = await findTodos(db, { completed: true });
       expect(result).toHaveLength(1);
-      expect(result[0]!.completed).toBe(true);
+      expect(result[0]?.completed).toBe(true);
     });
 
     test("respects limit", async () => {
@@ -74,16 +74,16 @@ describe("Todo queries", () => {
         completed: false,
         completedAt: null,
       });
-      expect(typeof todo!.createdAt).toBe("string");
-      expect(typeof todo!.updatedAt).toBe("string");
+      expect(typeof todo?.createdAt).toBe("string");
+      expect(typeof todo?.updatedAt).toBe("string");
     });
 
     test("returns completed boolean true for completed todos", async () => {
       const { id } = await createTodo(db, { title: "Task" });
       await completeTodo(db, { id });
       const [todo] = await findTodos(db, { completed: true });
-      expect(todo!.completed).toBe(true);
-      expect(todo!.completedAt).not.toBeNull();
+      expect(todo?.completed).toBe(true);
+      expect(todo?.completedAt).not.toBeNull();
     });
   });
 
@@ -92,8 +92,8 @@ describe("Todo queries", () => {
       const { id } = await createTodo(db, { title: "Task" });
       const todo = await getTodoById(db, { id });
       expect(todo).not.toBeNull();
-      expect(todo!.id).toBe(id);
-      expect(todo!.title).toBe("Task");
+      expect(todo?.id).toBe(id);
+      expect(todo?.title).toBe("Task");
     });
 
     test("returns null for an unknown id", async () => {
@@ -105,7 +105,7 @@ describe("Todo queries", () => {
       const { id } = await createTodo(db, { title: "Task" });
       await completeTodo(db, { id });
       const todo = await getTodoById(db, { id });
-      expect(todo!.completed).toBe(true);
+      expect(todo?.completed).toBe(true);
     });
   });
 });

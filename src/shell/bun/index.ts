@@ -1,20 +1,21 @@
 // NOTE: imports in this file must use relative paths (../../core/..., ../../features/...).
 // The electrobun bundler does not resolve tsconfig path aliases (@core/*, @features/*, @shell/*).
-import { BrowserView, BrowserWindow, ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
-import type { AppRPCSchema } from "../shared/rpc-schema";
-import { DatabaseManager } from "../../core/bun/database-manager";
-import { SettingsManager } from "../../core/bun/settings-manager";
-import { CredentialStore } from "../../core/bun/credential-store";
-import { EventBus } from "../../core/bun/event-bus";
-import { ActionQueue } from "../../core/bun/action-queue";
-import { Scheduler } from "../../core/bun/scheduler";
-import { FeatureRegistry } from "../../core/bun/feature-registry";
-import { todoFeature } from "../../features/todo/bun/index";
-import { rssReaderFeature } from "../../features/rss-reader/bun/index";
-import { pomodoroFeature } from "../../features/pomodoro/bun/index";
-import { weatherFeature } from "../../features/weather/bun/index";
-import { clockFeature } from "../../features/clock/bun/index";
+
 import { join } from "node:path";
+import { BrowserView, BrowserWindow, type ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
+import { ActionQueue } from "../../core/bun/action-queue";
+import { CredentialStore } from "../../core/bun/credential-store";
+import { DatabaseManager } from "../../core/bun/database-manager";
+import { EventBus } from "../../core/bun/event-bus";
+import { FeatureRegistry } from "../../core/bun/feature-registry";
+import { Scheduler } from "../../core/bun/scheduler";
+import { SettingsManager } from "../../core/bun/settings-manager";
+import { clockFeature } from "../../features/clock/bun/index";
+import { pomodoroFeature } from "../../features/pomodoro/bun/index";
+import { rssReaderFeature } from "../../features/rss-reader/bun/index";
+import { todoFeature } from "../../features/todo/bun/index";
+import { weatherFeature } from "../../features/weather/bun/index";
+import type { AppRPCSchema } from "../shared/rpc-schema";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
@@ -89,6 +90,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       },
       "todo:find": async (params) => {
         await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
         return actionQueue.executeQuery("todo", "find", params) as Promise<any>;
       },
 
@@ -118,10 +120,12 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       },
       "rss:get-feeds": async (_params) => {
         await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
         return actionQueue.executeQuery("rss-reader", "get-feeds", {}) as Promise<any>;
       },
       "rss:get-entries": async (params) => {
         await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
         return actionQueue.executeQuery("rss-reader", "get-entries", params) as Promise<any>;
       },
 
@@ -148,6 +152,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       },
       "pomodoro:get-current": async (_params) => {
         await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
         return actionQueue.executeQuery("pomodoro", "get-current", {}) as Promise<any>;
       },
       "pomodoro:get-settings": async (_params) => {
@@ -183,6 +188,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       },
       "weather:get-current": async (_params) => {
         await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
         return actionQueue.executeQuery("weather", "get-current", {}) as Promise<any>;
       },
       "weather:get-settings": async (_params) => {
@@ -246,11 +252,8 @@ async function getDashboardUrl(): Promise<string> {
   if (channel === "dev") {
     try {
       await fetch(DEV_SERVER_URL, { method: "HEAD" });
-      console.log(`HMR enabled: Using Vite dev server at ${DEV_SERVER_URL}`);
       return DEV_SERVER_URL;
-    } catch {
-      console.log("Vite dev server not running. Run 'bun run dev:hmr' for HMR support.");
-    }
+    } catch {}
   }
   return "views://dashboard/index.html";
 }
@@ -341,5 +344,3 @@ tray.on("tray-clicked", (raw) => {
 });
 
 void mainWindow;
-
-console.log(`${APP_TITLE} started — tray app with dashboard shell`);

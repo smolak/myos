@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import type { ClockSettings, TimeFormat } from "../shared/types";
 import { rpc } from "@shell/view/electrobun";
+import { useCallback, useEffect, useState } from "react";
+import type { ClockSettings, TimeFormat } from "../shared/types";
 
 const DEFAULT_SETTINGS: ClockSettings = { format: "24h" };
 

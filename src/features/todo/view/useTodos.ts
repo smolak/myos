@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
-import type { TodoItem } from "../shared/types";
 import { rpc } from "@shell/view/electrobun";
+import { useCallback, useEffect, useState } from "react";
+import type { TodoItem } from "../shared/types";
 
 export interface UseTodosReturn {
   readonly todos: readonly TodoItem[];

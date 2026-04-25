@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { ActionQueue } from "./action-queue";
 
 function setupDb(): Database {
@@ -114,7 +114,7 @@ describe("ActionQueue", () => {
       ]);
 
       const row = db.query<{ params: string }, []>("SELECT params FROM execution_actions").get();
-      expect(JSON.parse(row!.params)).toEqual({ title: "Test", n: 42 });
+      expect(JSON.parse(row?.params)).toEqual({ title: "Test", n: 42 });
     });
 
     test("stores optional correlationId", () => {

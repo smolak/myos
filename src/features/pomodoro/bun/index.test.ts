@@ -1,15 +1,15 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseManager } from "@core/bun/database-manager";
-import { SettingsManager } from "@core/bun/settings-manager";
-import { CredentialStore } from "@core/bun/credential-store";
-import { FeatureRegistry } from "@core/bun/feature-registry";
-import { EventBus } from "@core/bun/event-bus";
 import { ActionQueue } from "@core/bun/action-queue";
+import { CredentialStore } from "@core/bun/credential-store";
+import { DatabaseManager } from "@core/bun/database-manager";
+import { EventBus } from "@core/bun/event-bus";
+import { FeatureRegistry } from "@core/bun/feature-registry";
 import { Scheduler } from "@core/bun/scheduler";
 import { ScriptEngine } from "@core/bun/script-engine";
+import { SettingsManager } from "@core/bun/settings-manager";
 import { pomodoroFeature } from "./index";
 
 describe("pomodoroFeature definition", () => {
@@ -27,8 +27,8 @@ describe("pomodoroFeature definition", () => {
 
   test("has the sessions migration at version 001", () => {
     expect(pomodoroFeature.migrations).toHaveLength(1);
-    expect(pomodoroFeature.migrations[0]!.version).toBe("001");
-    expect(pomodoroFeature.migrations[0]!.up).toContain("CREATE TABLE pomodoro_sessions");
+    expect(pomodoroFeature.migrations[0]?.version).toBe("001");
+    expect(pomodoroFeature.migrations[0]?.up).toContain("CREATE TABLE pomodoro_sessions");
   });
 
   test("manifest declares all actions", () => {
@@ -58,8 +58,8 @@ describe("pomodoroFeature definition", () => {
   test("manifest declares timer widget with small and medium sizes", () => {
     const widget = pomodoroFeature.manifest.widgets.find((w) => w.id === "timer");
     expect(widget).toBeDefined();
-    expect(widget!.sizes).toContain("small");
-    expect(widget!.sizes).toContain("medium");
+    expect(widget?.sizes).toContain("small");
+    expect(widget?.sizes).toContain("medium");
   });
 });
 

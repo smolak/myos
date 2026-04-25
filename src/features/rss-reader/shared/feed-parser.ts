@@ -25,11 +25,11 @@ function decodeEntities(s: string): string {
 function getText(xml: string, tag: string): string | null {
   const cdataRe = new RegExp(`<${tag}(?:\\s[^>]*)?>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${tag}>`, "i");
   const cdataM = cdataRe.exec(xml);
-  if (cdataM) return decodeEntities(cdataM[1]!.trim()) || null;
+  if (cdataM) return decodeEntities(cdataM[1]?.trim()) || null;
 
   const plainRe = new RegExp(`<${tag}(?:\\s[^>]*)?>([^<]*)<\\/${tag}>`, "i");
   const plainM = plainRe.exec(xml);
-  if (plainM) return decodeEntities(plainM[1]!.trim()) || null;
+  if (plainM) return decodeEntities(plainM[1]?.trim()) || null;
 
   return null;
 }
@@ -37,15 +37,16 @@ function getText(xml: string, tag: string): string | null {
 function getAttr(xml: string, tag: string, attr: string): string | null {
   const re = new RegExp(`<${tag}[^>]*\\s${attr}="([^"]*)"`, "i");
   const m = re.exec(xml);
-  return m ? m[1]! : null;
+  return m ? (m[1] ?? null) : null;
 }
 
 function splitBlocks(xml: string, tag: string): string[] {
   const blocks: string[] = [];
   const re = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "gi");
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(xml)) !== null) {
-    blocks.push(m[0]!);
+  let m = re.exec(xml);
+  while (m !== null) {
+    blocks.push(m[0]);
+    m = re.exec(xml);
   }
   return blocks;
 }
@@ -53,12 +54,12 @@ function splitBlocks(xml: string, tag: string): string[] {
 function toIso(dateStr: string | null): string | null {
   if (!dateStr) return null;
   const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? null : d.toISOString();
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 function parseRss(xml: string): ParsedFeed {
   const channelM = /<channel>([\s\S]*?)<\/channel>/i.exec(xml);
-  const channelXml = channelM ? channelM[1]! : xml;
+  const channelXml = channelM ? (channelM[1] ?? xml) : xml;
 
   const itemStart = channelXml.indexOf("<item");
   const channelHeader = itemStart > -1 ? channelXml.slice(0, itemStart) : channelXml;
