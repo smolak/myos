@@ -1,5 +1,6 @@
 import type { DashboardPage } from "@core/types";
 import type { TimeFormat } from "@features/clock/shared/types";
+import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
 import type { RssEntry, RssFeed } from "@features/rss-reader/shared/types";
 import type { TodoItem } from "@features/todo/shared/types";
@@ -70,6 +71,14 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       // Theme
       "theme:get": { params: Record<string, never>; response: { mode: ThemeMode; accentColor: string } };
       "theme:update": { params: { mode?: ThemeMode; accentColor?: string }; response: { success: boolean } };
+
+      // Daily Journal
+      "journal:add-note": { params: { date: string; content: string }; response: { id: string } };
+      "journal:update-note": { params: { id: string; content: string }; response: { success: boolean } };
+      "journal:delete-note": { params: { id: string }; response: { success: boolean } };
+      "journal:get-notes": { params: { limit?: number; search?: string }; response: JournalNote[] };
+      "journal:get-note-by-date": { params: { date: string }; response: JournalNote | null };
+      "journal:get-timeline": { params: { date: string }; response: TimelineEvent[] };
 
       // Notifications
       "notification:get-history": { params: Record<string, never>; response: AppNotification[] };

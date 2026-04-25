@@ -11,6 +11,8 @@ import { FeatureRegistry } from "../../core/bun/feature-registry";
 import { Scheduler } from "../../core/bun/scheduler";
 import { SettingsManager } from "../../core/bun/settings-manager";
 import { clockFeature } from "../../features/clock/bun/index";
+import { dailyJournalFeature } from "../../features/daily-journal/bun/index";
+import { getTimelineEvents } from "../../features/daily-journal/bun/queries";
 import { pomodoroFeature } from "../../features/pomodoro/bun/index";
 import { rssReaderFeature } from "../../features/rss-reader/bun/index";
 import { todoFeature } from "../../features/todo/bun/index";
@@ -59,6 +61,7 @@ const startupPromise = featureRegistry.startup([
   pomodoroFeature,
   weatherFeature,
   clockFeature,
+  dailyJournalFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -264,6 +267,34 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           await settingsManager.set(THEME_SCOPE, "accentColor", params.accentColor);
         }
         return { success: true };
+      },
+
+      // Daily Journal
+      "journal:add-note": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("daily-journal", "add-note", params) as Promise<{ id: string }>;
+      },
+      "journal:update-note": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("daily-journal", "update-note", params) as Promise<{ success: boolean }>;
+      },
+      "journal:delete-note": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("daily-journal", "delete-note", params) as Promise<{ success: boolean }>;
+      },
+      "journal:get-notes": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("daily-journal", "get-notes", params) as Promise<any>;
+      },
+      "journal:get-note-by-date": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("daily-journal", "get-note-by-date", params) as Promise<any>;
+      },
+      "journal:get-timeline": async (params) => {
+        await ready();
+        return [...getTimelineEvents(coreDb, params.date)];
       },
 
       // Notifications

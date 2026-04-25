@@ -420,12 +420,12 @@ Implement Daily Journal feature. Automatically aggregate events from the day (co
 
 ### Acceptance criteria
 
-- [ ] Daily page auto-generated from cross-feature events
-- [ ] Timeline shows completed todos, pomodoro sessions, etc.
-- [ ] Free-text notes can be added to any day
-- [ ] Past days are browsable and searchable
-- [ ] Widget shows today's activity summary
-- [ ] Tests cover event aggregation, note persistence
+- [x] Daily page auto-generated from cross-feature events
+- [x] Timeline shows completed todos, pomodoro sessions, etc.
+- [x] Free-text notes can be added to any day
+- [x] Past days are browsable and searchable
+- [x] Widget shows today's activity summary
+- [x] Tests cover event aggregation, note persistence
 
 ---
 

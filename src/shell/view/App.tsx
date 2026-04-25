@@ -1,5 +1,7 @@
 import type { DashboardPage, LayoutItem } from "@core/types";
 import { ClockWidget } from "@features/clock/view/ClockWidget";
+import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
+import { DailyJournalWidget } from "@features/daily-journal/view/DailyJournalWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
@@ -30,6 +32,7 @@ const DEFAULT_PAGES: DashboardPage[] = [
       { i: "clock-1", x: 2, y: 1, w: 1, h: 1, featureId: "clock", widgetId: "display" },
       { i: "weather-1", x: 3, y: 1, w: 1, h: 1, featureId: "weather", widgetId: "conditions" },
       { i: "rss-1", x: 0, y: 2, w: 4, h: 2, featureId: "rss-reader", widgetId: "feed-list" },
+      { i: "journal-1", x: 0, y: 4, w: 2, h: 2, featureId: "daily-journal", widgetId: "summary" },
     ],
     order: 0,
   },
@@ -91,6 +94,14 @@ function App() {
         keywords: ["forecast", "temperature"],
         action: () => setFullViewFeature("weather"),
       },
+      {
+        id: "nav:journal",
+        label: "Open Daily Journal",
+        description: "View today's activity and write notes",
+        group: "Navigation",
+        keywords: ["journal", "diary", "notes", "timeline"],
+        action: () => setFullViewFeature("daily-journal"),
+      },
     ]);
   }, []);
 
@@ -120,6 +131,9 @@ function App() {
     }
     if (item.featureId === "weather" && item.widgetId === "conditions") {
       return <WeatherWidget onOpenFullView={() => setFullViewFeature("weather")} />;
+    }
+    if (item.featureId === "daily-journal" && item.widgetId === "summary") {
+      return <DailyJournalWidget onOpenFullView={() => setFullViewFeature("daily-journal")} />;
     }
     return (
       <span className="text-xs text-zinc-500">
@@ -181,6 +195,13 @@ function App() {
         <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
           <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
             <RssReaderFullView onClose={() => setFullViewFeature(null)} />
+          </div>
+        </div>
+      )}
+      {fullViewFeature === "daily-journal" && (
+        <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+          <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+            <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
           </div>
         </div>
       )}
