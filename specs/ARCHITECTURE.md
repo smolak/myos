@@ -24,6 +24,7 @@
 - [Feature Ideas](#feature-ideas)
 - [Future Phases](#future-phases)
 - [Decision Rationale](ARCHITECTURE-RATIONALE.md) *(separate file)*
+- [Ubiquitous Language](UBIQUITOUS_LANGUAGE.md) *(canonical term glossary)*
 
 ---
 
@@ -635,3 +636,4 @@ src/
 ---
 
 > **Decision rationale and reference implementations** have been moved to [`ARCHITECTURE-RATIONALE.md`](ARCHITECTURE-RATIONALE.md) to keep this file focused on the actionable specification.
+> **Canonical term definitions** for all domain concepts used here (Feature, Event, Action, Widget, etc.) are in [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md).

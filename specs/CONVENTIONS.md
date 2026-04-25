@@ -78,7 +78,7 @@ This project follows a **bounded context** model. Each feature owns its data, it
 - **Features do not share databases.** Each feature reads and writes only its own DB file. The core DB is owned by core services.
 - **Cross-feature writes go through the action queue.** A feature may not call another feature's action handler directly. Emit an event → script reacts → action queue executes.
 - **Cross-feature reads go through `ctx.query()`.** Features may query another feature's public query surface, but not its DB.
-- **Domain vocabulary stays inside the bounded context.** The `todo` feature's internal types (`TodoItem`, `TodoStatus`) are not shared with other features. Events carry plain data shapes, not domain objects.
+- **Domain vocabulary stays inside the bounded context.** The `todo` feature's internal types (`TodoItem`, `TodoStatus`) are not shared with other features. Events carry plain data shapes, not domain objects. For the canonical definition of shared cross-cutting terms (Feature, Event, Action, Widget, Channel, etc.) see [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md).
 
 ---
 
