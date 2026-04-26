@@ -19,6 +19,8 @@ vi.mock("./electrobun", () => ({
       "rss:get-entries": vi.fn().mockResolvedValue([]),
       "journal:get-notes": vi.fn().mockResolvedValue([]),
       "journal:get-note-by-date": vi.fn().mockResolvedValue(null),
+      "habits:get-all": vi.fn().mockResolvedValue([]),
+      "bookmarks:get-all": vi.fn().mockResolvedValue([]),
     },
   },
 }));

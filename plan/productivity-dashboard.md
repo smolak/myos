@@ -494,12 +494,12 @@ Implement Habits feature. Define habits with daily/weekly frequency. Track compl
 
 ### Acceptance criteria
 
-- [ ] Habits can be created with name and frequency
-- [ ] Check off habits for current day
-- [ ] Streak calculation (consecutive days)
-- [ ] Widget shows today's habits with completion state
-- [ ] Full view shows habit list and streak history
-- [ ] Tests cover streak calculation, completion tracking
+- [x] Habits can be created with name and frequency
+- [x] Check off habits for current day
+- [x] Streak calculation (consecutive days)
+- [x] Widget shows today's habits with completion state
+- [x] Full view shows habit list and streak history
+- [x] Tests cover streak calculation, completion tracking
 
 ---
 
@@ -513,12 +513,12 @@ Implement Bookmarks feature. Save URLs with title, description, tags. Organize i
 
 ### Acceptance criteria
 
-- [ ] Bookmarks saved with title, URL, tags
-- [ ] Folder organization supported
-- [ ] Widget shows recent bookmarks
-- [ ] Full view with search and tag filtering
-- [ ] Command palette quick-add
-- [ ] Tests cover CRUD, tag filtering
+- [x] Bookmarks saved with title, URL, tags
+- [x] Folder organization supported
+- [x] Widget shows recent bookmarks
+- [x] Full view with search and tag filtering
+- [x] Command palette quick-add
+- [x] Tests cover CRUD, tag filtering
 
 ---
 

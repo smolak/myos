@@ -1,4 +1,5 @@
 import type { DashboardPage } from "@core/types";
+import type { Bookmark } from "@features/bookmarks/shared/types";
 import type { CalendarEvent, CalendarSource } from "@features/calendar/shared/types";
 import type { TimeFormat } from "@features/clock/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
@@ -100,6 +101,19 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
         response: CalendarEvent[];
       };
       "calendar:get-upcoming": { params: { limit?: number }; response: CalendarEvent[] };
+
+      // Bookmarks
+      "bookmarks:create": {
+        params: { title: string; url: string; description?: string; folder?: string; tags?: string[] };
+        response: { id: string };
+      };
+      "bookmarks:update": {
+        params: { id: string; title?: string; url?: string; description?: string; folder?: string; tags?: string[] };
+        response: { success: boolean };
+      };
+      "bookmarks:delete": { params: { id: string }; response: { success: boolean } };
+      "bookmarks:get-all": { params: { folder?: string; tag?: string }; response: Bookmark[] };
+      "bookmarks:get-by-id": { params: { id: string }; response: Bookmark | null };
 
       // Habits
       "habits:create": {

@@ -10,6 +10,7 @@ import { EventBus } from "../../core/bun/event-bus";
 import { FeatureRegistry } from "../../core/bun/feature-registry";
 import { Scheduler } from "../../core/bun/scheduler";
 import { SettingsManager } from "../../core/bun/settings-manager";
+import { bookmarksFeature } from "../../features/bookmarks/bun/index";
 import { calendarFeature } from "../../features/calendar/bun/index";
 import { clockFeature } from "../../features/clock/bun/index";
 import { dailyJournalFeature } from "../../features/daily-journal/bun/index";
@@ -67,6 +68,7 @@ const startupPromise = featureRegistry.startup([
   dailyJournalFeature,
   calendarFeature,
   habitsFeature,
+  bookmarksFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -373,16 +375,42 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return actionQueue.executeQuery("habits", "get-history", params) as Promise<any>;
       },
 
+      // Bookmarks
+      "bookmarks:create": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("bookmarks", "create", params) as Promise<{ id: string }>;
+      },
+      "bookmarks:update": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("bookmarks", "update", params) as Promise<{ success: boolean }>;
+      },
+      "bookmarks:delete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("bookmarks", "delete", params) as Promise<{ success: boolean }>;
+      },
+      "bookmarks:get-all": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("bookmarks", "get-all", params) as Promise<any>;
+      },
+      "bookmarks:get-by-id": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("bookmarks", "get-by-id", params) as Promise<any>;
+      },
+
       // Global search
       "search:global": async ({ query }) => {
         await ready();
-        const [todoResults, rssResults, journalResults, calendarResults, habitsResults] = await Promise.all([
-          actionQueue.executeQuery("todo", "search", { query }),
-          actionQueue.executeQuery("rss-reader", "search", { query }),
-          actionQueue.executeQuery("daily-journal", "search", { query }),
-          actionQueue.executeQuery("calendar", "search", { query }),
-          actionQueue.executeQuery("habits", "search", { query }),
-        ]);
+        const [todoResults, rssResults, journalResults, calendarResults, habitsResults, bookmarksResults] =
+          await Promise.all([
+            actionQueue.executeQuery("todo", "search", { query }),
+            actionQueue.executeQuery("rss-reader", "search", { query }),
+            actionQueue.executeQuery("daily-journal", "search", { query }),
+            actionQueue.executeQuery("calendar", "search", { query }),
+            actionQueue.executeQuery("habits", "search", { query }),
+            actionQueue.executeQuery("bookmarks", "search", { query }),
+          ]);
         const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
           (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
             ...r,
@@ -395,6 +423,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           ...tag(journalResults, "daily-journal", "Daily Journal"),
           ...tag(calendarResults, "calendar", "Calendar"),
           ...tag(habitsResults, "habits", "Habits"),
+          ...tag(bookmarksResults, "bookmarks", "Bookmarks"),
         ];
       },
 

@@ -1,3 +1,4 @@
+import { BookmarksFullView } from "@features/bookmarks/view/BookmarksFullView";
 import { CalendarFullView } from "@features/calendar/view/CalendarFullView";
 import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
 import { HabitsFullView } from "@features/habits/view/HabitsFullView";
@@ -17,6 +18,7 @@ function FeatureContent({ featureId, onExit }: FocusModeViewProps) {
   if (featureId === "daily-journal") return <DailyJournalFullView onClose={onExit} />;
   if (featureId === "calendar") return <CalendarFullView onClose={onExit} />;
   if (featureId === "habits") return <HabitsFullView onClose={onExit} />;
+  if (featureId === "bookmarks") return <BookmarksFullView onClose={onExit} />;
   return null;
 }
 
