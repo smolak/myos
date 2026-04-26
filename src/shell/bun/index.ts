@@ -24,7 +24,7 @@ import type { SearchResult } from "../shared/search-types";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
-const LAYOUT_VERSION = 4;
+const LAYOUT_VERSION = 5;
 
 const POMODORO_SETTINGS_SCOPE = "pomodoro";
 const DEFAULT_WORK_MINUTES = 25;

@@ -23,7 +23,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useNotifications } from "./useNotifications";
 import { useTheme } from "./useTheme";
 
-const LAYOUT_VERSION = 4;
+const LAYOUT_VERSION = 5;
 
 const DEFAULT_PAGES: DashboardPage[] = [
   {
@@ -36,6 +36,7 @@ const DEFAULT_PAGES: DashboardPage[] = [
       { i: "weather-1", x: 3, y: 1, w: 1, h: 1, featureId: "weather", widgetId: "conditions" },
       { i: "rss-1", x: 0, y: 2, w: 4, h: 2, featureId: "rss-reader", widgetId: "feed-list" },
       { i: "journal-1", x: 0, y: 4, w: 2, h: 2, featureId: "daily-journal", widgetId: "summary" },
+      { i: "calendar-1", x: 2, y: 4, w: 2, h: 2, featureId: "calendar", widgetId: "upcoming-events" },
     ],
     order: 0,
   },
