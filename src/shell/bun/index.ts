@@ -14,6 +14,7 @@ import { calendarFeature } from "../../features/calendar/bun/index";
 import { clockFeature } from "../../features/clock/bun/index";
 import { dailyJournalFeature } from "../../features/daily-journal/bun/index";
 import { getTimelineEvents } from "../../features/daily-journal/bun/queries";
+import { habitsFeature } from "../../features/habits/bun/index";
 import { pomodoroFeature } from "../../features/pomodoro/bun/index";
 import { rssReaderFeature } from "../../features/rss-reader/bun/index";
 import { todoFeature } from "../../features/todo/bun/index";
@@ -24,7 +25,7 @@ import type { SearchResult } from "../shared/search-types";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
-const LAYOUT_VERSION = 5;
+const LAYOUT_VERSION = 6;
 
 const POMODORO_SETTINGS_SCOPE = "pomodoro";
 const DEFAULT_WORK_MINUTES = 25;
@@ -65,6 +66,7 @@ const startupPromise = featureRegistry.startup([
   clockFeature,
   dailyJournalFeature,
   calendarFeature,
+  habitsFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -343,14 +345,43 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return actionQueue.executeQuery("calendar", "get-upcoming", params) as Promise<any>;
       },
 
+      // Habits
+      "habits:create": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("habits", "create", params) as Promise<{ id: string }>;
+      },
+      "habits:delete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("habits", "delete", params) as Promise<{ success: boolean }>;
+      },
+      "habits:complete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("habits", "complete", params) as Promise<{ success: boolean }>;
+      },
+      "habits:uncomplete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("habits", "uncomplete", params) as Promise<{ success: boolean }>;
+      },
+      "habits:get-all": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("habits", "get-all", params) as Promise<any>;
+      },
+      "habits:get-history": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("habits", "get-history", params) as Promise<any>;
+      },
+
       // Global search
       "search:global": async ({ query }) => {
         await ready();
-        const [todoResults, rssResults, journalResults, calendarResults] = await Promise.all([
+        const [todoResults, rssResults, journalResults, calendarResults, habitsResults] = await Promise.all([
           actionQueue.executeQuery("todo", "search", { query }),
           actionQueue.executeQuery("rss-reader", "search", { query }),
           actionQueue.executeQuery("daily-journal", "search", { query }),
           actionQueue.executeQuery("calendar", "search", { query }),
+          actionQueue.executeQuery("habits", "search", { query }),
         ]);
         const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
           (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
@@ -363,6 +394,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           ...tag(rssResults, "rss-reader", "RSS Reader"),
           ...tag(journalResults, "daily-journal", "Daily Journal"),
           ...tag(calendarResults, "calendar", "Calendar"),
+          ...tag(habitsResults, "habits", "Habits"),
         ];
       },
 
@@ -415,6 +447,18 @@ void startupPromise.then(() => {
       title: "Event starting soon",
       body: p.title,
       featureId: "calendar",
+      timestamp: Date.now(),
+      read: false,
+    });
+  });
+
+  eventBus.subscribe("habits:completed", async (payload) => {
+    const p = payload as { name?: string; date?: string };
+    await addNotification({
+      id: crypto.randomUUID(),
+      title: "Habit completed",
+      body: p.name,
+      featureId: "habits",
       timestamp: Date.now(),
       read: false,
     });

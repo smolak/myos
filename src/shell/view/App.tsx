@@ -5,6 +5,9 @@ import { ClockWidget } from "@features/clock/view/ClockWidget";
 import { DailyJournalProvider } from "@features/daily-journal/view/DailyJournalContext";
 import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
 import { DailyJournalWidget } from "@features/daily-journal/view/DailyJournalWidget";
+import { HabitsProvider } from "@features/habits/view/HabitsContext";
+import { HabitsFullView } from "@features/habits/view/HabitsFullView";
+import { HabitsWidget } from "@features/habits/view/HabitsWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
 import { RssReaderProvider } from "@features/rss-reader/view/RssReaderContext";
@@ -25,7 +28,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useNotifications } from "./useNotifications";
 import { useTheme } from "./useTheme";
 
-const LAYOUT_VERSION = 5;
+const LAYOUT_VERSION = 6;
 
 const DEFAULT_PAGES: DashboardPage[] = [
   {
@@ -39,6 +42,7 @@ const DEFAULT_PAGES: DashboardPage[] = [
       { i: "rss-1", x: 0, y: 2, w: 4, h: 2, featureId: "rss-reader", widgetId: "feed-list" },
       { i: "journal-1", x: 0, y: 4, w: 2, h: 2, featureId: "daily-journal", widgetId: "summary" },
       { i: "calendar-1", x: 2, y: 4, w: 2, h: 2, featureId: "calendar", widgetId: "upcoming-events" },
+      { i: "habits-1", x: 0, y: 6, w: 2, h: 1, featureId: "habits", widgetId: "daily-checkin" },
     ],
     order: 0,
   },
@@ -150,6 +154,14 @@ function App() {
         keywords: ["calendar", "events", "schedule", "ics"],
         action: () => setFullViewFeature("calendar"),
       },
+      {
+        id: "nav:habits",
+        label: "Open Habits",
+        description: "View and manage daily habits",
+        group: "Navigation",
+        keywords: ["habits", "streak", "daily", "routine"],
+        action: () => setFullViewFeature("habits"),
+      },
     ]);
   }, []);
 
@@ -196,6 +208,14 @@ function App() {
         keywords: ["focus", "calendar", "events", "schedule", "fullscreen"],
         action: () => enterFocusMode("calendar"),
       },
+      {
+        id: "focus:habits",
+        label: "Focus Mode: Habits",
+        description: "Open Habits in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "habits", "streak", "routine", "fullscreen"],
+        action: () => enterFocusMode("habits"),
+      },
     ]);
   }, [enterFocusMode]);
 
@@ -232,6 +252,9 @@ function App() {
     if (item.featureId === "calendar" && item.widgetId === "upcoming-events") {
       return <CalendarWidget onOpenFullView={() => setFullViewFeature("calendar")} />;
     }
+    if (item.featureId === "habits" && item.widgetId === "daily-checkin") {
+      return <HabitsWidget onOpenFullView={() => setFullViewFeature("habits")} />;
+    }
     return (
       <span className="text-xs text-zinc-500">
         {item.featureId}/{item.widgetId}
@@ -241,88 +264,97 @@ function App() {
 
   return (
     <RssReaderProvider>
-      <DailyJournalProvider>
-        <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-          <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between relative z-10">
-            <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--accent-color)" }}>
-              MyOS
-            </h1>
-            <div className="flex items-center gap-2">
-              <ThemeToggle
-                mode={themeMode}
-                accentColor={accentColor}
-                onModeChange={(m) => void setThemeMode(m)}
-                onAccentChange={(c) => void setAccentColor(c)}
-              />
-              <NotificationCenter
-                notifications={notifications}
-                unreadCount={unreadCount}
-                onMarkRead={(id) => void markRead(id)}
-                onClearAll={() => void clearAll()}
-              />
-              <button
-                type="button"
-                className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
-                onClick={() => setPaletteOpen(true)}
-                aria-label="Open command palette"
-              >
-                ⌘K
-              </button>
-            </div>
-          </header>
-          <main className="flex-1 overflow-auto p-4">
-            <DashboardGrid page={currentPage} onLayoutChange={handleLayoutChange} renderWidget={renderWidget} />
-          </main>
+      <HabitsProvider>
+        <DailyJournalProvider>
+          <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
+            <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between relative z-10">
+              <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--accent-color)" }}>
+                MyOS
+              </h1>
+              <div className="flex items-center gap-2">
+                <ThemeToggle
+                  mode={themeMode}
+                  accentColor={accentColor}
+                  onModeChange={(m) => void setThemeMode(m)}
+                  onAccentChange={(c) => void setAccentColor(c)}
+                />
+                <NotificationCenter
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onMarkRead={(id) => void markRead(id)}
+                  onClearAll={() => void clearAll()}
+                />
+                <button
+                  type="button"
+                  className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
+                  onClick={() => setPaletteOpen(true)}
+                  aria-label="Open command palette"
+                >
+                  ⌘K
+                </button>
+              </div>
+            </header>
+            <main className="flex-1 overflow-auto p-4">
+              <DashboardGrid page={currentPage} onLayoutChange={handleLayoutChange} renderWidget={renderWidget} />
+            </main>
 
-          <CommandPalette
-            open={paletteOpen}
-            onClose={() => setPaletteOpen(false)}
-            commands={commandRegistry.getAll()}
-            onSearch={(query) => rpc.request["search:global"]({ query })}
-            onNavigateToFeature={(featureId) => {
-              setFullViewFeature(featureId);
-            }}
-          />
+            <CommandPalette
+              open={paletteOpen}
+              onClose={() => setPaletteOpen(false)}
+              commands={commandRegistry.getAll()}
+              onSearch={(query) => rpc.request["search:global"]({ query })}
+              onNavigateToFeature={(featureId) => {
+                setFullViewFeature(featureId);
+              }}
+            />
 
-          {fullViewFeature === "todo" && (
-            <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-              <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
-                <TodoFullView onClose={() => setFullViewFeature(null)} />
+            {fullViewFeature === "todo" && (
+              <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
+                  <TodoFullView onClose={() => setFullViewFeature(null)} />
+                </div>
               </div>
-            </div>
-          )}
-          {fullViewFeature === "pomodoro" && (
-            <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-              <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
-                <PomodoroFullView onClose={() => setFullViewFeature(null)} />
+            )}
+            {fullViewFeature === "pomodoro" && (
+              <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
+                  <PomodoroFullView onClose={() => setFullViewFeature(null)} />
+                </div>
               </div>
-            </div>
-          )}
-          {fullViewFeature === "rss-reader" && (
-            <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-              <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                <RssReaderFullView onClose={() => setFullViewFeature(null)} />
+            )}
+            {fullViewFeature === "rss-reader" && (
+              <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                  <RssReaderFullView onClose={() => setFullViewFeature(null)} />
+                </div>
               </div>
-            </div>
-          )}
-          {fullViewFeature === "daily-journal" && (
-            <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-              <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
+            )}
+            {fullViewFeature === "daily-journal" && (
+              <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                  <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
+                </div>
               </div>
-            </div>
-          )}
-          {fullViewFeature === "calendar" && (
-            <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-              <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                <CalendarFullView onClose={() => setFullViewFeature(null)} />
+            )}
+            {fullViewFeature === "calendar" && (
+              <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                  <CalendarFullView onClose={() => setFullViewFeature(null)} />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            {fullViewFeature === "habits" && (
+              <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                  <HabitsFullView onClose={() => setFullViewFeature(null)} />
+                </div>
+              </div>
+            )}
 
-          {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
-        </div>
-      </DailyJournalProvider>
+            {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
+          </div>
+        </DailyJournalProvider>
+      </HabitsProvider>
     </RssReaderProvider>
   );
 }

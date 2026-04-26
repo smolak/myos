@@ -2,6 +2,7 @@ import type { DashboardPage } from "@core/types";
 import type { CalendarEvent, CalendarSource } from "@features/calendar/shared/types";
 import type { TimeFormat } from "@features/clock/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
+import type { HabitCompletion, HabitWithStats } from "@features/habits/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
 import type { RssEntry, RssFeed } from "@features/rss-reader/shared/types";
 import type { TodoItem } from "@features/todo/shared/types";
@@ -99,6 +100,17 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
         response: CalendarEvent[];
       };
       "calendar:get-upcoming": { params: { limit?: number }; response: CalendarEvent[] };
+
+      // Habits
+      "habits:create": {
+        params: { name: string; description?: string; frequency?: "daily" | "weekly" };
+        response: { id: string };
+      };
+      "habits:delete": { params: { id: string }; response: { success: boolean } };
+      "habits:complete": { params: { id: string; date: string }; response: { success: boolean } };
+      "habits:uncomplete": { params: { id: string; date: string }; response: { success: boolean } };
+      "habits:get-all": { params: { date?: string }; response: HabitWithStats[] };
+      "habits:get-history": { params: { id: string }; response: HabitCompletion[] };
 
       // Global search
       "search:global": { params: { query: string }; response: SearchResult[] };

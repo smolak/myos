@@ -50,7 +50,7 @@ describe("App", () => {
   test("loads persisted pages from the RPC layer on mount", async () => {
     const { rpc } = await import("./electrobun");
     const saved: DashboardPage[] = [{ id: "work", name: "Work", layout: [], order: 0 }];
-    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 5, pages: saved });
+    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 6, pages: saved });
 
     await act(async () => {
       render(<App />);

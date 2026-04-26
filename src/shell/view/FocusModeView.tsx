@@ -1,5 +1,6 @@
 import { CalendarFullView } from "@features/calendar/view/CalendarFullView";
 import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
+import { HabitsFullView } from "@features/habits/view/HabitsFullView";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
@@ -15,6 +16,7 @@ function FeatureContent({ featureId, onExit }: FocusModeViewProps) {
   if (featureId === "rss-reader") return <RssReaderFullView onClose={onExit} />;
   if (featureId === "daily-journal") return <DailyJournalFullView onClose={onExit} />;
   if (featureId === "calendar") return <CalendarFullView onClose={onExit} />;
+  if (featureId === "habits") return <HabitsFullView onClose={onExit} />;
   return null;
 }
 
