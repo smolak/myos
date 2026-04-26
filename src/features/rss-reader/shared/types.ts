@@ -1,4 +1,4 @@
-import type { ActionMap, EventMap, QueryMap } from "@core/types";
+import type { ActionMap, EventMap, FeatureSearchResult, QueryMap } from "@core/types";
 
 export interface RssFeed {
   readonly id: string;
@@ -66,4 +66,5 @@ export interface RssReaderQueries extends QueryMap {
     params: Record<string, never>;
     result: { count: number };
   };
+  search: { params: { query: string }; result: readonly FeatureSearchResult[] };
 }

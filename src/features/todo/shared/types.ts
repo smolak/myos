@@ -1,4 +1,4 @@
-import type { ActionMap, EventMap, QueryMap } from "@core/types";
+import type { ActionMap, EventMap, FeatureSearchResult, QueryMap } from "@core/types";
 
 export interface TodoItem {
   readonly id: string;
@@ -27,4 +27,5 @@ export interface TodoActions extends ActionMap {
 export interface TodoQueries extends QueryMap {
   find: { params: { completed?: boolean; limit?: number }; result: readonly TodoItem[] };
   "get-by-id": { params: { id: string }; result: TodoItem | null };
+  search: { params: { query: string }; result: readonly FeatureSearchResult[] };
 }

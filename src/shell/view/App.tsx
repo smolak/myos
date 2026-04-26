@@ -175,7 +175,15 @@ function App() {
         <DashboardGrid page={currentPage} onLayoutChange={handleLayoutChange} renderWidget={renderWidget} />
       </main>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commandRegistry.getAll()} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        commands={commandRegistry.getAll()}
+        onSearch={(query) => rpc.request["search:global"]({ query })}
+        onNavigateToFeature={(featureId) => {
+          setFullViewFeature(featureId);
+        }}
+      />
 
       {fullViewFeature === "todo" && (
         <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">

@@ -19,6 +19,7 @@ import { todoFeature } from "../../features/todo/bun/index";
 import { weatherFeature } from "../../features/weather/bun/index";
 import type { AppNotification } from "../shared/notification-types";
 import type { AppRPCSchema, ThemeMode } from "../shared/rpc-schema";
+import type { SearchResult } from "../shared/search-types";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
@@ -295,6 +296,27 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       "journal:get-timeline": async (params) => {
         await ready();
         return [...getTimelineEvents(coreDb, params.date)];
+      },
+
+      // Global search
+      "search:global": async ({ query }) => {
+        await ready();
+        const [todoResults, rssResults, journalResults] = await Promise.all([
+          actionQueue.executeQuery("todo", "search", { query }),
+          actionQueue.executeQuery("rss-reader", "search", { query }),
+          actionQueue.executeQuery("daily-journal", "search", { query }),
+        ]);
+        const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
+          (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
+            ...r,
+            featureId,
+            featureName,
+          }));
+        return [
+          ...tag(todoResults, "todo", "Todo"),
+          ...tag(rssResults, "rss-reader", "RSS Reader"),
+          ...tag(journalResults, "daily-journal", "Daily Journal"),
+        ];
       },
 
       // Shell

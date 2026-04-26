@@ -3,6 +3,7 @@ import type { RssReaderActions, RssReaderEvents, RssReaderQueries } from "../sha
 import { addFeed, deleteFeed, fetchAllFeeds, markRead, markUnread } from "./actions";
 import { rssReaderMigrations } from "./migrations";
 import { getEntries, getFeeds, getUnreadCount } from "./queries";
+import { searchRssEntries } from "./search";
 
 const FETCH_INTERVAL_MS = 30 * 60 * 1000;
 
@@ -73,6 +74,11 @@ export const rssReaderFeature: FeatureDefinition<RssReaderEvents, RssReaderActio
         description: "Get total number of unread entries",
         params: {},
         result: { count: "number" },
+      },
+      search: {
+        description: "Search RSS entries by title or description",
+        params: { query: "string" },
+        result: "FeatureSearchResult[]",
       },
     },
     permissions: [{ type: "network", reason: "Fetch RSS feeds from the internet" }],
@@ -155,6 +161,10 @@ export const rssReaderFeature: FeatureDefinition<RssReaderEvents, RssReaderActio
 
     ctx.queries.handle("get-unread-count", async (params) => {
       return getUnreadCount(ctx.db, params);
+    });
+
+    ctx.queries.handle("search", async (params) => {
+      return searchRssEntries(ctx.db, params);
     });
 
     ctx.scheduler.register("rss-reader:fetch-feeds", { type: "interval", value: FETCH_INTERVAL_MS }, async () => {

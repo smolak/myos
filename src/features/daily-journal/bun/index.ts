@@ -3,6 +3,7 @@ import type { DailyJournalActions, DailyJournalEvents, DailyJournalQueries } fro
 import { addNote, deleteNote, updateNote } from "./actions";
 import { dailyJournalMigrations } from "./migrations";
 import { getNoteByDate, getNotes } from "./queries";
+import { searchJournalNotes } from "./search";
 
 export const dailyJournalFeature: FeatureDefinition<DailyJournalEvents, DailyJournalActions, DailyJournalQueries> = {
   id: "daily-journal",
@@ -52,6 +53,11 @@ export const dailyJournalFeature: FeatureDefinition<DailyJournalEvents, DailyJou
         description: "Get note for a specific date",
         params: { date: "string" },
         result: "JournalNote | null",
+      },
+      search: {
+        description: "Search journal notes by content",
+        params: { query: "string" },
+        result: "FeatureSearchResult[]",
       },
     },
     permissions: [],
@@ -107,6 +113,10 @@ export const dailyJournalFeature: FeatureDefinition<DailyJournalEvents, DailyJou
 
     ctx.queries.handle("get-note-by-date", async (params) => {
       return getNoteByDate(ctx.db, params);
+    });
+
+    ctx.queries.handle("search", async (params) => {
+      return searchJournalNotes(ctx.db, params);
     });
   },
 

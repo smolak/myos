@@ -1,4 +1,4 @@
-import type { ActionMap, EventMap, QueryMap } from "@core/types";
+import type { ActionMap, EventMap, FeatureSearchResult, QueryMap } from "@core/types";
 
 export interface JournalNote {
   readonly id: string;
@@ -52,4 +52,5 @@ export interface DailyJournalQueries extends QueryMap {
     params: { date: string };
     result: JournalNote | null;
   };
+  search: { params: { query: string }; result: readonly FeatureSearchResult[] };
 }

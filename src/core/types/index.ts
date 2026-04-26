@@ -7,3 +7,4 @@ export * from "./events";
 export * from "./feature";
 export * from "./scheduler";
 export * from "./script";
+export * from "./search";

@@ -7,6 +7,7 @@ import type { TodoItem } from "@features/todo/shared/types";
 import type { WeatherData } from "@features/weather/shared/types";
 import type { ElectrobunRPCSchema } from "electrobun/bun";
 import type { AppNotification } from "./notification-types";
+import type { SearchResult } from "./search-types";
 
 export type ThemeMode = "dark" | "light" | "system";
 
@@ -79,6 +80,9 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "journal:get-notes": { params: { limit?: number; search?: string }; response: JournalNote[] };
       "journal:get-note-by-date": { params: { date: string }; response: JournalNote | null };
       "journal:get-timeline": { params: { date: string }; response: TimelineEvent[] };
+
+      // Global search
+      "search:global": { params: { query: string }; response: SearchResult[] };
 
       // Shell
       "shell:open-url": { params: { url: string }; response: { success: boolean } };

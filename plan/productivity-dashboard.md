@@ -439,11 +439,11 @@ Implement Global Search in command palette or dedicated UI. Each feature registe
 
 ### Acceptance criteria
 
-- [ ] Single search input searches all features
-- [ ] Features implement `search` query in their contract
-- [ ] Results aggregated and ranked by relevance
-- [ ] Clicking result navigates to feature/item
-- [ ] Tests cover parallel query fanout, result merging
+- [x] Single search input searches all features
+- [x] Features implement `search` query in their contract
+- [x] Results aggregated and ranked by relevance
+- [x] Clicking result navigates to feature/item
+- [x] Tests cover parallel query fanout, result merging
 
 ---
 

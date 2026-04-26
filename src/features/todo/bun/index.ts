@@ -3,6 +3,7 @@ import type { TodoActions, TodoEvents, TodoQueries } from "../shared/types";
 import { completeTodo, createTodo, deleteTodo, updateTodo } from "./actions";
 import { todoMigrations } from "./migrations";
 import { findTodos, getTodoById } from "./queries";
+import { searchTodos } from "./search";
 
 export const todoFeature: FeatureDefinition<TodoEvents, TodoActions, TodoQueries> = {
   id: "todo",
@@ -61,6 +62,11 @@ export const todoFeature: FeatureDefinition<TodoEvents, TodoActions, TodoQueries
         description: "Get a single todo by ID",
         params: { id: "string" },
         result: "TodoItem | null",
+      },
+      search: {
+        description: "Search todos by title or description",
+        params: { query: "string" },
+        result: "FeatureSearchResult[]",
       },
     },
     permissions: [],
@@ -122,6 +128,10 @@ export const todoFeature: FeatureDefinition<TodoEvents, TodoActions, TodoQueries
 
     ctx.queries.handle("get-by-id", async (params) => {
       return getTodoById(ctx.db, params);
+    });
+
+    ctx.queries.handle("search", async (params) => {
+      return searchTodos(ctx.db, params);
     });
   },
 
