@@ -298,6 +298,17 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return [...getTimelineEvents(coreDb, params.date)];
       },
 
+      // Focus mode
+      "focus:get-last": async (_params) => {
+        return {
+          lastFocusedFeatureId: settingsManager.get<string | null>("focus", "lastFocusedFeatureId", null),
+        };
+      },
+      "focus:set-last": async ({ featureId }) => {
+        await settingsManager.set("focus", "lastFocusedFeatureId", featureId);
+        return { success: true };
+      },
+
       // Global search
       "search:global": async ({ query }) => {
         await ready();

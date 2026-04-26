@@ -81,6 +81,10 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "journal:get-note-by-date": { params: { date: string }; response: JournalNote | null };
       "journal:get-timeline": { params: { date: string }; response: TimelineEvent[] };
 
+      // Focus mode
+      "focus:get-last": { params: Record<string, never>; response: { lastFocusedFeatureId: string | null } };
+      "focus:set-last": { params: { featureId: string | null }; response: { success: boolean } };
+
       // Global search
       "search:global": { params: { query: string }; response: SearchResult[] };
 

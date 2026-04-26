@@ -9,11 +9,12 @@ import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
 import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { WeatherWidget } from "@features/weather/view/WeatherWidget";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CommandPalette } from "./CommandPalette";
 import { commandRegistry } from "./command-registry";
 import { DashboardGrid } from "./DashboardGrid";
 import { rpc } from "./electrobun";
+import { FocusModeView } from "./FocusModeView";
 import { registerHotkey } from "./hotkeys";
 import { NotificationCenter } from "./NotificationCenter";
 import { ThemeToggle } from "./ThemeToggle";
@@ -41,10 +42,17 @@ const DEFAULT_PAGES: DashboardPage[] = [
 function App() {
   const [pages, setPages] = useState<DashboardPage[]>(DEFAULT_PAGES);
   const [fullViewFeature, setFullViewFeature] = useState<string | null>(null);
+  const [focusModeFeatureId, setFocusModeFeatureId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const currentPage = pages[0] as DashboardPage;
   const { mode: themeMode, accentColor, setMode: setThemeMode, setAccentColor } = useTheme();
   const { notifications, unreadCount, markRead, clearAll } = useNotifications();
+
+  // Refs to avoid stale closures in hotkey handler
+  const focusModeFeatureIdRef = useRef(focusModeFeatureId);
+  focusModeFeatureIdRef.current = focusModeFeatureId;
+  const fullViewFeatureRef = useRef(fullViewFeature);
+  fullViewFeatureRef.current = fullViewFeature;
 
   useEffect(() => {
     void rpc.request["dashboard:get-layout"]({}).then((stored) => {
@@ -52,12 +60,39 @@ function App() {
         setPages(stored.pages);
       }
     });
+    void rpc.request["focus:get-last"]({}).then(({ lastFocusedFeatureId }) => {
+      if (lastFocusedFeatureId) {
+        // Store for the hotkey to recall — don't auto-enter focus mode
+        focusModeFeatureIdRef.current = lastFocusedFeatureId;
+      }
+    });
+  }, []);
+
+  const enterFocusMode = useCallback((featureId: string) => {
+    setFocusModeFeatureId(featureId);
+    setFullViewFeature(null);
+    void rpc.request["focus:set-last"]({ featureId });
+  }, []);
+
+  const exitFocusMode = useCallback(() => {
+    setFocusModeFeatureId(null);
   }, []);
 
   // Register global Cmd+K hotkey
   useEffect(() => {
     return registerHotkey("cmd+k", () => setPaletteOpen(true));
   }, []);
+
+  // Cmd+Shift+F: enter focus mode for the open modal, or exit if already in focus mode
+  useEffect(() => {
+    return registerHotkey("cmd+shift+f", () => {
+      if (focusModeFeatureIdRef.current) {
+        setFocusModeFeatureId(null);
+      } else if (fullViewFeatureRef.current) {
+        enterFocusMode(fullViewFeatureRef.current);
+      }
+    });
+  }, [enterFocusMode]);
 
   // Register built-in navigation commands
   useEffect(() => {
@@ -104,6 +139,44 @@ function App() {
       },
     ]);
   }, []);
+
+  // Register focus mode commands
+  useEffect(() => {
+    return commandRegistry.registerMany([
+      {
+        id: "focus:todo",
+        label: "Focus Mode: Todo",
+        description: "Open Todo in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "task", "tasks", "fullscreen"],
+        action: () => enterFocusMode("todo"),
+      },
+      {
+        id: "focus:pomodoro",
+        label: "Focus Mode: Pomodoro",
+        description: "Open Pomodoro timer in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "timer", "session", "fullscreen"],
+        action: () => enterFocusMode("pomodoro"),
+      },
+      {
+        id: "focus:rss-reader",
+        label: "Focus Mode: RSS Reader",
+        description: "Open RSS Reader in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "feed", "articles", "news", "fullscreen"],
+        action: () => enterFocusMode("rss-reader"),
+      },
+      {
+        id: "focus:daily-journal",
+        label: "Focus Mode: Daily Journal",
+        description: "Open Daily Journal in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "journal", "diary", "notes", "fullscreen"],
+        action: () => enterFocusMode("daily-journal"),
+      },
+    ]);
+  }, [enterFocusMode]);
 
   const handleLayoutChange = useCallback(
     (layout: LayoutItem[]): void => {
@@ -213,6 +286,8 @@ function App() {
           </div>
         </div>
       )}
+
+      {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
     </div>
   );
 }
