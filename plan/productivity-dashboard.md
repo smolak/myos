@@ -475,12 +475,12 @@ Implement Calendar feature. User provides ICS URLs (Google Calendar, etc.) in se
 
 ### Acceptance criteria
 
-- [ ] ICS URLs configured in settings
-- [ ] Scheduler syncs calendar data
-- [ ] Widget shows next N upcoming events
-- [ ] Full view renders week/month grid
-- [ ] `calendar:event-starting` emitted before events
-- [ ] Tests cover ICS parsing, event storage
+- [x] ICS URLs configured in settings
+- [x] Scheduler syncs calendar data
+- [x] Widget shows next N upcoming events
+- [x] Full view renders week/month grid
+- [x] `calendar:event-starting` emitted before events
+- [x] Tests cover ICS parsing, event storage
 
 ---
 

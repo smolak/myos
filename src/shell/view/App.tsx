@@ -1,4 +1,6 @@
 import type { DashboardPage, LayoutItem } from "@core/types";
+import { CalendarFullView } from "@features/calendar/view/CalendarFullView";
+import { CalendarWidget } from "@features/calendar/view/CalendarWidget";
 import { ClockWidget } from "@features/clock/view/ClockWidget";
 import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
 import { DailyJournalWidget } from "@features/daily-journal/view/DailyJournalWidget";
@@ -137,6 +139,14 @@ function App() {
         keywords: ["journal", "diary", "notes", "timeline"],
         action: () => setFullViewFeature("daily-journal"),
       },
+      {
+        id: "nav:calendar",
+        label: "Open Calendar",
+        description: "View upcoming events and manage calendars",
+        group: "Navigation",
+        keywords: ["calendar", "events", "schedule", "ics"],
+        action: () => setFullViewFeature("calendar"),
+      },
     ]);
   }, []);
 
@@ -175,6 +185,14 @@ function App() {
         keywords: ["focus", "journal", "diary", "notes", "fullscreen"],
         action: () => enterFocusMode("daily-journal"),
       },
+      {
+        id: "focus:calendar",
+        label: "Focus Mode: Calendar",
+        description: "Open Calendar in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "calendar", "events", "schedule", "fullscreen"],
+        action: () => enterFocusMode("calendar"),
+      },
     ]);
   }, [enterFocusMode]);
 
@@ -207,6 +225,9 @@ function App() {
     }
     if (item.featureId === "daily-journal" && item.widgetId === "summary") {
       return <DailyJournalWidget onOpenFullView={() => setFullViewFeature("daily-journal")} />;
+    }
+    if (item.featureId === "calendar" && item.widgetId === "upcoming-events") {
+      return <CalendarWidget onOpenFullView={() => setFullViewFeature("calendar")} />;
     }
     return (
       <span className="text-xs text-zinc-500">
@@ -283,6 +304,13 @@ function App() {
         <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
           <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
             <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
+          </div>
+        </div>
+      )}
+      {fullViewFeature === "calendar" && (
+        <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+          <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+            <CalendarFullView onClose={() => setFullViewFeature(null)} />
           </div>
         </div>
       )}

@@ -10,6 +10,7 @@ import { EventBus } from "../../core/bun/event-bus";
 import { FeatureRegistry } from "../../core/bun/feature-registry";
 import { Scheduler } from "../../core/bun/scheduler";
 import { SettingsManager } from "../../core/bun/settings-manager";
+import { calendarFeature } from "../../features/calendar/bun/index";
 import { clockFeature } from "../../features/clock/bun/index";
 import { dailyJournalFeature } from "../../features/daily-journal/bun/index";
 import { getTimelineEvents } from "../../features/daily-journal/bun/queries";
@@ -63,6 +64,7 @@ const startupPromise = featureRegistry.startup([
   weatherFeature,
   clockFeature,
   dailyJournalFeature,
+  calendarFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -309,13 +311,46 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return { success: true };
       },
 
+      // Calendar
+      "calendar:add-source": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("calendar", "add-source", params) as Promise<{ id: string }>;
+      },
+      "calendar:delete-source": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("calendar", "delete-source", params) as Promise<{ success: boolean }>;
+      },
+      "calendar:sync-all": async (_params) => {
+        await ready();
+        return actionQueue.dispatchAction("calendar", "sync-all", {}) as Promise<{
+          synced: number;
+          newEvents: number;
+        }>;
+      },
+      "calendar:get-sources": async (_params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("calendar", "get-sources", {}) as Promise<any>;
+      },
+      "calendar:get-events": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("calendar", "get-events", params) as Promise<any>;
+      },
+      "calendar:get-upcoming": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("calendar", "get-upcoming", params) as Promise<any>;
+      },
+
       // Global search
       "search:global": async ({ query }) => {
         await ready();
-        const [todoResults, rssResults, journalResults] = await Promise.all([
+        const [todoResults, rssResults, journalResults, calendarResults] = await Promise.all([
           actionQueue.executeQuery("todo", "search", { query }),
           actionQueue.executeQuery("rss-reader", "search", { query }),
           actionQueue.executeQuery("daily-journal", "search", { query }),
+          actionQueue.executeQuery("calendar", "search", { query }),
         ]);
         const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
           (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
@@ -327,6 +362,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           ...tag(todoResults, "todo", "Todo"),
           ...tag(rssResults, "rss-reader", "RSS Reader"),
           ...tag(journalResults, "daily-journal", "Daily Journal"),
+          ...tag(calendarResults, "calendar", "Calendar"),
         ];
       },
 
@@ -367,6 +403,18 @@ void startupPromise.then(() => {
       title: "Pomodoro session ended",
       body: p.type === "work" ? "Time for a break!" : "Back to work!",
       featureId: "pomodoro",
+      timestamp: Date.now(),
+      read: false,
+    });
+  });
+
+  eventBus.subscribe("calendar:event-starting", async (payload) => {
+    const p = payload as { title?: string; startTime?: string };
+    await addNotification({
+      id: crypto.randomUUID(),
+      title: "Event starting soon",
+      body: p.title,
+      featureId: "calendar",
       timestamp: Date.now(),
       read: false,
     });

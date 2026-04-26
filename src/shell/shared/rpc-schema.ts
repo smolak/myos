@@ -1,4 +1,5 @@
 import type { DashboardPage } from "@core/types";
+import type { CalendarEvent, CalendarSource } from "@features/calendar/shared/types";
 import type { TimeFormat } from "@features/clock/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
@@ -84,6 +85,20 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       // Focus mode
       "focus:get-last": { params: Record<string, never>; response: { lastFocusedFeatureId: string | null } };
       "focus:set-last": { params: { featureId: string | null }; response: { success: boolean } };
+
+      // Calendar
+      "calendar:add-source": {
+        params: { url: string; title?: string; syncIntervalMinutes?: number };
+        response: { id: string };
+      };
+      "calendar:delete-source": { params: { id: string }; response: { success: boolean } };
+      "calendar:sync-all": { params: Record<string, never>; response: { synced: number; newEvents: number } };
+      "calendar:get-sources": { params: Record<string, never>; response: CalendarSource[] };
+      "calendar:get-events": {
+        params: { sourceId?: string; from?: string; to?: string; limit?: number };
+        response: CalendarEvent[];
+      };
+      "calendar:get-upcoming": { params: { limit?: number }; response: CalendarEvent[] };
 
       // Global search
       "search:global": { params: { query: string }; response: SearchResult[] };
