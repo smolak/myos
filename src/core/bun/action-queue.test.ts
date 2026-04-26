@@ -114,7 +114,7 @@ describe("ActionQueue", () => {
       ]);
 
       const row = db.query<{ params: string }, []>("SELECT params FROM execution_actions").get();
-      expect(JSON.parse(row?.params)).toEqual({ title: "Test", n: 42 });
+      expect(JSON.parse(row!.params)).toEqual({ title: "Test", n: 42 });
     });
 
     test("stores optional correlationId", () => {

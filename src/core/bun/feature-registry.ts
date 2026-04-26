@@ -24,6 +24,8 @@ export class FeatureRegistry {
   private readonly settingsManager: SettingsManager;
   private readonly credentialStore: CredentialStore;
   private readonly actionQueue: ActionQueue;
+  private readonly eventBus: EventBus;
+  private readonly scheduler: Scheduler;
 
   constructor(
     dbManager: DatabaseManager,
@@ -105,7 +107,9 @@ export class FeatureRegistry {
   }
 
   private buildFeatureContext(db: Database, featureId: string): FeatureContext {
-    const { eventBus, actionQueue, scheduler } = this;
+    const eventBus = this.eventBus;
+    const actionQueue = this.actionQueue;
+    const scheduler = this.scheduler;
     return {
       db,
       events: {
