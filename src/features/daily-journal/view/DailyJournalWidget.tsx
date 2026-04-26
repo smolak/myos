@@ -1,11 +1,11 @@
-import { useDailyJournal } from "./useDailyJournal";
+import { useDailyJournalContext } from "./DailyJournalContext";
 
 interface Props {
   onOpenFullView?: () => void;
 }
 
 export function DailyJournalWidget({ onOpenFullView }: Props) {
-  const { todayNote, notes, isLoading } = useDailyJournal();
+  const { todayNote, notes, isLoading } = useDailyJournalContext();
   const today = new Date().toISOString().split("T")[0];
 
   if (isLoading) {

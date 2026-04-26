@@ -11,8 +11,8 @@ const mockSearchNotes = vi.fn();
 
 let mockNotes: Array<{ id: string; date: string; content: string; createdAt: string; updatedAt: string }> = [];
 
-vi.mock("./useDailyJournal", () => ({
-  useDailyJournal: () => ({
+vi.mock("./DailyJournalContext", () => ({
+  useDailyJournalContext: () => ({
     notes: mockNotes,
     isLoading: false,
     todayNote: null,

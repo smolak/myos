@@ -15,6 +15,10 @@ vi.mock("./electrobun", () => ({
       "notification:clear": vi.fn().mockResolvedValue({ success: true }),
       "focus:get-last": vi.fn().mockResolvedValue({ lastFocusedFeatureId: null }),
       "focus:set-last": vi.fn().mockResolvedValue({ success: true }),
+      "rss:get-feeds": vi.fn().mockResolvedValue([]),
+      "rss:get-entries": vi.fn().mockResolvedValue([]),
+      "journal:get-notes": vi.fn().mockResolvedValue([]),
+      "journal:get-note-by-date": vi.fn().mockResolvedValue(null),
     },
   },
 }));
@@ -46,7 +50,7 @@ describe("App", () => {
   test("loads persisted pages from the RPC layer on mount", async () => {
     const { rpc } = await import("./electrobun");
     const saved: DashboardPage[] = [{ id: "work", name: "Work", layout: [], order: 0 }];
-    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 4, pages: saved });
+    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 5, pages: saved });
 
     await act(async () => {
       render(<App />);

@@ -1,6 +1,6 @@
 import { rpc } from "@shell/view/electrobun";
-import type { StoredEntry } from "./useRssReader";
-import { useRssReader } from "./useRssReader";
+import type { RssEntry } from "../shared/types";
+import { useRssReaderContext } from "./RssReaderContext";
 
 interface Props {
   onOpenFullView?: () => void;
@@ -12,7 +12,7 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function EntryRow({ entry, onRead }: { entry: StoredEntry; onRead: (id: string) => void }) {
+function EntryRow({ entry, onRead }: { entry: RssEntry; onRead: (id: string) => void }) {
   return (
     <li className="flex items-start gap-2 py-1.5 border-b border-zinc-800 last:border-0">
       <div className="flex-1 min-w-0">
@@ -37,7 +37,7 @@ function EntryRow({ entry, onRead }: { entry: StoredEntry; onRead: (id: string) 
 }
 
 export function RssReaderWidget({ onOpenFullView }: Props) {
-  const { entries, unreadCount, isLoading, feeds, markRead } = useRssReader();
+  const { entries, unreadCount, isLoading, feeds, markRead } = useRssReaderContext();
 
   const recentEntries = entries.slice(0, 5);
   const isEmpty = feeds.length === 0;

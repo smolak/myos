@@ -1,7 +1,7 @@
 import { rpc } from "@shell/view/electrobun";
 import { useState } from "react";
+import { useRssReaderContext } from "./RssReaderContext";
 import type { StoredEntry, StoredFeed } from "./useRssReader";
-import { useRssReader } from "./useRssReader";
 
 interface Props {
   onClose?: () => void;
@@ -58,8 +58,15 @@ function EntryItem({
   );
 }
 
-function FeedTab() {
-  const { entries, markRead, markUnread } = useRssReader();
+function FeedTab({
+  entries,
+  markRead,
+  markUnread,
+}: {
+  entries: readonly StoredEntry[];
+  markRead: (id: string) => void;
+  markUnread: (id: string) => void;
+}) {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   const displayed = showUnreadOnly ? entries.filter((e) => !e.isRead) : entries;
@@ -116,8 +123,19 @@ function FeedRow({ feed, onDelete }: { feed: StoredFeed; onDelete: (id: string) 
   );
 }
 
-function ManageTab() {
-  const { feeds, addFeed, deleteFeed, refresh, isLoading } = useRssReader();
+function ManageTab({
+  feeds,
+  addFeed,
+  deleteFeed,
+  refresh,
+  isLoading,
+}: {
+  feeds: readonly StoredFeed[];
+  addFeed: (url: string) => Promise<void>;
+  deleteFeed: (id: string) => Promise<void>;
+  refresh: () => Promise<void>;
+  isLoading: boolean;
+}) {
   const [urlInput, setUrlInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -193,6 +211,7 @@ function ManageTab() {
 
 export function RssReaderFullView({ onClose }: Props) {
   const [activeTab, setActiveTab] = useState<"feed" | "manage">("feed");
+  const { feeds, entries, addFeed, deleteFeed, markRead, markUnread, refresh, isLoading } = useRssReaderContext();
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-100">
@@ -228,8 +247,10 @@ export function RssReaderFullView({ onClose }: Props) {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        {activeTab === "feed" && <FeedTab />}
-        {activeTab === "manage" && <ManageTab />}
+        {activeTab === "feed" && <FeedTab entries={entries} markRead={markRead} markUnread={markUnread} />}
+        {activeTab === "manage" && (
+          <ManageTab feeds={feeds} addFeed={addFeed} deleteFeed={deleteFeed} refresh={refresh} isLoading={isLoading} />
+        )}
       </div>
     </div>
   );

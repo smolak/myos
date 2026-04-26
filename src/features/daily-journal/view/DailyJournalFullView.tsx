@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DayData, TimelineEvent } from "../shared/types";
-import { useDailyJournal } from "./useDailyJournal";
+import { useDailyJournalContext } from "./DailyJournalContext";
 
 interface Props {
   onClose?: () => void;
@@ -36,7 +36,7 @@ function eventLabel(event: TimelineEvent): string {
 }
 
 export function DailyJournalFullView({ onClose }: Props) {
-  const { notes, isLoading, addNote, updateNote, deleteNote, getDay, searchNotes } = useDailyJournal();
+  const { notes, isLoading, addNote, updateNote, deleteNote, getDay, searchNotes } = useDailyJournalContext();
   const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().split("T")[0] as string);
   const [dayData, setDayData] = useState<DayData | null>(null);
   const [dayLoading, setDayLoading] = useState(false);

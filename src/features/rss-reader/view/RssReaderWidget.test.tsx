@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RssReaderWidget } from "./RssReaderWidget";
 
-vi.mock("./useRssReader", () => {
+vi.mock("./RssReaderContext", () => {
   const markReadMock = vi.fn();
   const addFeedMock = vi.fn();
   const deleteFeedMock = vi.fn();
@@ -24,7 +24,7 @@ vi.mock("./useRssReader", () => {
   let isLoading = false;
 
   return {
-    useRssReader: () => ({
+    useRssReaderContext: () => ({
       feeds,
       entries,
       unreadCount: entries.filter((e) => !e.isRead).length,
@@ -87,7 +87,7 @@ describe("RssReaderWidget", () => {
   let getMarkReadMock: () => ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
-    const mod = await import("./useRssReader");
+    const mod = await import("./RssReaderContext");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setFeeds = (mod as any).__setFeeds;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

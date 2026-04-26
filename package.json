@@ -6,7 +6,7 @@
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check --write .",
-    "test": "bun test --pass-with-no-tests ./src/core/bun ./src/features/todo/bun ./src/features/pomodoro/bun ./src/features/rss-reader/bun ./src/features/daily-journal/bun && vitest run",
+    "test": "bun run test:ui && bun run test:core",
     "test:core": "bun test --pass-with-no-tests ./src/core/bun ./src/features/todo/bun ./src/features/pomodoro/bun ./src/features/rss-reader/bun ./src/features/daily-journal/bun",
     "test:ui": "vitest run",
     "test:watch": "bun test --watch --pass-with-no-tests ./src/core/bun ./src/features/todo/bun ./src/features/pomodoro/bun ./src/features/rss-reader/bun ./src/features/daily-journal/bun",

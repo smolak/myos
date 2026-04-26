@@ -2,11 +2,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DailyJournalWidget } from "./DailyJournalWidget";
 
-vi.mock("./useDailyJournal", () => {
+vi.mock("./DailyJournalContext", () => {
   let todayNote: { id: string; date: string; content: string; createdAt: string; updatedAt: string } | null = null;
   let notes: Array<{ id: string; date: string; content: string; createdAt: string; updatedAt: string }> = [];
   return {
-    useDailyJournal: () => ({
+    useDailyJournalContext: () => ({
       todayNote,
       notes,
       isLoading: false,
@@ -40,7 +40,7 @@ describe("DailyJournalWidget", () => {
   let setNotes: (n: ReturnType<typeof makeNote>[]) => void;
 
   beforeEach(async () => {
-    const mod = await import("./useDailyJournal");
+    const mod = await import("./DailyJournalContext");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setTodayNote = (mod as any).__setTodayNote;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
