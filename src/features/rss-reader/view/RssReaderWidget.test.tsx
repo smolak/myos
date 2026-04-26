@@ -2,14 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RssReaderWidget } from "./RssReaderWidget";
 
-vi.mock("@shell/view/electrobun", () => ({
-  rpc: {
-    request: {
-      "shell:open-url": vi.fn().mockResolvedValue({}),
-    },
-  },
-}));
-
 vi.mock("./useRssReader", () => {
   const markReadMock = vi.fn();
   const addFeedMock = vi.fn();
