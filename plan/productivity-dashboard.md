@@ -457,11 +457,11 @@ Implement Focus Mode toggle. Single keypress or command shows one feature full-s
 
 ### Acceptance criteria
 
-- [ ] Keyboard shortcut enters focus mode
-- [ ] Selected feature renders full-screen, no grid/tabs
-- [ ] Same shortcut exits back to dashboard
-- [ ] Last focused feature is remembered
-- [ ] Command palette can enter focus mode for any feature
+- [x] Keyboard shortcut enters focus mode
+- [x] Selected feature renders full-screen, no grid/tabs
+- [x] Same shortcut exits back to dashboard
+- [x] Last focused feature is remembered
+- [x] Command palette can enter focus mode for any feature
 
 ---
 
