@@ -11,6 +11,7 @@ export interface UseBookmarksReturn {
     fields: { title?: string; url?: string; description?: string; folder?: string; tags?: string[] },
   ): Promise<void>;
   remove(id: string): Promise<void>;
+  openUrl(url: string): Promise<void>;
 }
 
 export function useBookmarks(): UseBookmarksReturn {
@@ -53,5 +54,9 @@ export function useBookmarks(): UseBookmarksReturn {
     [reload],
   );
 
-  return { bookmarks, isLoading, create, update, remove };
+  const openUrl = useCallback(async (url: string) => {
+    await rpc.request["shell:open-url"]({ url });
+  }, []);
+
+  return { bookmarks, isLoading, create, update, remove, openUrl };
 }

@@ -2,6 +2,14 @@ import { useState } from "react";
 import type { Bookmark } from "../shared/types";
 import { useBookmarksContext } from "./BookmarksContext";
 
+interface EditState {
+  title: string;
+  url: string;
+  description: string;
+  folder: string;
+  tagsInput: string;
+}
+
 interface Props {
   onClose?: () => void;
 }
@@ -121,12 +129,122 @@ function TagBadge({ tag }: { tag: string }) {
   return <span className="inline-block text-xs bg-zinc-800 text-zinc-400 rounded px-1.5 py-0.5">{tag}</span>;
 }
 
-function BookmarkItem({ bookmark, onDelete }: { bookmark: Bookmark; onDelete: (id: string) => Promise<void> }) {
+function BookmarkItem({
+  bookmark,
+  onDelete,
+  onUpdate,
+  onOpen,
+}: {
+  bookmark: Bookmark;
+  onDelete: (id: string) => Promise<void>;
+  onUpdate: (
+    id: string,
+    fields: { title?: string; url?: string; description?: string; folder?: string; tags?: string[] },
+  ) => Promise<void>;
+  onOpen: (url: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [edit, setEdit] = useState<EditState>({
+    title: bookmark.title,
+    url: bookmark.url,
+    description: bookmark.description ?? "",
+    folder: bookmark.folder ?? "",
+    tagsInput: bookmark.tags.join(", "),
+  });
+
+  async function handleSave() {
+    const tags = edit.tagsInput
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    await onUpdate(bookmark.id, {
+      title: edit.title,
+      url: edit.url,
+      description: edit.description || undefined,
+      folder: edit.folder || undefined,
+      tags: tags.length > 0 ? tags : undefined,
+    });
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <li className="py-3 border-b border-zinc-800 last:border-0 space-y-2">
+        <input
+          type="text"
+          value={edit.title}
+          onChange={(e) => setEdit((s) => ({ ...s, title: e.target.value }))}
+          className="w-full bg-zinc-800 rounded px-3 py-1.5 text-sm outline-none border border-zinc-700 focus:border-zinc-500 text-zinc-200"
+          aria-label="Edit title"
+        />
+        <input
+          type="url"
+          value={edit.url}
+          onChange={(e) => setEdit((s) => ({ ...s, url: e.target.value }))}
+          className="w-full bg-zinc-800 rounded px-3 py-1.5 text-sm outline-none border border-zinc-700 focus:border-zinc-500 text-zinc-200"
+          aria-label="Edit URL"
+        />
+        <input
+          type="text"
+          value={edit.description}
+          onChange={(e) => setEdit((s) => ({ ...s, description: e.target.value }))}
+          placeholder="Description (optional)"
+          className="w-full bg-zinc-800 rounded px-3 py-1.5 text-sm outline-none border border-zinc-700 focus:border-zinc-500 text-zinc-200 placeholder-zinc-600"
+          aria-label="Edit description"
+        />
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={edit.folder}
+            onChange={(e) => setEdit((s) => ({ ...s, folder: e.target.value }))}
+            placeholder="Folder (optional)"
+            className="flex-1 bg-zinc-800 rounded px-3 py-1.5 text-sm outline-none border border-zinc-700 focus:border-zinc-500 text-zinc-200 placeholder-zinc-600"
+            aria-label="Edit folder"
+          />
+          <input
+            type="text"
+            value={edit.tagsInput}
+            onChange={(e) => setEdit((s) => ({ ...s, tagsInput: e.target.value }))}
+            placeholder="Tags (comma-separated)"
+            className="flex-1 bg-zinc-800 rounded px-3 py-1.5 text-sm outline-none border border-zinc-700 focus:border-zinc-500 text-zinc-200 placeholder-zinc-600"
+            aria-label="Edit tags"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={!edit.title.trim() || !edit.url.trim()}
+            className="bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 px-3 py-1 rounded text-xs transition-colors text-zinc-200"
+            aria-label="Save"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-3 py-1"
+            aria-label="Cancel"
+          >
+            Cancel
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className="py-3 border-b border-zinc-800 last:border-0">
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-zinc-200 truncate">{bookmark.title}</p>
+          <button
+            type="button"
+            onClick={() => onOpen(bookmark.url)}
+            className="text-sm text-zinc-200 truncate block text-left hover:text-white hover:underline transition-colors w-full"
+            aria-label={`Open ${bookmark.title}`}
+          >
+            {bookmark.title}
+          </button>
           <p className="text-xs text-zinc-500 truncate">{domain(bookmark.url)}</p>
           {bookmark.description && <p className="text-xs text-zinc-600 mt-0.5 truncate">{bookmark.description}</p>}
           <div className="flex flex-wrap gap-1 mt-1">
@@ -140,14 +258,24 @@ function BookmarkItem({ bookmark, onDelete }: { bookmark: Bookmark; onDelete: (i
             ))}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => void onDelete(bookmark.id)}
-          className="text-xs text-zinc-600 hover:text-red-400 transition-colors shrink-0"
-          aria-label={`Delete ${bookmark.title}`}
-        >
-          Remove
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-xs text-zinc-600 hover:text-zinc-300 transition-colors"
+            aria-label={`Edit ${bookmark.title}`}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => void onDelete(bookmark.id)}
+            className="text-xs text-zinc-600 hover:text-red-400 transition-colors"
+            aria-label={`Delete ${bookmark.title}`}
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </li>
   );
@@ -159,12 +287,19 @@ function BookmarksList({
   activeTag,
   activeFolder,
   remove,
+  update,
+  openUrl,
 }: {
   bookmarks: readonly Bookmark[];
   searchQuery: string;
   activeTag: string;
   activeFolder: string;
   remove: (id: string) => Promise<void>;
+  update: (
+    id: string,
+    fields: { title?: string; url?: string; description?: string; folder?: string; tags?: string[] },
+  ) => Promise<void>;
+  openUrl: (url: string) => void;
 }) {
   const filtered = bookmarks.filter((b) => {
     if (activeFolder && b.folder !== activeFolder) return false;
@@ -191,14 +326,14 @@ function BookmarksList({
   return (
     <ul>
       {filtered.map((b) => (
-        <BookmarkItem key={b.id} bookmark={b} onDelete={remove} />
+        <BookmarkItem key={b.id} bookmark={b} onDelete={remove} onUpdate={update} onOpen={openUrl} />
       ))}
     </ul>
   );
 }
 
 export function BookmarksFullView({ onClose }: Props) {
-  const { bookmarks, create, remove } = useBookmarksContext();
+  const { bookmarks, create, update, remove, openUrl } = useBookmarksContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTag, setActiveTag] = useState("");
   const [activeFolder, setActiveFolder] = useState("");
@@ -274,6 +409,8 @@ export function BookmarksFullView({ onClose }: Props) {
               activeTag={activeTag}
               activeFolder={activeFolder}
               remove={remove}
+              update={update}
+              openUrl={openUrl}
             />
           </div>
         </div>

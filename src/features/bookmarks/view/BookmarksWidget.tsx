@@ -13,19 +13,26 @@ function domain(url: string): string {
   }
 }
 
-function BookmarkRow({ bookmark }: { bookmark: Bookmark }) {
+function BookmarkRow({ bookmark, onOpen }: { bookmark: Bookmark; onOpen: (url: string) => void }) {
   return (
-    <li className="flex items-center gap-2 py-1 min-w-0">
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-zinc-300 truncate">{bookmark.title}</p>
-        <p className="text-xs text-zinc-600 truncate">{domain(bookmark.url)}</p>
-      </div>
+    <li className="min-w-0">
+      <button
+        type="button"
+        aria-label={bookmark.title}
+        onClick={() => onOpen(bookmark.url)}
+        className="w-full text-left flex items-center gap-2 py-1 rounded hover:bg-zinc-800 transition-colors min-w-0"
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-zinc-300 truncate">{bookmark.title}</p>
+          <p className="text-xs text-zinc-600 truncate">{domain(bookmark.url)}</p>
+        </div>
+      </button>
     </li>
   );
 }
 
 export function BookmarksWidget({ onOpenFullView }: Props) {
-  const { bookmarks } = useBookmarksContext();
+  const { bookmarks, openUrl } = useBookmarksContext();
   const visible = bookmarks.slice(0, 4);
 
   return (
@@ -58,7 +65,7 @@ export function BookmarksWidget({ onOpenFullView }: Props) {
         <>
           <ul className="flex-1 overflow-hidden">
             {visible.map((b) => (
-              <BookmarkRow key={b.id} bookmark={b} />
+              <BookmarkRow key={b.id} bookmark={b} onOpen={openUrl} />
             ))}
           </ul>
           {bookmarks.length > 4 && (
