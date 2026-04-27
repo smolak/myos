@@ -29,6 +29,7 @@ import { TodoFullView } from "@features/todo/view/TodoFullView";
 import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { WeatherWidget } from "@features/weather/view/WeatherWidget";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AppOptions } from "./AppOptions";
 import { CommandPalette } from "./CommandPalette";
 import { commandRegistry } from "./command-registry";
 import { DashboardGrid } from "./DashboardGrid";
@@ -37,6 +38,7 @@ import { FocusModeView } from "./FocusModeView";
 import { registerHotkey } from "./hotkeys";
 import { NotificationCenter } from "./NotificationCenter";
 import { ThemeToggle } from "./ThemeToggle";
+import { useAppOptions } from "./useAppOptions";
 import { useNotifications } from "./useNotifications";
 import { useTheme } from "./useTheme";
 
@@ -102,15 +104,35 @@ function App() {
   const [fullViewFeature, setFullViewFeature] = useState<string | null>(null);
   const [focusModeFeatureId, setFocusModeFeatureId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [appOptionsOpen, setAppOptionsOpen] = useState(false);
   const currentPage = pages[0] as DashboardPage;
   const { mode: themeMode, accentColor, setMode: setThemeMode, setAccentColor } = useTheme();
   const { notifications, unreadCount, markRead, clearAll } = useNotifications();
+  useAppOptions();
 
   // Refs to avoid stale closures in hotkey handler
   const focusModeFeatureIdRef = useRef(focusModeFeatureId);
   focusModeFeatureIdRef.current = focusModeFeatureId;
   const fullViewFeatureRef = useRef(fullViewFeature);
   fullViewFeatureRef.current = fullViewFeature;
+
+  // Save window bounds silently on unload so they can be restored on next open
+  useEffect(() => {
+    function saveWindowBounds() {
+      void rpc.request["app:save-window-bounds"]({
+        width: window.outerWidth,
+        height: window.outerHeight,
+        x: window.screenX,
+        y: window.screenY,
+      });
+    }
+    window.addEventListener("resize", saveWindowBounds);
+    window.addEventListener("beforeunload", saveWindowBounds);
+    return () => {
+      window.removeEventListener("resize", saveWindowBounds);
+      window.removeEventListener("beforeunload", saveWindowBounds);
+    };
+  }, []);
 
   useEffect(() => {
     void rpc.request["dashboard:get-layout"]({}).then((stored) => {
@@ -151,6 +173,18 @@ function App() {
       }
     });
   }, [enterFocusMode]);
+
+  // Register app-level commands
+  useEffect(() => {
+    return commandRegistry.register({
+      id: "app:open-options",
+      label: "Open App Options",
+      description: "Appearance, data directory, and about",
+      group: "App",
+      keywords: ["settings", "options", "preferences", "appearance", "background", "theme"],
+      action: () => setAppOptionsOpen(true),
+    });
+  }, []);
 
   // Register built-in navigation commands
   useEffect(() => {
@@ -388,7 +422,10 @@ function App() {
             <RssReaderProvider>
               <HabitsProvider>
                 <DailyJournalProvider>
-                  <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
+                  <div
+                    className="flex flex-col h-screen text-zinc-100"
+                    style={{ background: "var(--user-bg, var(--bg-app))" }}
+                  >
                     <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between relative z-10">
                       <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--accent-color)" }}>
                         MyOS
@@ -413,6 +450,14 @@ function App() {
                           aria-label="Open command palette"
                         >
                           ⌘K
+                        </button>
+                        <button
+                          type="button"
+                          className="text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
+                          onClick={() => setAppOptionsOpen(true)}
+                          aria-label="Open app options"
+                        >
+                          ⚙
                         </button>
                       </div>
                     </header>
@@ -510,6 +555,8 @@ function App() {
                     )}
 
                     {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
+
+                    {appOptionsOpen && <AppOptions onClose={() => setAppOptionsOpen(false)} />}
                   </div>
                 </DailyJournalProvider>
               </HabitsProvider>

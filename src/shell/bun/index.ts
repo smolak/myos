@@ -1,6 +1,7 @@
 // NOTE: imports in this file must use relative paths (../../core/..., ../../features/...).
 // The electrobun bundler does not resolve tsconfig path aliases (@core/*, @features/*, @shell/*).
 
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BrowserView, BrowserWindow, type ElectrobunEvent, Tray, Updater, Utils } from "electrobun/bun";
 import { ActionQueue } from "../../core/bun/action-queue";
@@ -24,7 +25,7 @@ import { snippetsFeature } from "../../features/snippets/bun/index";
 import { todoFeature } from "../../features/todo/bun/index";
 import { weatherFeature } from "../../features/weather/bun/index";
 import type { AppNotification } from "../shared/notification-types";
-import type { AppRPCSchema, ThemeMode } from "../shared/rpc-schema";
+import type { AppRPCSchema, BackgroundStyle, ThemeMode } from "../shared/rpc-schema";
 import type { SearchResult } from "../shared/search-types";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
@@ -43,8 +44,31 @@ const MAX_NOTIFICATIONS = 50;
 const NOTIFICATIONS_SCOPE = "notifications";
 const NOTIFICATIONS_KEY = "history";
 
+const APP_SCOPE = "app";
+
+// Config file lives outside the data dir so it survives data-dir changes across restarts.
+const CONFIG_FILE = join(Utils.paths.userData, "myos-config.json");
+
+interface MyOSConfig {
+  dataDir?: string;
+}
+
+function readMyOSConfig(): MyOSConfig {
+  try {
+    return JSON.parse(readFileSync(CONFIG_FILE, "utf-8")) as MyOSConfig;
+  } catch {
+    return {};
+  }
+}
+
+async function writeMyOSConfig(updates: Partial<MyOSConfig>) {
+  const existing = readMyOSConfig();
+  await Bun.write(CONFIG_FILE, JSON.stringify({ ...existing, ...updates }, null, 2));
+}
+
 // Bootstrap core services
-const dataDir = process.env.MYOS_DATA_DIR?.trim() || join(Utils.paths.userData, "data");
+const myosConfig = readMyOSConfig();
+const dataDir = process.env.MYOS_DATA_DIR?.trim() || myosConfig.dataDir || join(Utils.paths.userData, "data");
 const dbManager = new DatabaseManager(dataDir);
 const coreDb = dbManager.getCoreDatabase();
 const settingsManager = new SettingsManager(coreDb);
@@ -516,6 +540,51 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         ];
       },
 
+      // App Options
+      "app:get-options": async (_params) => {
+        return {
+          background: settingsManager.get<BackgroundStyle | null>(APP_SCOPE, "background", null),
+        };
+      },
+      "app:update-options": async (params) => {
+        if (params.background !== undefined) {
+          await settingsManager.set(APP_SCOPE, "background", params.background);
+        }
+        return { success: true };
+      },
+      "app:get-data-dir": async (_params) => {
+        return { path: dataDir };
+      },
+      "app:open-in-finder": async ({ path }) => {
+        const proc = Bun.spawn(["open", path]);
+        await proc.exited;
+        return { success: true };
+      },
+      "app:pick-data-dir": async (_params) => {
+        const script = 'POSIX path of (choose folder with prompt "Select data directory:")';
+        const proc = Bun.spawn(["osascript", "-e", script], { stdout: "pipe", stderr: "pipe" });
+        // Read stdout concurrently so the stream isn't exhausted before we consume it.
+        // Use the resolved value of proc.exited — proc.exitCode can be null even after exit.
+        const [output, exitCode] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
+        if (exitCode !== 0) return { path: null };
+        return { path: output.trim() || null };
+      },
+      "app:save-data-dir": async ({ path }) => {
+        await writeMyOSConfig({ dataDir: path });
+        return { success: true };
+      },
+      "app:get-version": async (_params) => {
+        const pkg = (await Bun.file(join(import.meta.dir, "../../../package.json")).json()) as {
+          version: string;
+          name: string;
+        };
+        return { version: pkg.version, name: pkg.name };
+      },
+      "app:save-window-bounds": async (params) => {
+        await settingsManager.set(APP_SCOPE, "windowBounds", params);
+        return { success: true };
+      },
+
       // Shell
       "shell:open-url": async ({ url }) => {
         return { success: Utils.openExternal(url) };
@@ -615,12 +684,16 @@ async function getDashboardUrl(): Promise<string> {
   return "views://dashboard/index.html";
 }
 
-const WINDOW_FRAME = {
+const DEFAULT_WINDOW_FRAME = {
   width: 900,
   height: 700,
   x: 200,
   y: 200,
 } as const;
+
+function getWindowFrame() {
+  return settingsManager.get<typeof DEFAULT_WINDOW_FRAME>(APP_SCOPE, "windowBounds", DEFAULT_WINDOW_FRAME);
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -634,7 +707,7 @@ function createMainWindow(url: string): BrowserWindow {
   const win = new BrowserWindow({
     title: APP_TITLE,
     url,
-    frame: WINDOW_FRAME,
+    frame: getWindowFrame(),
     rpc,
   });
   attachCloseHandler(win);

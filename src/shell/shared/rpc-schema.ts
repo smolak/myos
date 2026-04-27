@@ -17,6 +17,8 @@ import type { SearchResult } from "./search-types";
 
 export type ThemeMode = "dark" | "light" | "system";
 
+export type BackgroundStyle = { type: "solid"; color: string } | { type: "gradient"; preset: string };
+
 export interface AppRPCSchema extends ElectrobunRPCSchema {
   bun: {
     requests: {
@@ -157,6 +159,19 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
 
       // Global search
       "search:global": { params: { query: string }; response: SearchResult[] };
+
+      // App Options
+      "app:get-options": { params: Record<string, never>; response: { background: BackgroundStyle | null } };
+      "app:update-options": { params: { background?: BackgroundStyle | null }; response: { success: boolean } };
+      "app:save-data-dir": { params: { path: string }; response: { success: boolean } };
+      "app:get-data-dir": { params: Record<string, never>; response: { path: string } };
+      "app:open-in-finder": { params: { path: string }; response: { success: boolean } };
+      "app:pick-data-dir": { params: Record<string, never>; response: { path: string | null } };
+      "app:get-version": { params: Record<string, never>; response: { version: string; name: string } };
+      "app:save-window-bounds": {
+        params: { width: number; height: number; x: number; y: number };
+        response: { success: boolean };
+      };
 
       // Shell
       "shell:open-url": { params: { url: string }; response: { success: boolean } };

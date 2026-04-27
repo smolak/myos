@@ -587,13 +587,13 @@ Implement Clipboard History feature. Watch system clipboard for changes. Store c
 
 ### Acceptance criteria
 
-- [ ] Gear icon visible in app shell; clicking opens the options overlay
-- [ ] Appearance section: color picker and gradient presets update the app background; persists across restarts
-- [ ] Data section: current DB path displayed; "Change…" opens native folder picker; selecting a new path shows restart notice
-- [ ] Data section: "Open in Finder" opens the data directory in Finder
-- [ ] About section: shows app name, version, data directory path, "Open in Finder", and backup note
-- [ ] Window size and position are remembered across restarts
-- [ ] Tests cover options read/write, data dir RPC, window bounds persistence
+- [x] Gear icon visible in app shell; clicking opens the options overlay
+- [x] Appearance section: color picker and gradient presets update the app background; persists across restarts
+- [ ] Data section: current DB path displayed; "Change…" opens native folder picker; selecting a new path shows restart notice **[NOT WORKING — folder change is not taking effect on next launch; root cause still unresolved despite multiple attempts: osascript pick returns correct path, config file is written, but the new dataDir is not being used on restart]**
+- [x] Data section: "Open in Finder" opens the data directory in Finder
+- [x] About section: shows app name, version, data directory path, "Open in Finder", and backup note
+- [x] Window size and position are remembered across restarts
+- [x] Tests cover options read/write, data dir RPC, window bounds persistence
 
 ---
 

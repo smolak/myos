@@ -3,6 +3,8 @@
 :root {
   --accent-color: #6366f1;
   --bg-app: #09090b;
+  /* Set by useAppOptions when user picks a background; falls back to --bg-app otherwise. */
+  --user-bg: initial;
   --bg-header: #18181b;
   --bg-surface: #27272a;
   --text-primary: #f4f4f5;
