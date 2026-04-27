@@ -1,6 +1,7 @@
 import type { DashboardPage } from "@core/types";
 import type { Bookmark } from "@features/bookmarks/shared/types";
 import type { CalendarEvent, CalendarSource } from "@features/calendar/shared/types";
+import type { ClipboardEntry } from "@features/clipboard-history/shared/types";
 import type { TimeFormat } from "@features/clock/shared/types";
 import type { CountdownWithTimeLeft } from "@features/countdowns/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
@@ -123,6 +124,11 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "countdowns:get-all": { params: { includeArchived?: boolean }; response: CountdownWithTimeLeft[] };
       "countdowns:get-by-id": { params: { id: string }; response: CountdownWithTimeLeft | null };
 
+      // Clipboard History
+      "clipboard-history:get-all": { params: { limit?: number; search?: string }; response: ClipboardEntry[] };
+      "clipboard-history:delete": { params: { id: string }; response: { success: boolean } };
+      "clipboard-history:clear": { params: Record<string, never>; response: { success: boolean } };
+
       // Habits
       "habits:create": {
         params: { name: string; description?: string; frequency?: "daily" | "weekly" };
@@ -149,6 +155,8 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
   };
   webview: {
     requests: Record<never, never>;
-    messages: Record<never, never>;
+    messages: {
+      "clipboard:new-entry": { id: string; content: string; contentType: string };
+    };
   };
 }

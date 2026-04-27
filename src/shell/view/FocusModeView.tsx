@@ -1,5 +1,6 @@
 import { BookmarksFullView } from "@features/bookmarks/view/BookmarksFullView";
 import { CalendarFullView } from "@features/calendar/view/CalendarFullView";
+import { ClipboardHistoryFullView } from "@features/clipboard-history/view/ClipboardHistoryFullView";
 import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
 import { HabitsFullView } from "@features/habits/view/HabitsFullView";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
@@ -19,6 +20,7 @@ function FeatureContent({ featureId, onExit }: FocusModeViewProps) {
   if (featureId === "calendar") return <CalendarFullView onClose={onExit} />;
   if (featureId === "habits") return <HabitsFullView onClose={onExit} />;
   if (featureId === "bookmarks") return <BookmarksFullView onClose={onExit} />;
+  if (featureId === "clipboard-history") return <ClipboardHistoryFullView onClose={onExit} />;
   return null;
 }
 

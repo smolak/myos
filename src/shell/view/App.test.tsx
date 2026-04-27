@@ -5,6 +5,8 @@ import App from "./App";
 
 vi.mock("./electrobun", () => ({
   rpc: {
+    addMessageListener: vi.fn(),
+    removeMessageListener: vi.fn(),
     request: {
       "dashboard:get-layout": vi.fn().mockResolvedValue({ version: 0, pages: [] }),
       "dashboard:save-layout": vi.fn().mockResolvedValue({ success: true }),
@@ -22,6 +24,7 @@ vi.mock("./electrobun", () => ({
       "habits:get-all": vi.fn().mockResolvedValue([]),
       "bookmarks:get-all": vi.fn().mockResolvedValue([]),
       "countdowns:get-all": vi.fn().mockResolvedValue([]),
+      "clipboard-history:get-all": vi.fn().mockResolvedValue([]),
     },
   },
 }));
@@ -53,7 +56,7 @@ describe("App", () => {
   test("loads persisted pages from the RPC layer on mount", async () => {
     const { rpc } = await import("./electrobun");
     const saved: DashboardPage[] = [{ id: "work", name: "Work", layout: [], order: 0 }];
-    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 7, pages: saved });
+    vi.mocked(rpc.request["dashboard:get-layout"]).mockResolvedValueOnce({ version: 8, pages: saved });
 
     await act(async () => {
       render(<App />);

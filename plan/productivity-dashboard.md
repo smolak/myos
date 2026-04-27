@@ -551,12 +551,12 @@ Implement Clipboard History feature. Watch system clipboard for changes. Store c
 
 ### Acceptance criteria
 
-- [ ] System clipboard monitored for changes
-- [ ] Clipboard entries stored with timestamp
-- [ ] Widget shows recent clips
-- [ ] Full view with search
-- [ ] `clipboard:copied` event emitted
-- [ ] Tests cover entry storage, event emission
+- [x] System clipboard monitored for changes
+- [x] Clipboard entries stored with timestamp
+- [x] Widget shows recent clips
+- [x] Full view with search
+- [x] `clipboard:copied` event emitted
+- [x] Tests cover entry storage, event emission
 
 ---
 

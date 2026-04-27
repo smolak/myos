@@ -12,6 +12,7 @@ import { Scheduler } from "../../core/bun/scheduler";
 import { SettingsManager } from "../../core/bun/settings-manager";
 import { bookmarksFeature } from "../../features/bookmarks/bun/index";
 import { calendarFeature } from "../../features/calendar/bun/index";
+import { clipboardHistoryFeature } from "../../features/clipboard-history/bun/index";
 import { clockFeature } from "../../features/clock/bun/index";
 import { countdownsFeature } from "../../features/countdowns/bun/index";
 import { dailyJournalFeature } from "../../features/daily-journal/bun/index";
@@ -27,7 +28,7 @@ import type { SearchResult } from "../shared/search-types";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
-const LAYOUT_VERSION = 7;
+const LAYOUT_VERSION = 8;
 
 const POMODORO_SETTINGS_SCOPE = "pomodoro";
 const DEFAULT_WORK_MINUTES = 25;
@@ -71,6 +72,7 @@ const startupPromise = featureRegistry.startup([
   habitsFeature,
   bookmarksFeature,
   countdownsFeature,
+  clipboardHistoryFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -425,6 +427,21 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return actionQueue.executeQuery("bookmarks", "get-by-id", params) as Promise<any>;
       },
 
+      // Clipboard History
+      "clipboard-history:get-all": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("clipboard-history", "get-all", params) as Promise<any>;
+      },
+      "clipboard-history:delete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("clipboard-history", "delete", params) as Promise<{ success: boolean }>;
+      },
+      "clipboard-history:clear": async (_params) => {
+        await ready();
+        return actionQueue.dispatchAction("clipboard-history", "clear", {}) as Promise<{ success: boolean }>;
+      },
+
       // Global search
       "search:global": async ({ query }) => {
         await ready();
@@ -436,6 +453,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           habitsResults,
           bookmarksResults,
           countdownsResults,
+          clipboardResults,
         ] = await Promise.all([
           actionQueue.executeQuery("todo", "search", { query }),
           actionQueue.executeQuery("rss-reader", "search", { query }),
@@ -444,6 +462,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           actionQueue.executeQuery("habits", "search", { query }),
           actionQueue.executeQuery("bookmarks", "search", { query }),
           actionQueue.executeQuery("countdowns", "search", { query }),
+          actionQueue.executeQuery("clipboard-history", "search", { query }),
         ]);
         const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
           (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
@@ -459,6 +478,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           ...tag(habitsResults, "habits", "Habits"),
           ...tag(bookmarksResults, "bookmarks", "Bookmarks"),
           ...tag(countdownsResults, "countdowns", "Countdowns"),
+          ...tag(clipboardResults, "clipboard-history", "Clipboard History"),
         ];
       },
 
@@ -526,6 +546,11 @@ void startupPromise.then(() => {
       timestamp: Date.now(),
       read: false,
     });
+  });
+
+  eventBus.subscribe("clipboard:copied", async (payload) => {
+    const p = payload as { id: string; content: string; contentType: string };
+    rpc.send["clipboard:new-entry"](p);
   });
 
   eventBus.subscribe("todo:item-completed", async (payload) => {
