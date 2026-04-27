@@ -607,9 +607,9 @@ Implement Snippets feature. Define templates with placeholder variables. Expand 
 
 ### Acceptance criteria
 
-- [ ] Snippets created with name and template text
-- [ ] Placeholder syntax (e.g., `{{date}}`, `{{clipboard}}`)
-- [ ] Expansion via command palette
-- [ ] Variable substitution at expansion time
-- [ ] Widget shows favorited snippets
-- [ ] Tests cover template parsing, variable substitution
+- [x] Snippets created with name and template text
+- [x] Placeholder syntax (e.g., `{{date}}`, `{{clipboard}}`)
+- [x] Expansion via command palette
+- [x] Variable substitution at expansion time
+- [x] Widget shows favorited snippets
+- [x] Tests cover template parsing, variable substitution

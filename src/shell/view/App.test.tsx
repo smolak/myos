@@ -25,6 +25,7 @@ vi.mock("./electrobun", () => ({
       "bookmarks:get-all": vi.fn().mockResolvedValue([]),
       "countdowns:get-all": vi.fn().mockResolvedValue([]),
       "clipboard-history:get-all": vi.fn().mockResolvedValue([]),
+      "snippets:get-all": vi.fn().mockResolvedValue([]),
     },
   },
 }));

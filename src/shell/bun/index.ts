@@ -20,6 +20,7 @@ import { getTimelineEvents } from "../../features/daily-journal/bun/queries";
 import { habitsFeature } from "../../features/habits/bun/index";
 import { pomodoroFeature } from "../../features/pomodoro/bun/index";
 import { rssReaderFeature } from "../../features/rss-reader/bun/index";
+import { snippetsFeature } from "../../features/snippets/bun/index";
 import { todoFeature } from "../../features/todo/bun/index";
 import { weatherFeature } from "../../features/weather/bun/index";
 import type { AppNotification } from "../shared/notification-types";
@@ -73,6 +74,7 @@ const startupPromise = featureRegistry.startup([
   bookmarksFeature,
   countdownsFeature,
   clipboardHistoryFeature,
+  snippetsFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -442,6 +444,35 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return actionQueue.dispatchAction("clipboard-history", "clear", {}) as Promise<{ success: boolean }>;
       },
 
+      // Snippets
+      "snippets:create": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("snippets", "create", params) as Promise<{ id: string }>;
+      },
+      "snippets:update": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("snippets", "update", params) as Promise<{ success: boolean }>;
+      },
+      "snippets:delete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("snippets", "delete", params) as Promise<{ success: boolean }>;
+      },
+      "snippets:get-all": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("snippets", "get-all", params) as Promise<any>;
+      },
+      "snippets:get-by-id": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("snippets", "get-by-id", params) as Promise<any>;
+      },
+      "snippets:expand": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("snippets", "expand", params) as Promise<any>;
+      },
+
       // Global search
       "search:global": async ({ query }) => {
         await ready();
@@ -454,6 +485,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           bookmarksResults,
           countdownsResults,
           clipboardResults,
+          snippetsResults,
         ] = await Promise.all([
           actionQueue.executeQuery("todo", "search", { query }),
           actionQueue.executeQuery("rss-reader", "search", { query }),
@@ -463,6 +495,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           actionQueue.executeQuery("bookmarks", "search", { query }),
           actionQueue.executeQuery("countdowns", "search", { query }),
           actionQueue.executeQuery("clipboard-history", "search", { query }),
+          actionQueue.executeQuery("snippets", "search", { query }),
         ]);
         const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
           (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
@@ -479,6 +512,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           ...tag(bookmarksResults, "bookmarks", "Bookmarks"),
           ...tag(countdownsResults, "countdowns", "Countdowns"),
           ...tag(clipboardResults, "clipboard-history", "Clipboard History"),
+          ...tag(snippetsResults, "snippets", "Snippets"),
         ];
       },
 

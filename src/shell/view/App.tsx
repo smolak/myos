@@ -22,6 +22,9 @@ import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
 import { RssReaderProvider } from "@features/rss-reader/view/RssReaderContext";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
+import { SnippetsProvider, useSnippetsContext } from "@features/snippets/view/SnippetsContext";
+import { SnippetsFullView } from "@features/snippets/view/SnippetsFullView";
+import { SnippetsWidget } from "@features/snippets/view/SnippetsWidget";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
 import { TodoWidget } from "@features/todo/view/TodoWidget";
 import { WeatherWidget } from "@features/weather/view/WeatherWidget";
@@ -55,10 +58,44 @@ const DEFAULT_PAGES: DashboardPage[] = [
       { i: "bookmarks-1", x: 2, y: 6, w: 2, h: 1, featureId: "bookmarks", widgetId: "recent-list" },
       { i: "countdowns-1", x: 0, y: 7, w: 2, h: 1, featureId: "countdowns", widgetId: "upcoming" },
       { i: "clipboard-1", x: 2, y: 7, w: 2, h: 1, featureId: "clipboard-history", widgetId: "recent-clips" },
+      { i: "snippets-1", x: 0, y: 8, w: 2, h: 1, featureId: "snippets", widgetId: "favorites" },
     ],
     order: 0,
   },
 ];
+
+function SnippetsCommandRegistrar({ onOpenFullView }: { onOpenFullView: () => void }) {
+  const { snippets, expand } = useSnippetsContext();
+
+  useEffect(() => {
+    if (snippets.length === 0) return;
+    return commandRegistry.registerMany(
+      snippets.map((s) => ({
+        id: `snippets:expand:${s.id}`,
+        label: `Expand Snippet: ${s.name}`,
+        description: s.template.length > 60 ? `${s.template.slice(0, 60)}…` : s.template,
+        group: "Snippets",
+        keywords: ["snippet", "template", "expand", "copy"],
+        action: () => {
+          void expand(s.id).then((text) => navigator.clipboard.writeText(text));
+        },
+      })),
+    );
+  }, [snippets, expand]);
+
+  useEffect(() => {
+    return commandRegistry.register({
+      id: "nav:snippets",
+      label: "Open Snippets",
+      description: "View and manage text snippets",
+      group: "Navigation",
+      keywords: ["snippet", "template", "text", "expand"],
+      action: onOpenFullView,
+    });
+  }, [onOpenFullView]);
+
+  return null;
+}
 
 function App() {
   const [pages, setPages] = useState<DashboardPage[]>(DEFAULT_PAGES);
@@ -276,6 +313,14 @@ function App() {
         keywords: ["focus", "clipboard", "copy", "paste", "fullscreen"],
         action: () => enterFocusMode("clipboard-history"),
       },
+      {
+        id: "focus:snippets",
+        label: "Focus Mode: Snippets",
+        description: "Open Snippets in full-screen focus mode",
+        group: "Focus Mode",
+        keywords: ["focus", "snippet", "template", "expand", "fullscreen"],
+        action: () => enterFocusMode("snippets"),
+      },
     ]);
   }, [enterFocusMode]);
 
@@ -324,6 +369,9 @@ function App() {
     if (item.featureId === "clipboard-history" && item.widgetId === "recent-clips") {
       return <ClipboardHistoryWidget onOpenFullView={() => setFullViewFeature("clipboard-history")} />;
     }
+    if (item.featureId === "snippets" && item.widgetId === "favorites") {
+      return <SnippetsWidget onOpenFullView={() => setFullViewFeature("snippets")} />;
+    }
     return (
       <span className="text-xs text-zinc-500">
         {item.featureId}/{item.widgetId}
@@ -332,129 +380,144 @@ function App() {
   }
 
   return (
-    <ClipboardHistoryProvider>
-      <CountdownsProvider>
-        <BookmarksProvider>
-          <RssReaderProvider>
-            <HabitsProvider>
-              <DailyJournalProvider>
-                <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-                  <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between relative z-10">
-                    <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--accent-color)" }}>
-                      MyOS
-                    </h1>
-                    <div className="flex items-center gap-2">
-                      <ThemeToggle
-                        mode={themeMode}
-                        accentColor={accentColor}
-                        onModeChange={(m) => void setThemeMode(m)}
-                        onAccentChange={(c) => void setAccentColor(c)}
+    <SnippetsProvider>
+      <SnippetsCommandRegistrar onOpenFullView={() => setFullViewFeature("snippets")} />
+      <ClipboardHistoryProvider>
+        <CountdownsProvider>
+          <BookmarksProvider>
+            <RssReaderProvider>
+              <HabitsProvider>
+                <DailyJournalProvider>
+                  <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
+                    <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between relative z-10">
+                      <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--accent-color)" }}>
+                        MyOS
+                      </h1>
+                      <div className="flex items-center gap-2">
+                        <ThemeToggle
+                          mode={themeMode}
+                          accentColor={accentColor}
+                          onModeChange={(m) => void setThemeMode(m)}
+                          onAccentChange={(c) => void setAccentColor(c)}
+                        />
+                        <NotificationCenter
+                          notifications={notifications}
+                          unreadCount={unreadCount}
+                          onMarkRead={(id) => void markRead(id)}
+                          onClearAll={() => void clearAll()}
+                        />
+                        <button
+                          type="button"
+                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
+                          onClick={() => setPaletteOpen(true)}
+                          aria-label="Open command palette"
+                        >
+                          ⌘K
+                        </button>
+                      </div>
+                    </header>
+                    <main className="flex-1 overflow-auto p-4">
+                      <DashboardGrid
+                        page={currentPage}
+                        onLayoutChange={handleLayoutChange}
+                        renderWidget={renderWidget}
                       />
-                      <NotificationCenter
-                        notifications={notifications}
-                        unreadCount={unreadCount}
-                        onMarkRead={(id) => void markRead(id)}
-                        onClearAll={() => void clearAll()}
-                      />
-                      <button
-                        type="button"
-                        className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
-                        onClick={() => setPaletteOpen(true)}
-                        aria-label="Open command palette"
-                      >
-                        ⌘K
-                      </button>
-                    </div>
-                  </header>
-                  <main className="flex-1 overflow-auto p-4">
-                    <DashboardGrid page={currentPage} onLayoutChange={handleLayoutChange} renderWidget={renderWidget} />
-                  </main>
+                    </main>
 
-                  <CommandPalette
-                    open={paletteOpen}
-                    onClose={() => setPaletteOpen(false)}
-                    commands={commandRegistry.getAll()}
-                    onSearch={(query) => rpc.request["search:global"]({ query })}
-                    onNavigateToFeature={(featureId) => {
-                      setFullViewFeature(featureId);
-                    }}
-                  />
+                    <CommandPalette
+                      open={paletteOpen}
+                      onClose={() => setPaletteOpen(false)}
+                      commands={commandRegistry.getAll()}
+                      onSearch={(query) => rpc.request["search:global"]({ query })}
+                      onNavigateToFeature={(featureId) => {
+                        setFullViewFeature(featureId);
+                      }}
+                    />
 
-                  {fullViewFeature === "todo" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
-                        <TodoFullView onClose={() => setFullViewFeature(null)} />
+                    {fullViewFeature === "todo" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
+                          <TodoFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {fullViewFeature === "pomodoro" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
-                        <PomodoroFullView onClose={() => setFullViewFeature(null)} />
+                    )}
+                    {fullViewFeature === "pomodoro" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
+                          <PomodoroFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {fullViewFeature === "rss-reader" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <RssReaderFullView onClose={() => setFullViewFeature(null)} />
+                    )}
+                    {fullViewFeature === "rss-reader" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <RssReaderFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {fullViewFeature === "daily-journal" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
+                    )}
+                    {fullViewFeature === "daily-journal" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {fullViewFeature === "calendar" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <CalendarFullView onClose={() => setFullViewFeature(null)} />
+                    )}
+                    {fullViewFeature === "calendar" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <CalendarFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {fullViewFeature === "habits" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <HabitsFullView onClose={() => setFullViewFeature(null)} />
+                    )}
+                    {fullViewFeature === "habits" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <HabitsFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {fullViewFeature === "bookmarks" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <BookmarksFullView onClose={() => setFullViewFeature(null)} />
+                    {fullViewFeature === "bookmarks" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <BookmarksFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {fullViewFeature === "countdowns" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <CountdownsFullView onClose={() => setFullViewFeature(null)} />
+                    {fullViewFeature === "countdowns" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <CountdownsFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {fullViewFeature === "clipboard-history" && (
-                    <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
-                      <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                        <ClipboardHistoryFullView onClose={() => setFullViewFeature(null)} />
+                    {fullViewFeature === "clipboard-history" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <ClipboardHistoryFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
-                </div>
-              </DailyJournalProvider>
-            </HabitsProvider>
-          </RssReaderProvider>
-        </BookmarksProvider>
-      </CountdownsProvider>
-    </ClipboardHistoryProvider>
+                    {fullViewFeature === "snippets" && (
+                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                        <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
+                          <SnippetsFullView onClose={() => setFullViewFeature(null)} />
+                        </div>
+                      </div>
+                    )}
+
+                    {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
+                  </div>
+                </DailyJournalProvider>
+              </HabitsProvider>
+            </RssReaderProvider>
+          </BookmarksProvider>
+        </CountdownsProvider>
+      </ClipboardHistoryProvider>
+    </SnippetsProvider>
   );
 }
 

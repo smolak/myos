@@ -8,6 +8,7 @@ import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/
 import type { HabitCompletion, HabitWithStats } from "@features/habits/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
 import type { RssEntry, RssFeed } from "@features/rss-reader/shared/types";
+import type { Snippet } from "@features/snippets/shared/types";
 import type { TodoItem } from "@features/todo/shared/types";
 import type { WeatherData } from "@features/weather/shared/types";
 import type { ElectrobunRPCSchema } from "electrobun/bun";
@@ -128,6 +129,20 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "clipboard-history:get-all": { params: { limit?: number; search?: string }; response: ClipboardEntry[] };
       "clipboard-history:delete": { params: { id: string }; response: { success: boolean } };
       "clipboard-history:clear": { params: Record<string, never>; response: { success: boolean } };
+
+      // Snippets
+      "snippets:create": {
+        params: { name: string; template: string; isFavorite?: boolean };
+        response: { id: string };
+      };
+      "snippets:update": {
+        params: { id: string; name?: string; template?: string; isFavorite?: boolean };
+        response: { success: boolean };
+      };
+      "snippets:delete": { params: { id: string }; response: { success: boolean } };
+      "snippets:get-all": { params: { favoritesOnly?: boolean }; response: Snippet[] };
+      "snippets:get-by-id": { params: { id: string }; response: Snippet | null };
+      "snippets:expand": { params: { id: string; clipboard?: string }; response: { text: string } };
 
       // Habits
       "habits:create": {

@@ -5,6 +5,7 @@ import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalF
 import { HabitsFullView } from "@features/habits/view/HabitsFullView";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
+import { SnippetsFullView } from "@features/snippets/view/SnippetsFullView";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
 
 interface FocusModeViewProps {
@@ -21,6 +22,7 @@ function FeatureContent({ featureId, onExit }: FocusModeViewProps) {
   if (featureId === "habits") return <HabitsFullView onClose={onExit} />;
   if (featureId === "bookmarks") return <BookmarksFullView onClose={onExit} />;
   if (featureId === "clipboard-history") return <ClipboardHistoryFullView onClose={onExit} />;
+  if (featureId === "snippets") return <SnippetsFullView onClose={onExit} />;
   return null;
 }
 
