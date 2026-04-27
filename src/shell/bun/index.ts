@@ -13,6 +13,7 @@ import { SettingsManager } from "../../core/bun/settings-manager";
 import { bookmarksFeature } from "../../features/bookmarks/bun/index";
 import { calendarFeature } from "../../features/calendar/bun/index";
 import { clockFeature } from "../../features/clock/bun/index";
+import { countdownsFeature } from "../../features/countdowns/bun/index";
 import { dailyJournalFeature } from "../../features/daily-journal/bun/index";
 import { getTimelineEvents } from "../../features/daily-journal/bun/queries";
 import { habitsFeature } from "../../features/habits/bun/index";
@@ -26,7 +27,7 @@ import type { SearchResult } from "../shared/search-types";
 
 const LAYOUT_SETTING_SCOPE = "dashboard";
 const LAYOUT_SETTING_KEY = "layout";
-const LAYOUT_VERSION = 6;
+const LAYOUT_VERSION = 7;
 
 const POMODORO_SETTINGS_SCOPE = "pomodoro";
 const DEFAULT_WORK_MINUTES = 25;
@@ -69,6 +70,7 @@ const startupPromise = featureRegistry.startup([
   calendarFeature,
   habitsFeature,
   bookmarksFeature,
+  countdownsFeature,
 ]);
 
 async function ready(): Promise<void> {
@@ -375,6 +377,30 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         return actionQueue.executeQuery("habits", "get-history", params) as Promise<any>;
       },
 
+      // Countdowns
+      "countdowns:create": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("countdowns", "create", params) as Promise<{ id: string }>;
+      },
+      "countdowns:delete": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("countdowns", "delete", params) as Promise<{ success: boolean }>;
+      },
+      "countdowns:archive": async (params) => {
+        await ready();
+        return actionQueue.dispatchAction("countdowns", "archive", params) as Promise<{ success: boolean }>;
+      },
+      "countdowns:get-all": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("countdowns", "get-all", params) as Promise<any>;
+      },
+      "countdowns:get-by-id": async (params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("countdowns", "get-by-id", params) as Promise<any>;
+      },
+
       // Bookmarks
       "bookmarks:create": async (params) => {
         await ready();
@@ -402,15 +428,23 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       // Global search
       "search:global": async ({ query }) => {
         await ready();
-        const [todoResults, rssResults, journalResults, calendarResults, habitsResults, bookmarksResults] =
-          await Promise.all([
-            actionQueue.executeQuery("todo", "search", { query }),
-            actionQueue.executeQuery("rss-reader", "search", { query }),
-            actionQueue.executeQuery("daily-journal", "search", { query }),
-            actionQueue.executeQuery("calendar", "search", { query }),
-            actionQueue.executeQuery("habits", "search", { query }),
-            actionQueue.executeQuery("bookmarks", "search", { query }),
-          ]);
+        const [
+          todoResults,
+          rssResults,
+          journalResults,
+          calendarResults,
+          habitsResults,
+          bookmarksResults,
+          countdownsResults,
+        ] = await Promise.all([
+          actionQueue.executeQuery("todo", "search", { query }),
+          actionQueue.executeQuery("rss-reader", "search", { query }),
+          actionQueue.executeQuery("daily-journal", "search", { query }),
+          actionQueue.executeQuery("calendar", "search", { query }),
+          actionQueue.executeQuery("habits", "search", { query }),
+          actionQueue.executeQuery("bookmarks", "search", { query }),
+          actionQueue.executeQuery("countdowns", "search", { query }),
+        ]);
         const tag = <F extends string>(results: unknown, featureId: F, featureName: string): SearchResult[] =>
           (results as { itemId: string; title: string; subtitle?: string; type: string }[]).map((r) => ({
             ...r,
@@ -424,6 +458,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           ...tag(calendarResults, "calendar", "Calendar"),
           ...tag(habitsResults, "habits", "Habits"),
           ...tag(bookmarksResults, "bookmarks", "Bookmarks"),
+          ...tag(countdownsResults, "countdowns", "Countdowns"),
         ];
       },
 

@@ -532,12 +532,12 @@ Implement Countdowns feature. Create countdowns with name and target date. Widge
 
 ### Acceptance criteria
 
-- [ ] Countdowns created with name and date
-- [ ] Widget shows days/hours remaining
-- [ ] Multiple countdowns displayed
-- [ ] `countdown:reached` event emitted
-- [ ] Completed countdowns can be archived
-- [ ] Tests cover countdown calculation, event emission
+- [x] Countdowns created with name and date
+- [x] Widget shows days/hours remaining
+- [x] Multiple countdowns displayed
+- [x] `countdown:reached` event emitted
+- [x] Completed countdowns can be archived
+- [x] Tests cover countdown calculation, event emission
 
 ---
 

@@ -2,6 +2,7 @@ import type { DashboardPage } from "@core/types";
 import type { Bookmark } from "@features/bookmarks/shared/types";
 import type { CalendarEvent, CalendarSource } from "@features/calendar/shared/types";
 import type { TimeFormat } from "@features/clock/shared/types";
+import type { CountdownWithTimeLeft } from "@features/countdowns/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
 import type { HabitCompletion, HabitWithStats } from "@features/habits/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
@@ -114,6 +115,13 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "bookmarks:delete": { params: { id: string }; response: { success: boolean } };
       "bookmarks:get-all": { params: { folder?: string; tag?: string }; response: Bookmark[] };
       "bookmarks:get-by-id": { params: { id: string }; response: Bookmark | null };
+
+      // Countdowns
+      "countdowns:create": { params: { name: string; targetDate: string }; response: { id: string } };
+      "countdowns:delete": { params: { id: string }; response: { success: boolean } };
+      "countdowns:archive": { params: { id: string }; response: { success: boolean } };
+      "countdowns:get-all": { params: { includeArchived?: boolean }; response: CountdownWithTimeLeft[] };
+      "countdowns:get-by-id": { params: { id: string }; response: CountdownWithTimeLeft | null };
 
       // Habits
       "habits:create": {
