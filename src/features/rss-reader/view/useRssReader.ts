@@ -33,7 +33,13 @@ export function useRssReader(): UseRssReaderReturn {
   }, []);
 
   useEffect(() => {
-    void reloadAll().finally(() => setIsLoading(false));
+    void (async () => {
+      await reloadAll();
+      setIsLoading(false);
+      // Startup fetch: pull fresh entries from network, then show them
+      await rpc.request["rss:fetch-feeds"]({}).catch(() => {});
+      await reloadAll();
+    })();
   }, [reloadAll]);
 
   const addFeed = useCallback(

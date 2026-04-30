@@ -22,6 +22,7 @@ vi.mock("./electrobun", () => ({
       "app:save-window-bounds": vi.fn().mockResolvedValue({ success: true }),
       "rss:get-feeds": vi.fn().mockResolvedValue([]),
       "rss:get-entries": vi.fn().mockResolvedValue([]),
+      "rss:fetch-feeds": vi.fn().mockResolvedValue({ fetched: 0, newEntries: 0 }),
       "journal:get-notes": vi.fn().mockResolvedValue([]),
       "journal:get-note-by-date": vi.fn().mockResolvedValue(null),
       "habits:get-all": vi.fn().mockResolvedValue([]),
