@@ -19,15 +19,25 @@ interface Props {
   page: DashboardPage;
   onLayoutChange?: (layout: LayoutItem[]) => void;
   renderWidget?: (item: LayoutItem) => ReactNode;
+  onOpenCatalog?: () => void;
 }
 
-export function DashboardGrid({ page, onLayoutChange, renderWidget }: Props) {
+export function DashboardGrid({ page, onLayoutChange, renderWidget, onOpenCatalog }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
 
   if (page.layout.length === 0) {
     return (
-      <div ref={containerRef} className="flex items-center justify-center py-32">
-        <p className="text-zinc-400">No widgets configured</p>
+      <div ref={containerRef} className="flex flex-col items-center justify-center py-32 gap-4">
+        <p className="text-zinc-500 text-sm">Your desktop is empty</p>
+        {onOpenCatalog && (
+          <button
+            type="button"
+            onClick={onOpenCatalog}
+            className="text-xs px-4 py-2 rounded-lg border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+          >
+            + Add features
+          </button>
+        )}
       </div>
     );
   }
@@ -53,7 +63,7 @@ export function DashboardGrid({ page, onLayoutChange, renderWidget }: Props) {
           onLayoutChange={handleLayoutChange}
         >
           {page.layout.map((item) => (
-            <div key={item.i} data-testid="widget-slot" className="bg-zinc-800 rounded-lg p-4">
+            <div key={item.i} data-testid="widget-slot">
               {renderWidget ? (
                 renderWidget(item)
               ) : (

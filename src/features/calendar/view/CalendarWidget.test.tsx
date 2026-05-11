@@ -85,18 +85,6 @@ describe("CalendarWidget", () => {
     expect(screen.getByText(/No calendars configured/)).toBeInTheDocument();
   });
 
-  test("shows 'Open' button", () => {
-    render(<CalendarWidget />);
-    expect(screen.getByText("Open")).toBeInTheDocument();
-  });
-
-  test("calls onOpenFullView when Open button clicked", () => {
-    const onOpenFullView = vi.fn();
-    render(<CalendarWidget onOpenFullView={onOpenFullView} />);
-    fireEvent.click(screen.getByText("Open"));
-    expect(onOpenFullView).toHaveBeenCalledOnce();
-  });
-
   test("calls onOpenFullView when empty state clicked", () => {
     const onOpenFullView = vi.fn();
     render(<CalendarWidget onOpenFullView={onOpenFullView} />);

@@ -24,7 +24,7 @@ describe("DashboardGrid", () => {
   describe("empty state", () => {
     test("shows placeholder when layout is empty", () => {
       render(<DashboardGrid page={EMPTY_PAGE} />);
-      expect(screen.getByText("No widgets configured")).toBeInTheDocument();
+      expect(screen.getByText("Your desktop is empty")).toBeInTheDocument();
     });
 
     test("does not show grid when layout is empty", () => {
@@ -36,7 +36,7 @@ describe("DashboardGrid", () => {
   describe("with items", () => {
     test("does not show placeholder when layout has items", () => {
       render(<DashboardGrid page={{ ...EMPTY_PAGE, layout: [ITEM] }} />);
-      expect(screen.queryByText("No widgets configured")).not.toBeInTheDocument();
+      expect(screen.queryByText("Your desktop is empty")).not.toBeInTheDocument();
     });
 
     test("renders the grid when layout has items", () => {

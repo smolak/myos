@@ -10,18 +10,14 @@ export function TodoWidget({ onOpenFullView }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-zinc-200">Todos</h2>
+      {activeTodos.length === 0 ? (
         <button
           type="button"
           onClick={onOpenFullView}
-          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="text-xs text-zinc-600 hover:text-zinc-400 flex-1 flex items-center justify-center transition-colors"
         >
-          View all
+          No active todos
         </button>
-      </div>
-      {activeTodos.length === 0 ? (
-        <p className="text-xs text-zinc-500 flex-1 flex items-center justify-center">No active todos</p>
       ) : (
         <ul className="flex-1 space-y-1 overflow-hidden">
           {activeTodos.map((todo) => (

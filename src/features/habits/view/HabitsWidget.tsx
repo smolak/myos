@@ -45,17 +45,6 @@ export function HabitsWidget({ onOpenFullView }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-semibold text-zinc-200">Habits</h2>
-        <button
-          type="button"
-          onClick={onOpenFullView}
-          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-        >
-          Open
-        </button>
-      </div>
-
       {habits.length === 0 ? (
         <button
           type="button"

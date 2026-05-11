@@ -92,11 +92,4 @@ describe("CountdownsWidget", () => {
     render(<CountdownsWidget onOpenFullView={mockOpenFullView} />);
     expect(screen.getByText("+2 more")).toBeInTheDocument();
   });
-
-  test("clicking Open button triggers onOpenFullView", () => {
-    countdowns = [makeCountdown()];
-    render(<CountdownsWidget onOpenFullView={mockOpenFullView} />);
-    fireEvent.click(screen.getByRole("button", { name: "Open" }));
-    expect(mockOpenFullView).toHaveBeenCalledOnce();
-  });
 });

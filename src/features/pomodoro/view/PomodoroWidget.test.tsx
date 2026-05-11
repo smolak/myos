@@ -183,10 +183,10 @@ describe("PomodoroWidget", () => {
     expect(screen.getByText("New")).toBeInTheDocument();
   });
 
-  test("calls onOpenFullView when Open button clicked", () => {
+  test("calls onOpenFullView when timer is clicked", () => {
     const onOpenFullView = vi.fn();
     render(<PomodoroWidget onOpenFullView={onOpenFullView} />);
-    fireEvent.click(screen.getByText("Open"));
+    fireEvent.click(screen.getByRole("button", { name: "Open Pomodoro" }));
     expect(onOpenFullView).toHaveBeenCalledOnce();
   });
 

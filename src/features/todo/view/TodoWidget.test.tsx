@@ -75,10 +75,10 @@ describe("TodoWidget", () => {
     expect(screen.queryByText("Done")).not.toBeInTheDocument();
   });
 
-  test("calls onOpenFullView when View all is clicked", () => {
+  test("calls onOpenFullView when empty state is clicked", () => {
     const onOpenFullView = vi.fn();
     render(<TodoWidget onOpenFullView={onOpenFullView} />);
-    fireEvent.click(screen.getByText("View all"));
+    fireEvent.click(screen.getByText("No active todos"));
     expect(onOpenFullView).toHaveBeenCalledOnce();
   });
 

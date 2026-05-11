@@ -64,9 +64,6 @@ export function WeatherWidget({ onOpenFullView }: Props) {
   if (!isConfigured) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-sm font-semibold text-zinc-200">Weather</h2>
-        </div>
         <SetupForm
           onSave={(apiKey, location) => {
             updateSettings({ apiKey, location });
@@ -79,31 +76,6 @@ export function WeatherWidget({ onOpenFullView }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-semibold text-zinc-200">Weather</h2>
-        <div className="flex items-center gap-2">
-          {!isLoading && (
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-              aria-label="Refresh weather"
-            >
-              ↻
-            </button>
-          )}
-          {onOpenFullView && (
-            <button
-              type="button"
-              onClick={onOpenFullView}
-              className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-            >
-              Open
-            </button>
-          )}
-        </div>
-      </div>
-
       {isLoading && !data && (
         <div className="flex flex-1 items-center justify-center">
           <p className="text-xs text-zinc-500">Loading…</p>
@@ -124,7 +96,12 @@ export function WeatherWidget({ onOpenFullView }: Props) {
       )}
 
       {data && (
-        <div className="flex flex-1 items-center gap-3">
+        <button
+          type="button"
+          className="flex flex-1 items-center gap-3 w-full text-left"
+          onClick={onOpenFullView}
+          aria-label="Open weather settings"
+        >
           <div className="flex flex-col">
             <TemperatureDisplay temp={data.tempCelsius} units={settings.units} />
             <span className="text-xs text-zinc-400 mt-0.5 capitalize">{data.condition.description}</span>
@@ -133,7 +110,7 @@ export function WeatherWidget({ onOpenFullView }: Props) {
             <span className="text-xs text-zinc-300">{data.location}</span>
             <span className="text-xs text-zinc-600">{data.humidity}% humidity</span>
           </div>
-        </div>
+        </button>
       )}
     </div>
   );

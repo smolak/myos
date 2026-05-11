@@ -67,10 +67,10 @@ describe("DailyJournalWidget", () => {
     expect(screen.getByText(/1 entry this week/)).toBeInTheDocument();
   });
 
-  test("calls onOpenFullView when View all is clicked", () => {
+  test("calls onOpenFullView when empty note state is clicked", () => {
     const onOpenFullView = vi.fn();
     render(<DailyJournalWidget onOpenFullView={onOpenFullView} />);
-    fireEvent.click(screen.getByText("View all"));
+    fireEvent.click(screen.getByText("No note for today — write one"));
     expect(onOpenFullView).toHaveBeenCalledOnce();
   });
 

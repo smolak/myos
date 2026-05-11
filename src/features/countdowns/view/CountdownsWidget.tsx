@@ -29,17 +29,6 @@ export function CountdownsWidget({ onOpenFullView }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-semibold text-zinc-200">Countdowns</h2>
-        <button
-          type="button"
-          onClick={onOpenFullView}
-          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-        >
-          Open
-        </button>
-      </div>
-
       {countdowns.length === 0 ? (
         <button
           type="button"

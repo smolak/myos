@@ -56,14 +56,6 @@ describe("ClipboardHistoryWidget", () => {
     expect(screen.getByText("+3 more")).toBeInTheDocument();
   });
 
-  test("Open button calls onOpenFullView", () => {
-    entries = [makeEntry()];
-    const onOpen = vi.fn();
-    render(<ClipboardHistoryWidget onOpenFullView={onOpen} />);
-    fireEvent.click(screen.getByText("Open"));
-    expect(onOpen).toHaveBeenCalledOnce();
-  });
-
   test("empty state button calls onOpenFullView", () => {
     const onOpen = vi.fn();
     render(<ClipboardHistoryWidget onOpenFullView={onOpen} />);

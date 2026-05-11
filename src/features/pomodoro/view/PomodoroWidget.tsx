@@ -26,17 +26,6 @@ export function PomodoroWidget({ onOpenFullView }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-semibold text-zinc-200">Pomodoro</h2>
-        <button
-          type="button"
-          onClick={onOpenFullView}
-          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-        >
-          Open
-        </button>
-      </div>
-
       <div className="flex flex-1 items-center gap-4">
         <button
           type="button"

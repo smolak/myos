@@ -44,21 +44,11 @@ export function RssReaderWidget({ onOpenFullView }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-zinc-200">RSS Reader</h2>
-          {unreadCount > 0 && (
-            <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">{unreadCount}</span>
-          )}
+      {unreadCount > 0 && (
+        <div className="mb-1.5">
+          <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">{unreadCount} unread</span>
         </div>
-        <button
-          type="button"
-          onClick={onOpenFullView}
-          className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-        >
-          Open
-        </button>
-      </div>
+      )}
 
       {isLoading && <p className="text-xs text-zinc-500 mb-1">Fetching feeds…</p>}
 

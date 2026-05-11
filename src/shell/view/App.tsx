@@ -34,6 +34,7 @@ import { CommandPalette } from "./CommandPalette";
 import { commandRegistry } from "./command-registry";
 import { DashboardGrid } from "./DashboardGrid";
 import { rpc } from "./electrobun";
+import { FeatureCatalog } from "./FeatureCatalog";
 import { FocusModeView } from "./FocusModeView";
 import { registerHotkey } from "./hotkeys";
 import { NotificationCenter } from "./NotificationCenter";
@@ -41,6 +42,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useAppOptions } from "./useAppOptions";
 import { useNotifications } from "./useNotifications";
 import { useTheme } from "./useTheme";
+import { WidgetWindow } from "./WidgetWindow";
 
 const LAYOUT_VERSION = 8;
 
@@ -105,6 +107,7 @@ function App() {
   const [focusModeFeatureId, setFocusModeFeatureId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [appOptionsOpen, setAppOptionsOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const currentPage = pages[0] as DashboardPage;
   const { mode: themeMode, accentColor, setMode: setThemeMode, setAccentColor } = useTheme();
   const { notifications, unreadCount, markRead, clearAll } = useNotifications();
@@ -369,47 +372,89 @@ function App() {
     [currentPage.id],
   );
 
-  function renderWidget(item: LayoutItem) {
+  const removeWidget = useCallback(
+    (id: string): void => {
+      setPages((prev) => {
+        const updated = prev.map((p) =>
+          p.id === currentPage.id ? { ...p, layout: p.layout.filter((l) => l.i !== id) } : p,
+        );
+        void rpc.request["dashboard:save-layout"]({ version: LAYOUT_VERSION, pages: updated });
+        return updated;
+      });
+    },
+    [currentPage.id],
+  );
+
+  const addWidget = useCallback(
+    (featureId: string, widgetId: string, w: number, h: number): void => {
+      const newItem: LayoutItem = {
+        i: `${featureId}-${Date.now().toString(36)}`,
+        x: 0,
+        y: Number.POSITIVE_INFINITY,
+        w,
+        h,
+        featureId,
+        widgetId,
+      };
+      setPages((prev) => {
+        const updated = prev.map((p) => (p.id === currentPage.id ? { ...p, layout: [...p.layout, newItem] } : p));
+        void rpc.request["dashboard:save-layout"]({ version: LAYOUT_VERSION, pages: updated });
+        return updated;
+      });
+    },
+    [currentPage.id],
+  );
+
+  function getWidgetContent(item: LayoutItem, onOpenFullView: () => void) {
     if (item.featureId === "todo" && item.widgetId === "task-list") {
-      return <TodoWidget onOpenFullView={() => setFullViewFeature("todo")} />;
+      return <TodoWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "pomodoro" && item.widgetId === "timer") {
-      return <PomodoroWidget onOpenFullView={() => setFullViewFeature("pomodoro")} />;
+      return <PomodoroWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "rss-reader" && item.widgetId === "feed-list") {
-      return <RssReaderWidget onOpenFullView={() => setFullViewFeature("rss-reader")} />;
+      return <RssReaderWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "clock" && item.widgetId === "display") {
       return <ClockWidget />;
     }
     if (item.featureId === "weather" && item.widgetId === "conditions") {
-      return <WeatherWidget onOpenFullView={() => setFullViewFeature("weather")} />;
+      return <WeatherWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "daily-journal" && item.widgetId === "summary") {
-      return <DailyJournalWidget onOpenFullView={() => setFullViewFeature("daily-journal")} />;
+      return <DailyJournalWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "calendar" && item.widgetId === "upcoming-events") {
-      return <CalendarWidget onOpenFullView={() => setFullViewFeature("calendar")} />;
+      return <CalendarWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "habits" && item.widgetId === "daily-checkin") {
-      return <HabitsWidget onOpenFullView={() => setFullViewFeature("habits")} />;
+      return <HabitsWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "bookmarks" && item.widgetId === "recent-list") {
-      return <BookmarksWidget onOpenFullView={() => setFullViewFeature("bookmarks")} />;
+      return <BookmarksWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "countdowns" && item.widgetId === "upcoming") {
-      return <CountdownsWidget onOpenFullView={() => setFullViewFeature("countdowns")} />;
+      return <CountdownsWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "clipboard-history" && item.widgetId === "recent-clips") {
-      return <ClipboardHistoryWidget onOpenFullView={() => setFullViewFeature("clipboard-history")} />;
+      return <ClipboardHistoryWidget onOpenFullView={onOpenFullView} />;
     }
     if (item.featureId === "snippets" && item.widgetId === "favorites") {
-      return <SnippetsWidget onOpenFullView={() => setFullViewFeature("snippets")} />;
+      return <SnippetsWidget onOpenFullView={onOpenFullView} />;
     }
     return (
       <span className="text-xs text-zinc-500">
         {item.featureId}/{item.widgetId}
       </span>
+    );
+  }
+
+  function renderWidget(item: LayoutItem) {
+    const onOpenFullView = () => setFullViewFeature(item.featureId);
+    return (
+      <WidgetWindow featureId={item.featureId} onExpand={onOpenFullView} onClose={() => removeWidget(item.i)}>
+        {getWidgetContent(item, onOpenFullView)}
+      </WidgetWindow>
     );
   }
 
@@ -423,14 +468,23 @@ function App() {
               <HabitsProvider>
                 <DailyJournalProvider>
                   <div
-                    className="flex flex-col h-screen text-zinc-100"
+                    className="flex flex-col h-screen text-zinc-100 os-desktop"
                     style={{ background: "var(--user-bg, var(--bg-app))" }}
                   >
-                    <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 px-6 py-4 backdrop-blur flex items-center justify-between relative z-10">
-                      <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--accent-color)" }}>
+                    <header
+                      className="shrink-0 bg-zinc-900/80 px-5 py-3 backdrop-blur flex items-center justify-between relative z-10"
+                      style={{
+                        boxShadow: "var(--shadow-header)",
+                        borderBottom: "1px solid var(--border-color-subtle)",
+                      }}
+                    >
+                      <h1
+                        className="text-sm font-semibold tracking-tight select-none"
+                        style={{ color: "var(--accent-color)", letterSpacing: "-0.02em" }}
+                      >
                         MyOS
                       </h1>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <ThemeToggle
                           mode={themeMode}
                           accentColor={accentColor}
@@ -445,7 +499,16 @@ function App() {
                         />
                         <button
                           type="button"
-                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
+                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2.5 py-1 transition-colors"
+                          onClick={() => setCatalogOpen(true)}
+                          aria-label="Open feature catalog"
+                          title="Add features"
+                        >
+                          ⊞
+                        </button>
+                        <button
+                          type="button"
+                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2.5 py-1 transition-colors font-mono"
                           onClick={() => setPaletteOpen(true)}
                           aria-label="Open command palette"
                         >
@@ -453,7 +516,7 @@ function App() {
                         </button>
                         <button
                           type="button"
-                          className="text-zinc-500 hover:text-zinc-300 border border-zinc-700 rounded px-2 py-1 transition-colors"
+                          className="text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2 py-1 transition-colors text-sm leading-none"
                           onClick={() => setAppOptionsOpen(true)}
                           aria-label="Open app options"
                         >
@@ -461,11 +524,12 @@ function App() {
                         </button>
                       </div>
                     </header>
-                    <main className="flex-1 overflow-auto p-4">
+                    <main className="flex-1 overflow-auto p-5">
                       <DashboardGrid
                         page={currentPage}
                         onLayoutChange={handleLayoutChange}
                         renderWidget={renderWidget}
+                        onOpenCatalog={() => setCatalogOpen(true)}
                       />
                     </main>
 
@@ -480,42 +544,42 @@ function App() {
                     />
 
                     {fullViewFeature === "todo" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
                           <TodoFullView onClose={() => setFullViewFeature(null)} />
                         </div>
                       </div>
                     )}
                     {fullViewFeature === "pomodoro" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
                           <PomodoroFullView onClose={() => setFullViewFeature(null)} />
                         </div>
                       </div>
                     )}
                     {fullViewFeature === "rss-reader" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <RssReaderFullView onClose={() => setFullViewFeature(null)} />
                         </div>
                       </div>
                     )}
                     {fullViewFeature === "daily-journal" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
                         </div>
                       </div>
                     )}
                     {fullViewFeature === "calendar" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <CalendarFullView onClose={() => setFullViewFeature(null)} />
                         </div>
                       </div>
                     )}
                     {fullViewFeature === "habits" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <HabitsFullView onClose={() => setFullViewFeature(null)} />
                         </div>
@@ -523,7 +587,7 @@ function App() {
                     )}
 
                     {fullViewFeature === "bookmarks" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <BookmarksFullView onClose={() => setFullViewFeature(null)} />
                         </div>
@@ -531,7 +595,7 @@ function App() {
                     )}
 
                     {fullViewFeature === "countdowns" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <CountdownsFullView onClose={() => setFullViewFeature(null)} />
                         </div>
@@ -539,7 +603,7 @@ function App() {
                     )}
 
                     {fullViewFeature === "clipboard-history" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <ClipboardHistoryFullView onClose={() => setFullViewFeature(null)} />
                         </div>
@@ -547,11 +611,19 @@ function App() {
                     )}
 
                     {fullViewFeature === "snippets" && (
-                      <div className="fixed inset-0 bg-black/60 z-40 flex items-center justify-center">
+                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
                         <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
                           <SnippetsFullView onClose={() => setFullViewFeature(null)} />
                         </div>
                       </div>
+                    )}
+
+                    {catalogOpen && (
+                      <FeatureCatalog
+                        currentLayout={currentPage.layout}
+                        onAdd={addWidget}
+                        onClose={() => setCatalogOpen(false)}
+                      />
                     )}
 
                     {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}

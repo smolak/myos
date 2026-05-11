@@ -108,18 +108,6 @@ describe("RssReaderWidget", () => {
     expect(screen.getByText(/No feeds configured/)).toBeInTheDocument();
   });
 
-  test("shows 'Open' button", () => {
-    render(<RssReaderWidget />);
-    expect(screen.getByText("Open")).toBeInTheDocument();
-  });
-
-  test("calls onOpenFullView when Open button clicked", () => {
-    const onOpenFullView = vi.fn();
-    render(<RssReaderWidget onOpenFullView={onOpenFullView} />);
-    fireEvent.click(screen.getByText("Open"));
-    expect(onOpenFullView).toHaveBeenCalledOnce();
-  });
-
   test("calls onOpenFullView when empty state clicked", () => {
     const onOpenFullView = vi.fn();
     render(<RssReaderWidget onOpenFullView={onOpenFullView} />);
@@ -138,7 +126,7 @@ describe("RssReaderWidget", () => {
     setFeeds([makeFeed()]);
     setEntries([makeEntry({ isRead: false }), makeEntry({ id: "e2", isRead: false })]);
     render(<RssReaderWidget />);
-    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("2 unread")).toBeInTheDocument();
   });
 
   test("does not show unread badge when all entries are read", () => {

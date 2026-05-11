@@ -2,46 +2,190 @@
 
 :root {
   --accent-color: #6366f1;
-  --bg-app: #09090b;
-  /* Set by useAppOptions when user picks a background; falls back to --bg-app otherwise. */
   --user-bg: initial;
-  --bg-header: #18181b;
-  --bg-surface: #27272a;
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --border-color: #3f3f46;
+
+  /* Surface hierarchy */
+  --bg-app: #0b0b14;
+  --bg-header: #0f0f1a;
+  --bg-surface: #14141f;
+  --bg-surface-raised: #1a1a28;
+  --text-primary: #eeeef4;
+  --text-secondary: #8080a0;
+  --border-color: #282838;
+  --border-color-subtle: #1c1c2a;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-header: 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* Feature accent colors */
+  --feature-color-todo: #3b82f6;
+  --feature-color-pomodoro: #f97316;
+  --feature-color-clock: #f59e0b;
+  --feature-color-weather: #0ea5e9;
+  --feature-color-rss-reader: #22c55e;
+  --feature-color-calendar: #8b5cf6;
+  --feature-color-habits: #10b981;
+  --feature-color-daily-journal: #6366f1;
+  --feature-color-bookmarks: #ec4899;
+  --feature-color-countdowns: #ef4444;
+  --feature-color-clipboard-history: #14b8a6;
+  --feature-color-snippets: #eab308;
+}
+
+/* Feature color scoping via data attribute */
+[data-feature="todo"] {
+  --feature-color: var(--feature-color-todo);
+}
+[data-feature="pomodoro"] {
+  --feature-color: var(--feature-color-pomodoro);
+}
+[data-feature="clock"] {
+  --feature-color: var(--feature-color-clock);
+}
+[data-feature="weather"] {
+  --feature-color: var(--feature-color-weather);
+}
+[data-feature="rss-reader"] {
+  --feature-color: var(--feature-color-rss-reader);
+}
+[data-feature="calendar"] {
+  --feature-color: var(--feature-color-calendar);
+}
+[data-feature="habits"] {
+  --feature-color: var(--feature-color-habits);
+}
+[data-feature="daily-journal"] {
+  --feature-color: var(--feature-color-daily-journal);
+}
+[data-feature="bookmarks"] {
+  --feature-color: var(--feature-color-bookmarks);
+}
+[data-feature="countdowns"] {
+  --feature-color: var(--feature-color-countdowns);
+}
+[data-feature="clipboard-history"] {
+  --feature-color: var(--feature-color-clipboard-history);
+}
+[data-feature="snippets"] {
+  --feature-color: var(--feature-color-snippets);
+}
+
+/* OS desktop background — layered gradient giving depth */
+.os-desktop {
+  background:
+    radial-gradient(ellipse at 15% 85%, rgba(30, 20, 90, 0.45) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 15%, rgba(10, 35, 80, 0.35) 0%, transparent 48%),
+    radial-gradient(ellipse at 60% 55%, rgba(20, 10, 50, 0.3) 0%, transparent 40%), #0b0b14;
+}
+
+/* Widget window chrome */
+.widget-window {
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-subtle);
+}
+
+/* Title bar */
+.widget-titlebar {
+  background: rgba(0, 0, 0, 0.28);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.widget-drag-handle {
+  cursor: grab;
+}
+.widget-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Window control dots */
+.window-btn {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  display: block;
+  flex-shrink: 0;
+  transition: filter 0.12s ease;
+}
+
+.window-btn-close {
+  background: #ff5f57;
+  cursor: pointer;
+}
+.window-btn-min {
+  background: #febc2e;
+  cursor: default;
+}
+.window-btn-max {
+  background: #28c840;
+  cursor: pointer;
+}
+
+/* Desaturate dots when titlebar is not hovered */
+.widget-titlebar:not(:hover) .window-btn {
+  filter: saturate(0) brightness(0.55);
+}
+.window-btn-close:hover {
+  filter: brightness(1.15);
+}
+.window-btn-max:hover {
+  filter: brightness(1.15);
 }
 
 html[data-effective-theme="light"] {
-  --bg-app: #f9fafb;
+  --bg-app: #e8e8f0;
   --bg-header: #ffffff;
-  --bg-surface: #f4f4f5;
-  --text-primary: #09090b;
-  --text-secondary: #6b7280;
-  --border-color: #e5e7eb;
+  --bg-surface: #ffffff;
+  --bg-surface-raised: #f5f5fa;
+  --text-primary: #0d0d1a;
+  --text-secondary: #606080;
+  --border-color: #e0e0ee;
+  --border-color-subtle: #eaeaf4;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-header: 0 1px 0 rgba(0, 0, 0, 0.06);
 
   color-scheme: light;
+}
+
+html[data-effective-theme="light"] .os-desktop {
+  background:
+    radial-gradient(ellipse at 15% 85%, rgba(200, 210, 255, 0.4) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 15%, rgba(180, 220, 255, 0.3) 0%, transparent 48%), #dde0ef;
+}
+
+html[data-effective-theme="light"] .widget-window {
+  background: #ffffff;
+  border-color: #e4e4f0;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+html[data-effective-theme="light"] .widget-titlebar {
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom-color: #ebebf4;
 }
 
 /* Remap zinc background utilities in light mode.
    Tailwind v4 places utilities in @layer utilities, so rules outside
    any layer have higher specificity and override them. */
 html[data-effective-theme="light"] .bg-zinc-950 {
-  background-color: #f9fafb;
+  background-color: #e8e8f0;
 }
 html[data-effective-theme="light"] .bg-zinc-900 {
   background-color: #ffffff;
 }
 html[data-effective-theme="light"] .bg-zinc-800 {
-  background-color: #f4f4f5;
+  background-color: #f4f4f8;
 }
 html[data-effective-theme="light"] .bg-zinc-700 {
-  background-color: #e4e4e7;
+  background-color: #e4e4ee;
 }
 
 /* Opacity-modified variants used in the header backdrop */
 html[data-effective-theme="light"] .bg-zinc-900\/80 {
-  background-color: rgb(255 255 255 / 0.9);
+  background-color: rgb(255 255 255 / 0.92);
 }
 
 /* Text utilities */
@@ -66,15 +210,15 @@ html[data-effective-theme="light"] .text-zinc-600 {
 
 /* Border utilities */
 html[data-effective-theme="light"] .border-zinc-800 {
-  border-color: #e4e4e7;
+  border-color: #e4e4ee;
 }
 html[data-effective-theme="light"] .border-zinc-700 {
-  border-color: #d4d4d8;
+  border-color: #d4d4e4;
 }
 
 /* Hover variants — specificity must beat Tailwind's generated :hover rules */
 html[data-effective-theme="light"] .hover\:bg-zinc-800:hover {
-  background-color: #f4f4f5;
+  background-color: #f0f0f8;
 }
 html[data-effective-theme="light"] .hover\:border-zinc-500:hover {
   border-color: #a1a1aa;
@@ -82,10 +226,10 @@ html[data-effective-theme="light"] .hover\:border-zinc-500:hover {
 
 /* Active / selected state inside CommandPalette */
 html[data-effective-theme="light"] .bg-zinc-700 {
-  background-color: #e4e4e7;
+  background-color: #e4e4ee;
 }
 
 /* Divide color used in notification list */
 html[data-effective-theme="light"] .divide-zinc-800 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #e4e4e7;
+  border-color: #e4e4ee;
 }
