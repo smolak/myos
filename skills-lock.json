@@ -12,8 +12,8 @@
       "computedHash": "708f261a16aa01e1b0d7a9a0b904dbe6176e864f424515db4f48707cd11dfdf9"
     },
     "frontend-design": {
-      "source": "anthropics/skills",
-      "sourceType": "github",
+      "source": "git@github.com:anthropics/skills.git",
+      "sourceType": "git",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
     },
