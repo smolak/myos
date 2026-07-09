@@ -10,7 +10,7 @@ import { FeatureRegistry } from "@core/bun/feature-registry";
 import { Scheduler } from "@core/bun/scheduler";
 import { ScriptEngine } from "@core/bun/script-engine";
 import { SettingsManager } from "@core/bun/settings-manager";
-import { rssReaderFeature } from "./index";
+import { createRssReaderFeature, rssReaderFeature } from "./index";
 
 describe("rssReaderFeature definition", () => {
   test("has id 'rss-reader'", () => {
@@ -25,10 +25,11 @@ describe("rssReaderFeature definition", () => {
     expect(rssReaderFeature.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  test("has migrations for feeds and entries tables", () => {
-    expect(rssReaderFeature.migrations).toHaveLength(2);
+  test("has migrations for feeds, entries, and favicons tables", () => {
+    expect(rssReaderFeature.migrations).toHaveLength(3);
     expect(rssReaderFeature.migrations[0]?.up).toContain("CREATE TABLE rss_feeds");
     expect(rssReaderFeature.migrations[1]?.up).toContain("CREATE TABLE rss_entries");
+    expect(rssReaderFeature.migrations[2]?.up).toContain("CREATE TABLE rss_favicons");
   });
 
   test("manifest declares all actions", () => {
@@ -45,6 +46,7 @@ describe("rssReaderFeature definition", () => {
     expect(keys).toContain("get-feeds");
     expect(keys).toContain("get-entries");
     expect(keys).toContain("get-unread-count");
+    expect(keys).toContain("get-favicons");
   });
 
   test("manifest declares all events", () => {
@@ -96,7 +98,7 @@ describe("rssReaderFeature lifecycle via FeatureRegistry", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("creates rss_feeds and rss_entries tables on first startup", async () => {
+  test("creates rss_feeds, rss_entries, and rss_favicons tables on first startup", async () => {
     await registry.startup([rssReaderFeature]);
     const featureDb = dbManager.getFeatureDatabase("rss-reader");
     const feeds = featureDb
@@ -105,8 +107,12 @@ describe("rssReaderFeature lifecycle via FeatureRegistry", () => {
     const entries = featureDb
       .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type='table' AND name='rss_entries'")
       .get();
+    const favicons = featureDb
+      .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type='table' AND name='rss_favicons'")
+      .get();
     expect(feeds?.name).toBe("rss_feeds");
     expect(entries?.name).toBe("rss_entries");
+    expect(favicons?.name).toBe("rss_favicons");
   });
 
   test("registers as enabled in the features table", async () => {
@@ -161,6 +167,165 @@ describe("rssReaderFeature lifecycle via FeatureRegistry", () => {
       .get();
     expect(row?.event_name).toBe("rss:new-entry");
     expect(row?.feature_id).toBe("rss-reader");
+  });
+});
+
+const FEED_XML = `<rss version="2.0"><channel>
+  <title>Test Feed</title>
+  <item>
+    <title>Post One</title>
+    <link>https://site-a.com/articles/1</link>
+    <guid>guid-1</guid>
+  </item>
+  <item>
+    <title>Post Two</title>
+    <link>https://site-b.com/posts/2</link>
+    <guid>guid-2</guid>
+  </item>
+</channel></rss>`;
+
+describe("fetch-feeds through the public action surface", () => {
+  let tmpDir: string;
+  let dbManager: DatabaseManager;
+  let registry: FeatureRegistry;
+  let actionQueue: ActionQueue;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), "myos-rss-ingest-"));
+    dbManager = new DatabaseManager(tmpDir);
+    const coreDb = dbManager.getCoreDatabase();
+    const settingsManager = new SettingsManager(coreDb);
+    const credentialStore = new CredentialStore(coreDb);
+    const eventBus = new EventBus(coreDb);
+    actionQueue = new ActionQueue(coreDb, 0);
+    const scheduler = new Scheduler(coreDb, 60_000, 0);
+    registry = new FeatureRegistry(dbManager, settingsManager, credentialStore, eventBus, actionQueue, scheduler);
+  });
+
+  afterEach(async () => {
+    dbManager.closeAll();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test("returns fetched and newEntries counts", async () => {
+    const feature = createRssReaderFeature(async () => new Response(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    const result = await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    expect(result).toEqual({ fetched: 1, newEntries: 2 });
+  });
+
+  test("emits rss:new-entry for each inserted entry", async () => {
+    const feature = createRssReaderFeature(async () => new Response(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const coreDb = dbManager.getCoreDatabase();
+    const rows = coreDb
+      .query<{ payload: string }, [string]>("SELECT payload FROM event_log WHERE event_name = ?")
+      .all("rss:new-entry");
+    expect(rows).toHaveLength(2);
+    const payloads = rows.map((r) => JSON.parse(r.payload) as { title: string; link: string });
+    expect(payloads[0]).toMatchObject({ title: "Post One", link: "https://site-a.com/articles/1" });
+    expect(payloads[1]).toMatchObject({ title: "Post Two", link: "https://site-b.com/posts/2" });
+  });
+
+  async function getFaviconsWhenReady(expectedCount: number): Promise<Record<string, string>> {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const favicons = (await actionQueue.executeQuery("rss-reader", "get-favicons", {})) as Record<string, string>;
+      if (Object.keys(favicons).length >= expectedCount) return favicons;
+      await Bun.sleep(5);
+    }
+    return (await actionQueue.executeQuery("rss-reader", "get-favicons", {})) as Record<string, string>;
+  }
+
+  function makeSiteFetch(feedXml: string, calls: string[] = []): (url: URL | RequestInfo) => Promise<Response> {
+    return async (input) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      calls.push(url);
+      if (url === "https://example.com/feed") {
+        return new Response(feedXml, { headers: { "content-type": "application/rss+xml" } });
+      }
+      if (url === "https://site-a.com/") {
+        return new Response(`<link rel="icon" href="/icon.png">`, { headers: { "content-type": "text/html" } });
+      }
+      if (url === "https://site-a.com/icon.png") {
+        return new Response(new Uint8Array([1, 1, 1]), { headers: { "content-type": "image/png" } });
+      }
+      if (url === "https://site-b.com/") {
+        return new Response("<html></html>", { headers: { "content-type": "text/html" } });
+      }
+      if (url === "https://site-b.com/favicon.ico") {
+        return new Response(new Uint8Array([2, 2, 2]), { headers: { "content-type": "image/x-icon" } });
+      }
+      throw new Error(`Host is down: ${url}`);
+    };
+  }
+
+  test("caches a favicon for each distinct hostname of new entries", async () => {
+    const feature = createRssReaderFeature(makeSiteFetch(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const favicons = await getFaviconsWhenReady(2);
+    expect(Object.keys(favicons).sort()).toEqual(["site-a.com", "site-b.com"]);
+    expect(favicons["site-a.com"]).toStartWith("data:image/png;base64,");
+    expect(favicons["site-b.com"]).toStartWith("data:image/x-icon;base64,");
+  });
+
+  test("feed results are identical when an icon host is dead", async () => {
+    const deadIconXml = `<rss version="2.0"><channel>
+      <title>Test Feed</title>
+      <item><title>Post</title><link>https://dead-site.com/post</link><guid>g1</guid></item>
+    </channel></rss>`;
+    const feature = createRssReaderFeature(makeSiteFetch(deadIconXml));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    const result = await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    expect(result).toEqual({ fetched: 1, newEntries: 1 });
+    // The failed lookup lands as a negative row, invisible to get-favicons
+    let row: { icon_data: Uint8Array | null } | null = null;
+    for (let attempt = 0; attempt < 100 && row === null; attempt++) {
+      row = dbManager
+        .getFeatureDatabase("rss-reader")
+        .query<{ icon_data: Uint8Array | null }, [string]>("SELECT icon_data FROM rss_favicons WHERE hostname = ?")
+        .get("dead-site.com");
+      if (row === null) await Bun.sleep(5);
+    }
+    expect(row).not.toBeNull();
+    expect(row?.icon_data).toBeNull();
+    const favicons = (await actionQueue.executeQuery("rss-reader", "get-favicons", {})) as Record<string, string>;
+    expect(favicons).toEqual({});
+  });
+
+  test("repeated fetch-feeds does not re-fetch cached favicons", async () => {
+    const calls: string[] = [];
+    const feature = createRssReaderFeature(makeSiteFetch(FEED_XML, calls));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+    await getFaviconsWhenReady(2);
+    const siteCallsAfterFirst = calls.filter((url) => url.startsWith("https://site-")).length;
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+    await Bun.sleep(25);
+
+    const siteCallsAfterSecond = calls.filter((url) => url.startsWith("https://site-")).length;
+    expect(siteCallsAfterSecond).toBe(siteCallsAfterFirst);
+    const count = dbManager
+      .getFeatureDatabase("rss-reader")
+      .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM rss_favicons")
+      .get();
+    expect(count?.n).toBe(2);
   });
 });
 

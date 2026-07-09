@@ -46,7 +46,7 @@ export interface NewEntry {
   readonly link: string;
 }
 
-type FetchFn = (url: URL | RequestInfo, init?: RequestInit) => Promise<Response>;
+export type FetchFn = (url: URL | RequestInfo, init?: RequestInit) => Promise<Response>;
 
 export async function fetchAllFeeds(
   db: Database,

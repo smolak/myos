@@ -93,6 +93,27 @@ export async function getEntries(
     .map(rowToEntry);
 }
 
+const DEFAULT_ICON_CONTENT_TYPE = "image/x-icon";
+
+export async function getFavicons(
+  db: Database,
+  _params: RssReaderQueries["get-favicons"]["params"],
+): Promise<RssReaderQueries["get-favicons"]["result"]> {
+  const rows = db
+    .query<{ hostname: string; icon_data: Uint8Array; content_type: string | null }, []>(
+      "SELECT hostname, icon_data, content_type FROM rss_favicons WHERE icon_data IS NOT NULL",
+    )
+    .all();
+
+  const favicons: Record<string, string> = {};
+  for (const row of rows) {
+    const contentType = row.content_type ?? DEFAULT_ICON_CONTENT_TYPE;
+    const base64 = Buffer.from(row.icon_data).toString("base64");
+    favicons[row.hostname] = `data:${contentType};base64,${base64}`;
+  }
+  return favicons;
+}
+
 export async function getUnreadCount(
   db: Database,
   _params: RssReaderQueries["get-unread-count"]["params"],

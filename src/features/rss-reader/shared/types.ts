@@ -66,5 +66,9 @@ export interface RssReaderQueries extends QueryMap {
     params: Record<string, never>;
     result: { count: number };
   };
+  "get-favicons": {
+    params: Record<string, never>;
+    result: Readonly<Record<string, string>>;
+  };
   search: { params: { query: string }; result: readonly FeatureSearchResult[] };
 }

@@ -40,6 +40,7 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "rss:fetch-feeds": { params: Record<string, never>; response: { fetched: number; newEntries: number } };
       "rss:get-feeds": { params: Record<string, never>; response: RssFeed[] };
       "rss:get-entries": { params: { feedId?: string; unreadOnly?: boolean; limit?: number }; response: RssEntry[] };
+      "rss:get-favicons": { params: Record<string, never>; response: Record<string, string> };
 
       // Pomodoro
       "pomodoro:start": { params: { type?: SessionType; durationSeconds?: number }; response: { id: string } };

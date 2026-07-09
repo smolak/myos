@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
 import { addFeed, fetchAllFeeds, markRead } from "./actions";
 import { rssReaderMigrations } from "./migrations";
-import { getEntries, getFeeds, getUnreadCount } from "./queries";
+import { getEntries, getFavicons, getFeeds, getUnreadCount } from "./queries";
 
 const RSS_XML_A = `<rss version="2.0"><channel>
   <title>Feed A</title>
@@ -197,5 +197,64 @@ describe("getUnreadCount", () => {
     await markRead(db, { id: newEntries[0]?.id });
     const result = await getUnreadCount(db, {});
     expect(result.count).toBe(1);
+  });
+});
+
+describe("getFavicons", () => {
+  let db: Database;
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), "myos-rss-qfav-"));
+    db = new Database(join(tmpDir, "rss.db"));
+    db.run("PRAGMA journal_mode=WAL");
+    bootstrapMigrationsTable(db);
+    runMigrations(db, "rss-reader", rssReaderMigrations);
+  });
+
+  afterEach(async () => {
+    db.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  function insertFavicon(hostname: string, iconData: Uint8Array | null, contentType: string | null): void {
+    db.query("INSERT INTO rss_favicons (hostname, icon_data, content_type, fetched_at) VALUES (?, ?, ?, ?)").run(
+      hostname,
+      iconData,
+      contentType,
+      new Date().toISOString(),
+    );
+  }
+
+  test("returns empty map when the cache is empty", async () => {
+    const favicons = await getFavicons(db, {});
+    expect(favicons).toEqual({});
+  });
+
+  test("returns a hostname to data: URL map", async () => {
+    const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+    insertFavicon("site-a.com", bytes, "image/png");
+
+    const favicons = await getFavicons(db, {});
+
+    const base64 = Buffer.from(bytes).toString("base64");
+    expect(favicons).toEqual({ "site-a.com": `data:image/png;base64,${base64}` });
+  });
+
+  test("omits hostnames with a negative row", async () => {
+    insertFavicon("dead-host.com", null, null);
+    insertFavicon("site-a.com", new Uint8Array([1, 2, 3]), "image/png");
+
+    const favicons = await getFavicons(db, {});
+
+    expect(Object.keys(favicons)).toEqual(["site-a.com"]);
+  });
+
+  test("defaults the data: URL content type when none was recorded", async () => {
+    insertFavicon("site-b.com", new Uint8Array([1, 2, 3]), null);
+
+    const favicons = await getFavicons(db, {});
+
+    expect(favicons["site-b.com"]).toStartWith("data:image/x-icon;base64,");
   });
 });
