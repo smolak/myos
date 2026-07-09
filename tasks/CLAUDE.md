@@ -1,8 +1,3 @@
----
-description: Conventions for working with task files
-globs: "tasks/**"
----
-
 # Task Conventions
 
 Read `specs/TASKS.md` for the full task format, philosophy, and reading strategy.

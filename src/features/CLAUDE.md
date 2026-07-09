@@ -1,8 +1,3 @@
----
-description: Conventions for building features (plugins)
-globs: "src/features/**"
----
-
 # Feature Development Rules
 
 Every feature follows the `FeatureDefinition` contract defined in `specs/ARCHITECTURE.md` § Feature Contract.

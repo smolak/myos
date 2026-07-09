@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run *)",
+      "Bash(bun test *)",
+      "Bash(bun build *)",
+      "Bash(bun install *)",
+      "Bash(bun --version)",
+      "Bash(bunx biome *)",
+      "Bash(npx electrobun *)",
+      "Bash(npx vitest *)",
+      "Bash(node_modules/electrobun/bin/electrobun *)",
+      "Bash(pkill -f \"MyOS-dev.app\")",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)"
+    ],
+    "additionalDirectories": ["/tmp"]
+  }
+}

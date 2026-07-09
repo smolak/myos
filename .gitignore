@@ -1,7 +1,7 @@
 node_modules/
 
-# Claude Code local settings (permissions, hooks — machine-specific)
-.claude/
+# Claude Code personal settings (machine-specific); shared settings and skills are tracked
+.claude/settings.local.json
 
 # Build outputs
 dist/

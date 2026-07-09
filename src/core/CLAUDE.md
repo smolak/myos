@@ -1,8 +1,3 @@
----
-description: Conventions for core services
-globs: "src/core/**"
----
-
 # Core Services Rules
 
 Core services are the foundation of the app. Bugs here cascade everywhere.
@@ -17,10 +12,3 @@ Core services are the foundation of the app. Bugs here cascade everywhere.
 ## Core Services (defined in specs/ARCHITECTURE.md)
 
 Feature Registry, Scheduler, Event Bus, Action Queue, Script Engine, Database Manager, Settings Manager, Credential Store, Notification Service, Backup Service, Command Palette, Theming.
-
-## API Naming
-
-- Classes: PascalCase noun (`DatabaseManager`, `EventBus`).
-- Methods/functions: camelCase verb-first (`getCoreDatabase()`, `runMigrations()`).
-- Prefer objects for 3+ parameters. Return result objects, not tuples.
-- Boolean properties: `is`/`has`/`can`/`should` prefix.

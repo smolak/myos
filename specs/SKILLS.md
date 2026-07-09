@@ -4,7 +4,7 @@ This file captures the skills currently available in this repository and recomme
 
 ## Project-Local Skills (Already Installed)
 
-These are present under `.agents/skills/`:
+These are present under `.claude/skills/`:
 
 - `electrobun`
 - `electrobun-best-practices`
