@@ -153,6 +153,6 @@ describe("dailyJournalFeature lifecycle via FeatureRegistry", () => {
     await Bun.sleep(10);
     const created = emitted.find((e) => e.event === "journal:note-created");
     expect(created).toBeDefined();
-    expect((created?.payload as { date: string }).date).toBe("2026-04-25");
+    expect(created?.payload).toMatchObject({ date: "2026-04-25" });
   });
 });

@@ -66,7 +66,7 @@ export function usePomodoro(): UsePomodoroReturn {
     if (session?.status === "running") {
       tickRef.current = setInterval(() => {
         setSession((prev) => {
-          if (!prev || prev.status !== "running") return prev;
+          if (prev?.status !== "running") return prev;
 
           const newElapsed = prev.elapsedSeconds + 1;
           if (newElapsed >= prev.durationSeconds) {
@@ -110,13 +110,13 @@ export function usePomodoro(): UsePomodoroReturn {
   );
 
   const pause = useCallback(async () => {
-    if (!session || session.status !== "running") return;
+    if (session?.status !== "running") return;
     await rpc.request["pomodoro:pause"]({ id: session.id, elapsedSeconds: session.elapsedSeconds });
     setSession((prev) => (prev ? { ...prev, status: "paused" } : null));
   }, [session]);
 
   const resume = useCallback(async () => {
-    if (!session || session.status !== "paused") return;
+    if (session?.status !== "paused") return;
     await rpc.request["pomodoro:resume"]({ id: session.id });
     setSession((prev) => (prev ? { ...prev, status: "running" } : null));
   }, [session]);

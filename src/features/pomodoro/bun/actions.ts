@@ -34,7 +34,7 @@ export async function pauseSession(db: Database, params: PauseParams): Promise<P
   const row = db
     .query<{ id: string; status: string }, [string]>("SELECT id, status FROM pomodoro_sessions WHERE id = ?")
     .get(params.id);
-  if (!row || row.status !== "running") return { success: false };
+  if (row?.status !== "running") return { success: false };
 
   const now = new Date().toISOString();
   db.query("UPDATE pomodoro_sessions SET status = 'paused', elapsed_seconds = ?, updated_at = ? WHERE id = ?").run(
@@ -49,7 +49,7 @@ export async function resumeSession(db: Database, params: ResumeParams): Promise
   const row = db
     .query<{ id: string; status: string }, [string]>("SELECT id, status FROM pomodoro_sessions WHERE id = ?")
     .get(params.id);
-  if (!row || row.status !== "paused") return { success: false };
+  if (row?.status !== "paused") return { success: false };
 
   const now = new Date().toISOString();
   db.query("UPDATE pomodoro_sessions SET status = 'running', updated_at = ? WHERE id = ?").run(now, params.id);
