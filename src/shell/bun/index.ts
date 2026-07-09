@@ -177,6 +177,11 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
         return actionQueue.executeQuery("rss-reader", "get-entries", params) as Promise<any>;
       },
+      "rss:get-favicons": async (_params) => {
+        await ready();
+        // biome-ignore lint/suspicious/noExplicitAny: query return type is determined by the feature layer
+        return actionQueue.executeQuery("rss-reader", "get-favicons", {}) as Promise<any>;
+      },
 
       // Pomodoro
       "pomodoro:start": async (params) => {

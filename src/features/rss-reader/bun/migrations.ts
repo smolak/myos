@@ -35,4 +35,16 @@ export const rssReaderMigrations: Migration[] = [
 			)
 		`,
   },
+  {
+    version: "003",
+    name: "create-rss-favicons",
+    up: `
+			CREATE TABLE rss_favicons (
+				hostname     TEXT NOT NULL PRIMARY KEY,
+				icon_data    BLOB,
+				content_type TEXT,
+				fetched_at   TEXT NOT NULL
+			)
+		`,
+  },
 ];
