@@ -39,6 +39,22 @@ describe("discoverIconUrl", () => {
   test("returns null when the page has no icon links", () => {
     expect(discoverIconUrl("<html><head><title>Hi</title></head></html>", "https://site-a.com/")).toBeNull();
   });
+
+  test("parses single-quoted and unquoted attribute values", () => {
+    const singleQuoted = `<link rel='icon' href='/single.png'>`;
+    expect(discoverIconUrl(singleQuoted, "https://site-a.com/")).toBe("https://site-a.com/single.png");
+
+    const unquoted = `<link rel=icon href=/plain.png>`;
+    expect(discoverIconUrl(unquoted, "https://site-a.com/")).toBe("https://site-a.com/plain.png");
+  });
+
+  test("ignores mask-icon links", () => {
+    const maskBeforeIcon = `<link rel="mask-icon" href="/mask.svg"><link rel="icon" href="/icon.png">`;
+    expect(discoverIconUrl(maskBeforeIcon, "https://site-a.com/")).toBe("https://site-a.com/icon.png");
+
+    const maskOnly = `<link rel="mask-icon" href="/mask.svg">`;
+    expect(discoverIconUrl(maskOnly, "https://site-a.com/")).toBeNull();
+  });
 });
 
 describe("fetchFavicon", () => {
@@ -106,6 +122,25 @@ describe("fetchFavicon", () => {
 
     expect(result.contentType).toBe("image/x-icon");
     expect(result.iconData).toEqual(ICO_BYTES);
+  });
+
+  test("falls back to http for a site not served over https", async () => {
+    const fetchFn: FetchFn = async (input) => {
+      const url = urlOf(input);
+      if (url.startsWith("https://")) throw new Error("TLS handshake failed");
+      if (url === "http://plain-site.com/") {
+        return new Response(`<link rel="icon" href="/icon.png">`, { headers: { "content-type": "text/html" } });
+      }
+      if (url === "http://plain-site.com/icon.png") {
+        return new Response(PNG_BYTES, { headers: { "content-type": "image/png" } });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    };
+
+    const result = await fetchFavicon("plain-site.com", fetchFn);
+
+    expect(result.contentType).toBe("image/png");
+    expect(result.iconData).toEqual(PNG_BYTES);
   });
 
   test("returns a null icon when even /favicon.ico is missing", async () => {

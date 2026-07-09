@@ -9,6 +9,9 @@ export interface IngestContext {
   readonly events: {
     emit(event: "rss:new-entry", payload: RssReaderEvents["rss:new-entry"]): void;
   };
+  readonly log: {
+    warn(message: string, ...args: unknown[]): void;
+  };
 }
 
 export interface IngestResult {
@@ -29,7 +32,9 @@ export async function ingestFeeds(ctx: IngestContext, fetchFn: FetchFn = fetch):
   }
 
   // Fire-and-forget: favicon failures must never delay or fail the feed pipeline
-  void acquireFavicons(ctx.db, distinctHostnames(newEntries), fetchFn).catch(() => {});
+  void acquireFavicons(ctx.db, distinctHostnames(newEntries), fetchFn).catch((error) => {
+    ctx.log.warn("Favicon acquisition failed", error);
+  });
 
   return { fetched, newEntries };
 }

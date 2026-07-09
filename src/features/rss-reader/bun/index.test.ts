@@ -292,17 +292,16 @@ describe("fetch-feeds through the public action surface", () => {
 
     expect(result).toEqual({ fetched: 1, newEntries: 1 });
     // The failed lookup lands as a negative row, invisible to get-favicons
-    for (let attempt = 0; attempt < 100; attempt++) {
-      const row = dbManager
+    let row: { icon_data: Uint8Array | null } | null = null;
+    for (let attempt = 0; attempt < 100 && row === null; attempt++) {
+      row = dbManager
         .getFeatureDatabase("rss-reader")
         .query<{ icon_data: Uint8Array | null }, [string]>("SELECT icon_data FROM rss_favicons WHERE hostname = ?")
         .get("dead-site.com");
-      if (row) {
-        expect(row.icon_data).toBeNull();
-        break;
-      }
-      await Bun.sleep(5);
+      if (row === null) await Bun.sleep(5);
     }
+    expect(row).not.toBeNull();
+    expect(row?.icon_data).toBeNull();
     const favicons = (await actionQueue.executeQuery("rss-reader", "get-favicons", {})) as Record<string, string>;
     expect(favicons).toEqual({});
   });
