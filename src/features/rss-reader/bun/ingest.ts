@@ -36,14 +36,14 @@ export async function ingestFeeds(ctx: IngestContext, fetchFn: FetchFn = fetch):
   // Fire-and-forget: favicon failures must never delay or fail the feed pipeline.
   // All stored entries' hostnames are considered — not just this run's new entries —
   // so stale icons refresh and expired negative rows retry even on quiet feeds.
-  const faviconAcquisition = acquireFavicons(ctx.db, allEntryHostnames(ctx.db), fetchFn).catch((error) => {
+  const faviconAcquisition = acquireFavicons(ctx.db, listEntryHostnames(ctx.db), fetchFn).catch((error) => {
     ctx.log.warn("Favicon acquisition failed", error);
   });
 
   return { fetched, newEntries, faviconAcquisition };
 }
 
-function allEntryHostnames(db: Database): string[] {
+function listEntryHostnames(db: Database): string[] {
   const links = db.query<{ link: string }, []>("SELECT DISTINCT link FROM rss_entries").all();
   const hostnames = new Set<string>();
   for (const { link } of links) {
