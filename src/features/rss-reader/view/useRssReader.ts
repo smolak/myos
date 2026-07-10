@@ -9,6 +9,7 @@ export type StoredEntry = RssEntry;
 export interface UseRssReaderReturn {
   readonly feeds: readonly RssFeed[];
   readonly entries: readonly RssEntry[];
+  readonly favicons: Readonly<Record<string, string>>;
   readonly unreadCount: number;
   readonly isLoading: boolean;
   addFeed(url: string): Promise<void>;
@@ -21,15 +22,18 @@ export interface UseRssReaderReturn {
 export function useRssReader(): UseRssReaderReturn {
   const [feeds, setFeeds] = useState<RssFeed[]>([]);
   const [entries, setEntries] = useState<RssEntry[]>([]);
+  const [favicons, setFavicons] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const reloadAll = useCallback(async () => {
-    const [feedList, entryList] = await Promise.all([
+    const [feedList, entryList, faviconMap] = await Promise.all([
       rpc.request["rss:get-feeds"]({}),
       rpc.request["rss:get-entries"]({}),
+      rpc.request["rss:get-favicons"]({}),
     ]);
     setFeeds(feedList as RssFeed[]);
     setEntries(entryList as RssEntry[]);
+    setFavicons(faviconMap as Record<string, string>);
   }, []);
 
   useEffect(() => {
@@ -87,5 +91,5 @@ export function useRssReader(): UseRssReaderReturn {
 
   const unreadCount = entries.filter((e) => !e.isRead).length;
 
-  return { feeds, entries, unreadCount, isLoading, addFeed, deleteFeed, markRead, markUnread, refresh };
+  return { feeds, entries, favicons, unreadCount, isLoading, addFeed, deleteFeed, markRead, markUnread, refresh };
 }

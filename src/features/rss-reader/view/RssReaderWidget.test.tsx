@@ -22,11 +22,13 @@ vi.mock("./RssReaderContext", () => {
     createdAt: string;
   }[] = [];
   let isLoading = false;
+  let favicons: Record<string, string> = {};
 
   return {
     useRssReaderContext: () => ({
       feeds,
       entries,
+      favicons,
       unreadCount: entries.filter((e) => !e.isRead).length,
       isLoading,
       addFeed: addFeedMock,
@@ -44,6 +46,9 @@ vi.mock("./RssReaderContext", () => {
     __setIsLoading: (l: boolean) => {
       isLoading = l;
     },
+    __setFavicons: (f: Record<string, string>) => {
+      favicons = f;
+    },
     __getMarkReadMock: () => markReadMock,
     __getAddFeedMock: () => addFeedMock,
   };
@@ -53,6 +58,7 @@ function makeEntry(
   overrides: Partial<{
     id: string;
     title: string;
+    link: string;
     isRead: boolean;
     publishedAt: string | null;
   }> = {},
@@ -62,7 +68,7 @@ function makeEntry(
     feedId: "f1",
     guid: overrides.id ?? "e1",
     title: overrides.title ?? "Test Article",
-    link: "https://example.com/1",
+    link: overrides.link ?? "https://example.com/1",
     description: null,
     publishedAt: overrides.publishedAt ?? "2024-01-01T10:00:00.000Z",
     isRead: overrides.isRead ?? false,
@@ -84,6 +90,7 @@ describe("RssReaderWidget", () => {
   let setFeeds: (f: ReturnType<typeof makeFeed>[]) => void;
   let setEntries: (e: ReturnType<typeof makeEntry>[]) => void;
   let setIsLoading: (l: boolean) => void;
+  let setFavicons: (f: Record<string, string>) => void;
   let getMarkReadMock: () => ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
@@ -95,11 +102,14 @@ describe("RssReaderWidget", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setIsLoading = (mod as any).__setIsLoading;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setFavicons = (mod as any).__setFavicons;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getMarkReadMock = (mod as any).__getMarkReadMock;
 
     setFeeds([]);
     setEntries([]);
     setIsLoading(false);
+    setFavicons({});
     getMarkReadMock().mockClear();
   });
 
@@ -164,6 +174,32 @@ describe("RssReaderWidget", () => {
     render(<RssReaderWidget />);
     const dot = document.querySelector(".bg-blue-400");
     expect(dot).toBeTruthy();
+  });
+
+  test("entry row shows the cached favicon for the link's hostname", () => {
+    setFeeds([makeFeed()]);
+    setEntries([makeEntry({ link: "https://example.com/1" })]);
+    setFavicons({ "example.com": "data:image/png;base64,AAAA" });
+    const { container } = render(<RssReaderWidget />);
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", "data:image/png;base64,AAAA");
+    expect(img).toHaveAttribute("aria-hidden", "true");
+  });
+
+  test("entry row shows a lettered placeholder when no favicon is cached", () => {
+    setFeeds([makeFeed()]);
+    setEntries([makeEntry({ link: "https://example.com/1" })]);
+    const { container } = render(<RssReaderWidget />);
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("E")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  test("entry title remains the accessible label when an icon is shown", () => {
+    setFeeds([makeFeed()]);
+    setEntries([makeEntry({ title: "Iconed Article" })]);
+    setFavicons({ "example.com": "data:image/png;base64,AAAA" });
+    render(<RssReaderWidget />);
+    expect(screen.getByRole("button", { name: "Iconed Article" })).toBeInTheDocument();
   });
 
   test("read entry has muted text class", () => {
