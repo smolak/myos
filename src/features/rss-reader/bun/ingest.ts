@@ -33,7 +33,8 @@ export async function ingestFeeds(ctx: IngestContext, fetchFn: FetchFn = fetch):
     });
   }
 
-  // Fire-and-forget: favicon failures must never delay or fail the feed pipeline.
+  // Runs in the background and never rejects: favicon failures must never delay or fail
+  // the feed pipeline; callers observe completion via the returned faviconAcquisition.
   // All stored entries' hostnames are considered — not just this run's new entries —
   // so stale icons refresh and expired negative rows retry even on quiet feeds.
   const faviconAcquisition = acquireFavicons(ctx.db, listEntryHostnames(ctx.db), fetchFn).catch((error) => {

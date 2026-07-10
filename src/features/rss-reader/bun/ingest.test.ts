@@ -1,45 +1,21 @@
 import { Database } from "bun:sqlite";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
-import type { FetchFn } from "./actions";
 import { addFeed } from "./actions";
-import { FAVICON_NEGATIVE_RETRY_DAYS, FAVICON_TTL_DAYS } from "./favicon-cache";
-import { DAY_MS, daysAgo, PNG_BYTES, urlOf } from "./favicon-test-helpers";
+import { DAY_MS, FAVICON_NEGATIVE_RETRY_DAYS, FAVICON_TTL_DAYS } from "./favicon-cache";
+import { daysAgo, deadFetch, makeIconFetch, PNG_BYTES, pngDataUri, withFeed } from "./favicon-test-helpers";
 import type { IngestContext } from "./ingest";
 import { ingestFeeds } from "./ingest";
 import { rssReaderMigrations } from "./migrations";
 import { getFavicons } from "./queries";
 
-const FEED_XML = `<rss version="2.0"><channel>
+const FEED = {
+  url: "https://example.com/feed",
+  xml: `<rss version="2.0"><channel>
   <title>Test Feed</title>
   <item><title>Post</title><link>https://site-a.com/post</link><guid>g1</guid></item>
-</channel></rss>`;
-
-const FEED_URL = "https://example.com/feed";
-
-function makeFeedAndIconFetch(iconCalls: string[]): FetchFn {
-  return async (input) => {
-    const url = urlOf(input);
-    if (url === FEED_URL) {
-      return new Response(FEED_XML, { headers: { "content-type": "application/rss+xml" } });
-    }
-    iconCalls.push(url);
-    if (url.endsWith("/favicon.ico")) {
-      return new Response(PNG_BYTES, { headers: { "content-type": "image/png" } });
-    }
-    return new Response("<html></html>", { headers: { "content-type": "text/html" } });
-  };
-}
-
-function makeFeedAndDeadIconFetch(): FetchFn {
-  return async (input) => {
-    const url = urlOf(input);
-    if (url === FEED_URL) {
-      return new Response(FEED_XML, { headers: { "content-type": "application/rss+xml" } });
-    }
-    throw new Error("Network down");
-  };
-}
+</channel></rss>`,
+};
 
 function makeContext(db: Database): IngestContext {
   return {
@@ -60,16 +36,16 @@ describe("ingestFeeds", () => {
     db = new Database(":memory:");
     bootstrapMigrationsTable(db);
     runMigrations(db, "rss-reader", rssReaderMigrations);
-    await addFeed(db, { url: FEED_URL });
+    await addFeed(db, { url: FEED.url });
   });
 
   test("re-fetches a stale favicon even when its hostname has no new entries", async () => {
-    const first = await ingestFeeds(makeContext(db), makeFeedAndIconFetch([]));
+    const first = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch()));
     await first.faviconAcquisition;
     setFaviconFetchedAt(db, "site-a.com", daysAgo(FAVICON_TTL_DAYS + 1));
 
     const iconCalls: string[] = [];
-    const second = await ingestFeeds(makeContext(db), makeFeedAndIconFetch(iconCalls));
+    const second = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch(iconCalls)));
     await second.faviconAcquisition;
 
     expect(second.newEntries).toHaveLength(0);
@@ -80,13 +56,25 @@ describe("ingestFeeds", () => {
     expect(Date.parse(row?.fetched_at ?? "")).toBeGreaterThan(Date.now() - DAY_MS);
   });
 
+  test("keeps serving the stale icon through get-favicons when a refresh fails", async () => {
+    const first = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch()));
+    await first.faviconAcquisition;
+    setFaviconFetchedAt(db, "site-a.com", daysAgo(FAVICON_TTL_DAYS + 1));
+
+    const second = await ingestFeeds(makeContext(db), withFeed(FEED, deadFetch));
+    await second.faviconAcquisition;
+
+    const favicons = await getFavicons(db, {});
+    expect(favicons["site-a.com"]).toBe(pngDataUri(PNG_BYTES));
+  });
+
   test("does not retry a negative-cached hostname inside the retry window", async () => {
-    const first = await ingestFeeds(makeContext(db), makeFeedAndDeadIconFetch());
+    const first = await ingestFeeds(makeContext(db), withFeed(FEED, deadFetch));
     await first.faviconAcquisition;
     setFaviconFetchedAt(db, "site-a.com", daysAgo(FAVICON_NEGATIVE_RETRY_DAYS - 1));
 
     const iconCalls: string[] = [];
-    const second = await ingestFeeds(makeContext(db), makeFeedAndIconFetch(iconCalls));
+    const second = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch(iconCalls)));
     await second.faviconAcquisition;
 
     expect(iconCalls).toHaveLength(0);
@@ -95,23 +83,23 @@ describe("ingestFeeds", () => {
   });
 
   test("retries a negative-cached hostname after the retry window", async () => {
-    const first = await ingestFeeds(makeContext(db), makeFeedAndDeadIconFetch());
+    const first = await ingestFeeds(makeContext(db), withFeed(FEED, deadFetch));
     await first.faviconAcquisition;
     setFaviconFetchedAt(db, "site-a.com", daysAgo(FAVICON_NEGATIVE_RETRY_DAYS + 1));
 
-    const second = await ingestFeeds(makeContext(db), makeFeedAndIconFetch([]));
+    const second = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch()));
     await second.faviconAcquisition;
 
     const favicons = await getFavicons(db, {});
-    expect(favicons["site-a.com"]).toBe(`data:image/png;base64,${Buffer.from(PNG_BYTES).toString("base64")}`);
+    expect(favicons["site-a.com"]).toBe(pngDataUri(PNG_BYTES));
   });
 
   test("remains idempotent across repeated ingests", async () => {
-    const first = await ingestFeeds(makeContext(db), makeFeedAndIconFetch([]));
+    const first = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch()));
     await first.faviconAcquisition;
 
     const iconCalls: string[] = [];
-    const second = await ingestFeeds(makeContext(db), makeFeedAndIconFetch(iconCalls));
+    const second = await ingestFeeds(makeContext(db), withFeed(FEED, makeIconFetch(iconCalls)));
     await second.faviconAcquisition;
 
     expect(second.newEntries).toHaveLength(0);
@@ -135,9 +123,8 @@ describe("ingestFeeds", () => {
         },
       },
     };
-    const fetchFn = async () => new Response(FEED_XML, { headers: { "content-type": "application/rss+xml" } });
 
-    const result = await ingestFeeds(ctx, fetchFn);
+    const result = await ingestFeeds(ctx, withFeed(FEED, deadFetch));
     await result.faviconAcquisition;
 
     expect(result.fetched).toBe(1);

@@ -8,7 +8,7 @@ export const FAVICON_TTL_DAYS = 30;
 /** How long a failed lookup (negative row) suppresses re-attempts for its hostname. */
 export const FAVICON_NEGATIVE_RETRY_DAYS = 7;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface CachedRow {
   readonly has_icon: number;
