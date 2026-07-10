@@ -17,6 +17,8 @@ export interface IngestContext {
 export interface IngestResult {
   readonly fetched: number;
   readonly newEntries: NewEntry[];
+  /** Settles when background favicon acquisition finishes; never rejects. */
+  readonly faviconAcquisition: Promise<void>;
 }
 
 export async function ingestFeeds(ctx: IngestContext, fetchFn: FetchFn = fetch): Promise<IngestResult> {
@@ -31,19 +33,22 @@ export async function ingestFeeds(ctx: IngestContext, fetchFn: FetchFn = fetch):
     });
   }
 
-  // Fire-and-forget: favicon failures must never delay or fail the feed pipeline
-  void acquireFavicons(ctx.db, distinctHostnames(newEntries), fetchFn).catch((error) => {
+  // Fire-and-forget: favicon failures must never delay or fail the feed pipeline.
+  // All stored entries' hostnames are considered — not just this run's new entries —
+  // so stale icons refresh and expired negative rows retry even on quiet feeds.
+  const faviconAcquisition = acquireFavicons(ctx.db, allEntryHostnames(ctx.db), fetchFn).catch((error) => {
     ctx.log.warn("Favicon acquisition failed", error);
   });
 
-  return { fetched, newEntries };
+  return { fetched, newEntries, faviconAcquisition };
 }
 
-function distinctHostnames(entries: readonly NewEntry[]): string[] {
+function allEntryHostnames(db: Database): string[] {
+  const links = db.query<{ link: string }, []>("SELECT DISTINCT link FROM rss_entries").all();
   const hostnames = new Set<string>();
-  for (const entry of entries) {
+  for (const { link } of links) {
     try {
-      hostnames.add(new URL(entry.link).hostname);
+      hostnames.add(new URL(link).hostname);
     } catch {
       // Entries whose link is not a valid URL get no favicon
     }
