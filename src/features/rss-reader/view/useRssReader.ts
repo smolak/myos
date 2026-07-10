@@ -1,6 +1,6 @@
 import { rpc } from "@shell/view/electrobun";
 import { useCallback, useEffect, useState } from "react";
-import type { RssEntry, RssFeed } from "../shared/types";
+import type { FaviconMap, RssEntry, RssFeed } from "../shared/types";
 
 // Type aliases preserved for component compatibility
 export type StoredFeed = RssFeed;
@@ -9,7 +9,7 @@ export type StoredEntry = RssEntry;
 export interface UseRssReaderReturn {
   readonly feeds: readonly RssFeed[];
   readonly entries: readonly RssEntry[];
-  readonly favicons: Readonly<Record<string, string>>;
+  readonly favicons: FaviconMap;
   readonly unreadCount: number;
   readonly isLoading: boolean;
   addFeed(url: string): Promise<void>;
@@ -22,7 +22,7 @@ export interface UseRssReaderReturn {
 export function useRssReader(): UseRssReaderReturn {
   const [feeds, setFeeds] = useState<RssFeed[]>([]);
   const [entries, setEntries] = useState<RssEntry[]>([]);
-  const [favicons, setFavicons] = useState<Record<string, string>>({});
+  const [favicons, setFavicons] = useState<FaviconMap>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const reloadAll = useCallback(async () => {
@@ -33,7 +33,7 @@ export function useRssReader(): UseRssReaderReturn {
     ]);
     setFeeds(feedList as RssFeed[]);
     setEntries(entryList as RssEntry[]);
-    setFavicons(faviconMap as Record<string, string>);
+    setFavicons(faviconMap as FaviconMap);
   }, []);
 
   useEffect(() => {

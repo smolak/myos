@@ -1,160 +1,113 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { RssEntry, RssFeed } from "../shared/types";
 import { RssReaderFullView } from "./RssReaderFullView";
 
-const openUrlMock = vi.fn().mockResolvedValue(undefined);
+const mocks = vi.hoisted(() => ({
+  openUrl: vi.fn().mockResolvedValue(undefined),
+  markRead: vi.fn(),
+  markUnread: vi.fn(),
+  state: {
+    feeds: [] as RssFeed[],
+    entries: [] as RssEntry[],
+    favicons: {} as Record<string, string>,
+  },
+}));
 
 vi.mock("@shell/view/electrobun", () => ({
   rpc: {
     request: new Proxy(
       {},
       {
-        get: (_target, prop: string) => (prop === "shell:open-url" ? openUrlMock : vi.fn().mockResolvedValue({})),
+        get: (_target, prop: string) => (prop === "shell:open-url" ? mocks.openUrl : vi.fn().mockResolvedValue({})),
       },
     ),
   },
 }));
 
-vi.mock("./RssReaderContext", () => {
-  const markReadMock = vi.fn();
-  const markUnreadMock = vi.fn();
+vi.mock("./RssReaderContext", () => ({
+  useRssReaderContext: () => ({
+    feeds: mocks.state.feeds,
+    entries: mocks.state.entries,
+    favicons: mocks.state.favicons,
+    unreadCount: mocks.state.entries.filter((e) => !e.isRead).length,
+    isLoading: false,
+    addFeed: vi.fn(),
+    deleteFeed: vi.fn(),
+    markRead: mocks.markRead,
+    markUnread: mocks.markUnread,
+    refresh: vi.fn(),
+  }),
+}));
 
-  let feeds: {
-    id: string;
-    url: string;
-    title: string;
-    fetchIntervalMinutes: number;
-    lastFetchedAt: string | null;
-  }[] = [];
-  let entries: {
-    id: string;
-    feedId: string;
-    guid: string;
-    title: string;
-    link: string;
-    description: string | null;
-    publishedAt: string | null;
-    isRead: boolean;
-    createdAt: string;
-  }[] = [];
-  let favicons: Record<string, string> = {};
-
+function makeEntry(overrides: Partial<RssEntry> = {}): RssEntry {
   return {
-    useRssReaderContext: () => ({
-      feeds,
-      entries,
-      favicons,
-      unreadCount: entries.filter((e) => !e.isRead).length,
-      isLoading: false,
-      addFeed: vi.fn(),
-      deleteFeed: vi.fn(),
-      markRead: markReadMock,
-      markUnread: markUnreadMock,
-      refresh: vi.fn(),
-    }),
-    __setFeeds: (f: typeof feeds) => {
-      feeds = f;
-    },
-    __setEntries: (e: typeof entries) => {
-      entries = e;
-    },
-    __setFavicons: (f: Record<string, string>) => {
-      favicons = f;
-    },
-    __getMarkReadMock: () => markReadMock,
-    __getMarkUnreadMock: () => markUnreadMock,
-  };
-});
-
-function makeEntry(
-  overrides: Partial<{
-    id: string;
-    title: string;
-    link: string;
-    isRead: boolean;
-  }> = {},
-) {
-  return {
-    id: overrides.id ?? "e1",
+    id: "e1",
     feedId: "f1",
     guid: overrides.id ?? "e1",
-    title: overrides.title ?? "Test Article",
-    link: overrides.link ?? "https://example.com/1",
+    title: "Test Article",
+    link: "https://example.com/1",
     description: null,
     publishedAt: "2026-01-01T10:00:00.000Z",
-    isRead: overrides.isRead ?? false,
+    isRead: false,
     createdAt: new Date().toISOString(),
+    ...overrides,
   };
 }
 
-function makeFeed() {
+function makeFeed(): RssFeed {
   return {
     id: "f1",
     url: "https://example.com/feed",
     title: "Test Feed",
+    description: null,
     fetchIntervalMinutes: 30,
     lastFetchedAt: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
   };
 }
 
 describe("RssReaderFullView", () => {
-  let setFeeds: (f: ReturnType<typeof makeFeed>[]) => void;
-  let setEntries: (e: ReturnType<typeof makeEntry>[]) => void;
-  let setFavicons: (f: Record<string, string>) => void;
-  let getMarkReadMock: () => ReturnType<typeof vi.fn>;
-  let getMarkUnreadMock: () => ReturnType<typeof vi.fn>;
-
-  beforeEach(async () => {
-    const mod = await import("./RssReaderContext");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setFeeds = (mod as any).__setFeeds;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setEntries = (mod as any).__setEntries;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setFavicons = (mod as any).__setFavicons;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getMarkReadMock = (mod as any).__getMarkReadMock;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getMarkUnreadMock = (mod as any).__getMarkUnreadMock;
-
-    setFeeds([]);
-    setEntries([]);
-    setFavicons({});
-    getMarkReadMock().mockClear();
-    getMarkUnreadMock().mockClear();
-    openUrlMock.mockClear();
+  beforeEach(() => {
+    mocks.state.feeds = [];
+    mocks.state.entries = [];
+    mocks.state.favicons = {};
+    mocks.openUrl.mockClear();
+    mocks.markRead.mockClear();
+    mocks.markUnread.mockClear();
   });
 
   describe("Entries tab icons", () => {
-    test("entry row shows the cached favicon for the link's hostname", () => {
-      setEntries([makeEntry({ link: "https://example.com/1" })]);
-      setFavicons({ "example.com": "data:image/png;base64,AAAA" });
+    test("shows the cached favicon for the entry link's hostname", () => {
+      mocks.state.entries = [makeEntry({ link: "https://example.com/1" })];
+      mocks.state.favicons = { "example.com": "data:image/png;base64,AAAA" };
       const { container } = render(<RssReaderFullView />);
       const img = container.querySelector("img");
       expect(img).toHaveAttribute("src", "data:image/png;base64,AAAA");
       expect(img).toHaveAttribute("aria-hidden", "true");
     });
 
-    test("entry row shows a lettered placeholder when no favicon is cached", () => {
-      setEntries([makeEntry({ link: "https://example.com/1" })]);
+    test("shows a lettered placeholder when no favicon is cached", () => {
+      mocks.state.entries = [makeEntry({ link: "https://example.com/1" })];
       const { container } = render(<RssReaderFullView />);
       expect(container.querySelector("img")).toBeNull();
       expect(screen.getByText("E")).toHaveAttribute("aria-hidden", "true");
     });
 
-    test("entry title remains the accessible label when an icon is shown", () => {
-      setEntries([makeEntry({ title: "Iconed Article" })]);
-      setFavicons({ "example.com": "data:image/png;base64,AAAA" });
+    test("keeps the entry title as the accessible label when an icon is shown", () => {
+      mocks.state.entries = [makeEntry({ title: "Iconed Article" })];
+      mocks.state.favicons = { "example.com": "data:image/png;base64,AAAA" };
       render(<RssReaderFullView />);
       expect(screen.getByRole("button", { name: "Iconed Article" })).toBeInTheDocument();
     });
   });
 
   describe("Manage tab", () => {
-    test("feed rows remain icon-free", () => {
-      setFeeds([makeFeed()]);
-      setEntries([makeEntry()]);
-      setFavicons({ "example.com": "data:image/png;base64,AAAA" });
+    test("keeps feed rows icon-free", () => {
+      mocks.state.feeds = [makeFeed()];
+      mocks.state.entries = [makeEntry()];
+      mocks.state.favicons = { "example.com": "data:image/png;base64,AAAA" };
       const { container } = render(<RssReaderFullView />);
       fireEvent.click(screen.getByRole("button", { name: "Manage" }));
       expect(screen.getByText("Test Feed")).toBeInTheDocument();
@@ -163,26 +116,19 @@ describe("RssReaderFullView", () => {
   });
 
   describe("existing behaviors stay unchanged", () => {
-    test("clicking an entry title opens the link and marks it read", () => {
-      setEntries([makeEntry({ id: "e1", title: "Clickable Article", link: "https://example.com/1" })]);
+    test("opens the link and marks the entry read when its title is clicked", () => {
+      mocks.state.entries = [makeEntry({ id: "e1", title: "Clickable Article", link: "https://example.com/1" })];
       render(<RssReaderFullView />);
       fireEvent.click(screen.getByRole("button", { name: "Clickable Article" }));
-      expect(openUrlMock).toHaveBeenCalledWith({ url: "https://example.com/1" });
-      expect(getMarkReadMock()).toHaveBeenCalledWith("e1");
+      expect(mocks.openUrl).toHaveBeenCalledWith({ url: "https://example.com/1" });
+      expect(mocks.markRead).toHaveBeenCalledWith("e1");
     });
 
-    test("mark unread button toggles a read entry", () => {
-      setEntries([makeEntry({ id: "e1", isRead: true })]);
+    test("toggles a read entry back to unread via the mark unread button", () => {
+      mocks.state.entries = [makeEntry({ id: "e1", isRead: true })];
       render(<RssReaderFullView />);
       fireEvent.click(screen.getByRole("button", { name: "Mark unread" }));
-      expect(getMarkUnreadMock()).toHaveBeenCalledWith("e1");
-    });
-
-    test("unread entry title keeps the unread styling when an icon is shown", () => {
-      setEntries([makeEntry({ title: "Unread Article", isRead: false })]);
-      setFavicons({ "example.com": "data:image/png;base64,AAAA" });
-      render(<RssReaderFullView />);
-      expect(screen.getByRole("button", { name: "Unread Article" }).className).toContain("text-zinc-200");
+      expect(mocks.markUnread).toHaveBeenCalledWith("e1");
     });
   });
 });

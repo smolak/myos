@@ -11,6 +11,9 @@ export interface RssFeed {
   readonly updatedAt: string;
 }
 
+/** Favicon data URLs keyed by the exact hostname they were acquired for. */
+export type FaviconMap = Readonly<Record<string, string>>;
+
 export interface RssEntry {
   readonly id: string;
   readonly feedId: string;
@@ -68,7 +71,7 @@ export interface RssReaderQueries extends QueryMap {
   };
   "get-favicons": {
     params: Record<string, never>;
-    result: Readonly<Record<string, string>>;
+    result: FaviconMap;
   };
   search: { params: { query: string }; result: readonly FeatureSearchResult[] };
 }

@@ -176,7 +176,7 @@ describe("RssReaderWidget", () => {
     expect(dot).toBeTruthy();
   });
 
-  test("entry row shows the cached favicon for the link's hostname", () => {
+  test("shows the cached favicon for the entry link's hostname", () => {
     setFeeds([makeFeed()]);
     setEntries([makeEntry({ link: "https://example.com/1" })]);
     setFavicons({ "example.com": "data:image/png;base64,AAAA" });
@@ -186,7 +186,7 @@ describe("RssReaderWidget", () => {
     expect(img).toHaveAttribute("aria-hidden", "true");
   });
 
-  test("entry row shows a lettered placeholder when no favicon is cached", () => {
+  test("shows a lettered placeholder when no favicon is cached", () => {
     setFeeds([makeFeed()]);
     setEntries([makeEntry({ link: "https://example.com/1" })]);
     const { container } = render(<RssReaderWidget />);
@@ -194,7 +194,7 @@ describe("RssReaderWidget", () => {
     expect(screen.getByText("E")).toHaveAttribute("aria-hidden", "true");
   });
 
-  test("entry title remains the accessible label when an icon is shown", () => {
+  test("keeps the entry title as the accessible label when an icon is shown", () => {
     setFeeds([makeFeed()]);
     setEntries([makeEntry({ title: "Iconed Article" })]);
     setFavicons({ "example.com": "data:image/png;base64,AAAA" });

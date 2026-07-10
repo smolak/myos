@@ -1,5 +1,5 @@
 import { rpc } from "@shell/view/electrobun";
-import type { RssEntry } from "../shared/types";
+import type { FaviconMap, RssEntry } from "../shared/types";
 import { EntryIcon } from "./EntryIcon";
 import { useRssReaderContext } from "./RssReaderContext";
 
@@ -20,7 +20,7 @@ function EntryRow({
 }: {
   entry: RssEntry;
   onRead: (id: string) => void;
-  favicons: Readonly<Record<string, string>>;
+  favicons: FaviconMap;
 }) {
   return (
     <li className="flex items-start gap-2 py-1.5 border-b border-zinc-800 last:border-0">

@@ -7,7 +7,7 @@ import type { CountdownWithTimeLeft } from "@features/countdowns/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
 import type { HabitCompletion, HabitWithStats } from "@features/habits/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
-import type { RssEntry, RssFeed } from "@features/rss-reader/shared/types";
+import type { FaviconMap, RssEntry, RssFeed } from "@features/rss-reader/shared/types";
 import type { Snippet } from "@features/snippets/shared/types";
 import type { TodoItem } from "@features/todo/shared/types";
 import type { WeatherData } from "@features/weather/shared/types";
@@ -40,7 +40,7 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
       "rss:fetch-feeds": { params: Record<string, never>; response: { fetched: number; newEntries: number } };
       "rss:get-feeds": { params: Record<string, never>; response: RssFeed[] };
       "rss:get-entries": { params: { feedId?: string; unreadOnly?: boolean; limit?: number }; response: RssEntry[] };
-      "rss:get-favicons": { params: Record<string, never>; response: Record<string, string> };
+      "rss:get-favicons": { params: Record<string, never>; response: FaviconMap };
 
       // Pomodoro
       "pomodoro:start": { params: { type?: SessionType; durationSeconds?: number }; response: { id: string } };

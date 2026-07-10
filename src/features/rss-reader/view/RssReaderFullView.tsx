@@ -1,5 +1,6 @@
 import { rpc } from "@shell/view/electrobun";
 import { useState } from "react";
+import type { FaviconMap } from "../shared/types";
 import { EntryIcon } from "./EntryIcon";
 import { useRssReaderContext } from "./RssReaderContext";
 import type { StoredEntry, StoredFeed } from "./useRssReader";
@@ -26,7 +27,7 @@ function EntryItem({
   entry: StoredEntry;
   onMarkRead: (id: string) => void;
   onMarkUnread: (id: string) => void;
-  favicons: Readonly<Record<string, string>>;
+  favicons: FaviconMap;
 }) {
   return (
     <li className="flex items-start gap-3 py-3 border-b border-zinc-800 last:border-0">
@@ -71,7 +72,7 @@ function FeedTab({
   entries: readonly StoredEntry[];
   markRead: (id: string) => void;
   markUnread: (id: string) => void;
-  favicons: Readonly<Record<string, string>>;
+  favicons: FaviconMap;
 }) {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 

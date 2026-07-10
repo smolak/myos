@@ -1,8 +1,9 @@
+import type { FaviconMap } from "../shared/types";
 import { hostnameFromLink, placeholderColor, placeholderInitial } from "./favicon-placeholder";
 
 interface Props {
   readonly link: string;
-  readonly favicons: Readonly<Record<string, string>>;
+  readonly favicons: FaviconMap;
 }
 
 /**
@@ -13,7 +14,9 @@ interface Props {
  */
 export function EntryIcon({ link, favicons }: Props) {
   const hostname = hostnameFromLink(link);
-  const src = hostname ? favicons[hostname] : undefined;
+  // typeof guard keeps Object.prototype members (e.g. hostname "constructor") from posing as icons
+  const cached = hostname ? favicons[hostname] : undefined;
+  const src = typeof cached === "string" ? cached : undefined;
 
   if (src) {
     return <img src={src} alt="" aria-hidden="true" className="w-4 h-4 shrink-0 rounded-sm" />;

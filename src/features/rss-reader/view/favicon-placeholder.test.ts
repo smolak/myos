@@ -44,7 +44,7 @@ describe("placeholderInitial", () => {
     expect(placeholderInitial("9to5mac.com")).toBe("9");
   });
 
-  test("subdomain-distinct hostnames get their own initials", () => {
+  test("gives subdomain-distinct hostnames their own initials", () => {
     expect(placeholderInitial("alice.github.io")).toBe("A");
     expect(placeholderInitial("bob.github.io")).toBe("B");
   });
@@ -63,11 +63,11 @@ describe("placeholderColor", () => {
     expect(placeholderColor("example.com")).not.toBe(placeholderColor("news.ycombinator.com"));
   });
 
-  test("subdomain-distinct hostnames get different colors", () => {
+  test("gives subdomain-distinct hostnames different colors", () => {
     expect(placeholderColor("alice.github.io")).not.toBe(placeholderColor("bob.github.io"));
   });
 
-  test("www-prefixed hostname is a distinct identity from the bare hostname", () => {
+  test("treats a www-prefixed hostname as a distinct identity from the bare hostname", () => {
     expect(placeholderColor("www.example.com")).not.toBe(placeholderColor("example.com"));
   });
 
