@@ -7,7 +7,7 @@
  * hostnames always render distinct placeholders.
  */
 
-export function hostnameFromLink(link: string): string | null {
+export function getHostnameFromLink(link: string): string | null {
   try {
     return new URL(link).hostname.toLowerCase();
   } catch {
@@ -15,7 +15,7 @@ export function hostnameFromLink(link: string): string | null {
   }
 }
 
-export function placeholderInitial(hostname: string): string {
+export function getPlaceholderInitial(hostname: string): string {
   const displayed = hostname.startsWith("www.") && hostname.length > "www.".length ? hostname.slice(4) : hostname;
   return displayed.charAt(0).toUpperCase();
 }
@@ -30,7 +30,7 @@ function hashHostname(hostname: string): number {
   return hash >>> 0;
 }
 
-export function placeholderColor(hostname: string): string {
+export function getPlaceholderColor(hostname: string): string {
   const hue = hashHostname(hostname) % 360;
   // Muted saturation and dark lightness to sit quietly on the zinc theme
   return `hsl(${hue}, 25%, 32%)`;

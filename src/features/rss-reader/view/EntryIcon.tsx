@@ -1,9 +1,8 @@
-import type { FaviconMap } from "../shared/types";
-import { hostnameFromLink, placeholderColor, placeholderInitial } from "./favicon-placeholder";
+import { getHostnameFromLink, getPlaceholderColor, getPlaceholderInitial } from "./favicon-placeholder";
+import { useRssReaderContext } from "./RssReaderContext";
 
 interface Props {
   readonly link: string;
-  readonly favicons: FaviconMap;
 }
 
 /**
@@ -12,8 +11,9 @@ interface Props {
  * placeholder derived deterministically from the hostname. Always reserves
  * the same space so titles stay vertically aligned.
  */
-export function EntryIcon({ link, favicons }: Props) {
-  const hostname = hostnameFromLink(link);
+export function EntryIcon({ link }: Props) {
+  const { favicons } = useRssReaderContext();
+  const hostname = getHostnameFromLink(link);
   // typeof guard keeps Object.prototype members (e.g. hostname "constructor") from posing as icons
   const cached = hostname ? favicons[hostname] : undefined;
   const src = typeof cached === "string" ? cached : undefined;
@@ -30,9 +30,9 @@ export function EntryIcon({ link, favicons }: Props) {
     <span
       aria-hidden="true"
       className="w-4 h-4 shrink-0 rounded-sm flex items-center justify-center text-[10px] font-medium leading-none text-zinc-200"
-      style={{ backgroundColor: placeholderColor(hostname) }}
+      style={{ backgroundColor: getPlaceholderColor(hostname) }}
     >
-      {placeholderInitial(hostname)}
+      {getPlaceholderInitial(hostname)}
     </span>
   );
 }

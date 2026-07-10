@@ -1,6 +1,5 @@
 import { rpc } from "@shell/view/electrobun";
 import { useState } from "react";
-import type { FaviconMap } from "../shared/types";
 import { EntryIcon } from "./EntryIcon";
 import { useRssReaderContext } from "./RssReaderContext";
 import type { StoredEntry, StoredFeed } from "./useRssReader";
@@ -22,18 +21,16 @@ function EntryItem({
   entry,
   onMarkRead,
   onMarkUnread,
-  favicons,
 }: {
   entry: StoredEntry;
   onMarkRead: (id: string) => void;
   onMarkUnread: (id: string) => void;
-  favicons: FaviconMap;
 }) {
   return (
     <li className="flex items-start gap-3 py-3 border-b border-zinc-800 last:border-0">
       {!entry.isRead && <span className="w-1.5 h-1.5 mt-1.5 shrink-0 rounded-full bg-blue-400" aria-hidden />}
       {entry.isRead && <span className="w-1.5 mt-1.5 shrink-0" aria-hidden />}
-      <EntryIcon link={entry.link} favicons={favicons} />
+      <EntryIcon link={entry.link} />
       <div className="flex-1 min-w-0">
         <button
           type="button"
@@ -67,12 +64,10 @@ function FeedTab({
   entries,
   markRead,
   markUnread,
-  favicons,
 }: {
   entries: readonly StoredEntry[];
   markRead: (id: string) => void;
   markUnread: (id: string) => void;
-  favicons: FaviconMap;
 }) {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
@@ -100,13 +95,7 @@ function FeedTab({
       ) : (
         <ul>
           {displayed.map((entry) => (
-            <EntryItem
-              key={entry.id}
-              entry={entry}
-              onMarkRead={markRead}
-              onMarkUnread={markUnread}
-              favicons={favicons}
-            />
+            <EntryItem key={entry.id} entry={entry} onMarkRead={markRead} onMarkUnread={markUnread} />
           ))}
         </ul>
       )}
@@ -224,8 +213,7 @@ function ManageTab({
 
 export function RssReaderFullView({ onClose }: Props) {
   const [activeTab, setActiveTab] = useState<"feed" | "manage">("feed");
-  const { feeds, entries, favicons, addFeed, deleteFeed, markRead, markUnread, refresh, isLoading } =
-    useRssReaderContext();
+  const { feeds, entries, addFeed, deleteFeed, markRead, markUnread, refresh, isLoading } = useRssReaderContext();
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-100">
@@ -261,9 +249,7 @@ export function RssReaderFullView({ onClose }: Props) {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        {activeTab === "feed" && (
-          <FeedTab entries={entries} markRead={markRead} markUnread={markUnread} favicons={favicons} />
-        )}
+        {activeTab === "feed" && <FeedTab entries={entries} markRead={markRead} markUnread={markUnread} />}
         {activeTab === "manage" && (
           <ManageTab feeds={feeds} addFeed={addFeed} deleteFeed={deleteFeed} refresh={refresh} isLoading={isLoading} />
         )}

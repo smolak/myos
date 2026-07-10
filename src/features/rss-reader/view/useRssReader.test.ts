@@ -173,6 +173,18 @@ describe("useRssReader — favicons", () => {
 
     expect(result.current.favicons).toEqual(fresh);
   });
+
+  test("degrades to an empty favicon map when the favicon query fails, still loading feeds and entries", async () => {
+    mockGetFavicons.mockRejectedValue(new Error("favicon query failed"));
+
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+
+    expect(result.current.feeds).toHaveLength(1);
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.favicons).toEqual({});
+    expect(result.current.isLoading).toBe(false);
+  });
 });
 
 describe("useRssReader — unreadCount", () => {

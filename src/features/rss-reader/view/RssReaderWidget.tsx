@@ -1,5 +1,5 @@
 import { rpc } from "@shell/view/electrobun";
-import type { FaviconMap, RssEntry } from "../shared/types";
+import type { RssEntry } from "../shared/types";
 import { EntryIcon } from "./EntryIcon";
 import { useRssReaderContext } from "./RssReaderContext";
 
@@ -13,18 +13,10 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function EntryRow({
-  entry,
-  onRead,
-  favicons,
-}: {
-  entry: RssEntry;
-  onRead: (id: string) => void;
-  favicons: FaviconMap;
-}) {
+function EntryRow({ entry, onRead }: { entry: RssEntry; onRead: (id: string) => void }) {
   return (
     <li className="flex items-start gap-2 py-1.5 border-b border-zinc-800 last:border-0">
-      <EntryIcon link={entry.link} favicons={favicons} />
+      <EntryIcon link={entry.link} />
       <div className="flex-1 min-w-0">
         <button
           type="button"
@@ -47,7 +39,7 @@ function EntryRow({
 }
 
 export function RssReaderWidget({ onOpenFullView }: Props) {
-  const { entries, unreadCount, isLoading, feeds, markRead, favicons } = useRssReaderContext();
+  const { entries, unreadCount, isLoading, feeds, markRead } = useRssReaderContext();
 
   const recentEntries = entries.slice(0, 5);
   const isEmpty = feeds.length === 0;
@@ -80,7 +72,7 @@ export function RssReaderWidget({ onOpenFullView }: Props) {
       ) : (
         <ul className="flex-1 overflow-hidden">
           {recentEntries.map((entry) => (
-            <EntryRow key={entry.id} entry={entry} onRead={markRead} favicons={favicons} />
+            <EntryRow key={entry.id} entry={entry} onRead={markRead} />
           ))}
         </ul>
       )}

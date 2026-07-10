@@ -29,11 +29,13 @@ export function useRssReader(): UseRssReaderReturn {
     const [feedList, entryList, faviconMap] = await Promise.all([
       rpc.request["rss:get-feeds"]({}),
       rpc.request["rss:get-entries"]({}),
-      rpc.request["rss:get-favicons"]({}),
+      // Favicons are purely additive: a failed lookup degrades to placeholders
+      // instead of blocking feeds and entries
+      rpc.request["rss:get-favicons"]({}).catch((): FaviconMap => ({})),
     ]);
     setFeeds(feedList as RssFeed[]);
     setEntries(entryList as RssEntry[]);
-    setFavicons(faviconMap as FaviconMap);
+    setFavicons(faviconMap);
   }, []);
 
   useEffect(() => {

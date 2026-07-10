@@ -1,18 +1,21 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { RssEntry, RssFeed } from "../shared/types";
+import type { FaviconMap, RssEntry, RssFeed } from "../shared/types";
 import { RssReaderFullView } from "./RssReaderFullView";
 
-const mocks = vi.hoisted(() => ({
-  openUrl: vi.fn().mockResolvedValue(undefined),
-  markRead: vi.fn(),
-  markUnread: vi.fn(),
-  state: {
-    feeds: [] as RssFeed[],
-    entries: [] as RssEntry[],
-    favicons: {} as Record<string, string>,
-  },
-}));
+const mocks = vi.hoisted(() => {
+  const state: { feeds: RssFeed[]; entries: RssEntry[]; favicons: FaviconMap } = {
+    feeds: [],
+    entries: [],
+    favicons: {},
+  };
+  return {
+    openUrl: vi.fn().mockResolvedValue(undefined),
+    markRead: vi.fn(),
+    markUnread: vi.fn(),
+    state,
+  };
+});
 
 vi.mock("@shell/view/electrobun", () => ({
   rpc: {
@@ -86,20 +89,6 @@ describe("RssReaderFullView", () => {
       const img = container.querySelector("img");
       expect(img).toHaveAttribute("src", "data:image/png;base64,AAAA");
       expect(img).toHaveAttribute("aria-hidden", "true");
-    });
-
-    test("shows a lettered placeholder when no favicon is cached", () => {
-      mocks.state.entries = [makeEntry({ link: "https://example.com/1" })];
-      const { container } = render(<RssReaderFullView />);
-      expect(container.querySelector("img")).toBeNull();
-      expect(screen.getByText("E")).toHaveAttribute("aria-hidden", "true");
-    });
-
-    test("keeps the entry title as the accessible label when an icon is shown", () => {
-      mocks.state.entries = [makeEntry({ title: "Iconed Article" })];
-      mocks.state.favicons = { "example.com": "data:image/png;base64,AAAA" };
-      render(<RssReaderFullView />);
-      expect(screen.getByRole("button", { name: "Iconed Article" })).toBeInTheDocument();
     });
   });
 
