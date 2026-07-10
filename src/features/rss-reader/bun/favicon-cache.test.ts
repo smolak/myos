@@ -1,29 +1,12 @@
 import { Database } from "bun:sqlite";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { bootstrapMigrationsTable, runMigrations } from "@core/bun/migration-runner";
-import { acquireFavicons } from "./favicon-cache";
+import { acquireFavicons, DAY_MS, FAVICON_NEGATIVE_RETRY_DAYS, FAVICON_TTL_DAYS } from "./favicon-cache";
+import { daysAgo, deadFetch, makeIconFetch, PNG_BYTES, pngDataUri, seedIconRow } from "./favicon-test-helpers";
 import { rssReaderMigrations } from "./migrations";
+import { getFavicons } from "./queries";
 
-const PNG_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-
-type FetchFn = (url: URL | RequestInfo, init?: RequestInit) => Promise<Response>;
-
-function urlOf(input: URL | RequestInfo): string {
-  if (typeof input === "string") return input;
-  if (input instanceof URL) return input.toString();
-  return input.url;
-}
-
-function makeIconFetch(calls: string[]): FetchFn {
-  return async (input) => {
-    const url = urlOf(input);
-    calls.push(url);
-    if (url.endsWith("/favicon.ico")) {
-      return new Response(PNG_BYTES, { headers: { "content-type": "image/png" } });
-    }
-    return new Response("<html></html>", { headers: { "content-type": "text/html" } });
-  };
-}
+const OLD_PNG_BYTES = new Uint8Array([0x01, 0x02, 0x03, 0x04]);
 
 describe("acquireFavicons", () => {
   let db: Database;
@@ -35,7 +18,7 @@ describe("acquireFavicons", () => {
   });
 
   test("stores an icon row for each hostname", async () => {
-    await acquireFavicons(db, ["site-a.com", "site-b.com"], makeIconFetch([]));
+    await acquireFavicons(db, ["site-a.com", "site-b.com"], makeIconFetch());
 
     const rows = db
       .query<{ hostname: string; icon_data: Uint8Array; content_type: string }, []>(
@@ -49,10 +32,6 @@ describe("acquireFavicons", () => {
   });
 
   test("writes a negative row when the lookup fails", async () => {
-    const deadFetch: FetchFn = async () => {
-      throw new Error("Network down");
-    };
-
     await acquireFavicons(db, ["dead-host.com"], deadFetch);
 
     const row = db
@@ -78,13 +57,84 @@ describe("acquireFavicons", () => {
   });
 
   test("does not re-fetch hostnames with a cached negative row", async () => {
-    const deadFetch: FetchFn = async () => {
-      throw new Error("Network down");
-    };
     await acquireFavicons(db, ["dead-host.com"], deadFetch);
 
     const calls: string[] = [];
     await acquireFavicons(db, ["dead-host.com"], makeIconFetch(calls));
+
+    expect(calls).toHaveLength(0);
+  });
+
+  test("re-fetches an icon whose fetched-at is older than the TTL", async () => {
+    seedIconRow(db, { hostname: "site-a.com", iconData: OLD_PNG_BYTES, fetchedAt: daysAgo(FAVICON_TTL_DAYS + 1) });
+
+    await acquireFavicons(db, ["site-a.com"], makeIconFetch());
+
+    const row = db
+      .query<{ icon_data: Uint8Array; fetched_at: string }, [string]>(
+        "SELECT icon_data, fetched_at FROM rss_favicons WHERE hostname = ?",
+      )
+      .get("site-a.com");
+    expect(new Uint8Array(row?.icon_data ?? [])).toEqual(PNG_BYTES);
+    expect(Date.parse(row?.fetched_at ?? "")).toBeGreaterThan(Date.now() - DAY_MS);
+  });
+
+  test("does not re-fetch an icon still inside the TTL", async () => {
+    seedIconRow(db, { hostname: "site-a.com", iconData: OLD_PNG_BYTES, fetchedAt: daysAgo(FAVICON_TTL_DAYS - 1) });
+
+    const calls: string[] = [];
+    await acquireFavicons(db, ["site-a.com"], makeIconFetch(calls));
+
+    expect(calls).toHaveLength(0);
+  });
+
+  test("keeps serving the stale icon when a refresh fails", async () => {
+    seedIconRow(db, { hostname: "site-a.com", iconData: OLD_PNG_BYTES, fetchedAt: daysAgo(FAVICON_TTL_DAYS + 1) });
+
+    await acquireFavicons(db, ["site-a.com"], deadFetch);
+
+    const favicons = await getFavicons(db, {});
+    expect(favicons["site-a.com"]).toBe(pngDataUri(OLD_PNG_BYTES));
+  });
+
+  test("does not re-attempt a failed refresh on the next acquisition", async () => {
+    seedIconRow(db, { hostname: "site-a.com", iconData: OLD_PNG_BYTES, fetchedAt: daysAgo(FAVICON_TTL_DAYS + 1) });
+    await acquireFavicons(db, ["site-a.com"], deadFetch);
+
+    const calls: string[] = [];
+    await acquireFavicons(db, ["site-a.com"], makeIconFetch(calls));
+
+    expect(calls).toHaveLength(0);
+  });
+
+  test("retries a negative-cached hostname after the retry window", async () => {
+    seedIconRow(db, { hostname: "was-dead.com", iconData: null, fetchedAt: daysAgo(FAVICON_NEGATIVE_RETRY_DAYS + 1) });
+
+    await acquireFavicons(db, ["was-dead.com"], makeIconFetch());
+
+    const favicons = await getFavicons(db, {});
+    expect(favicons["was-dead.com"]).toBe(pngDataUri(PNG_BYTES));
+  });
+
+  test("does not retry a negative-cached hostname inside the retry window", async () => {
+    seedIconRow(db, { hostname: "was-dead.com", iconData: null, fetchedAt: daysAgo(FAVICON_NEGATIVE_RETRY_DAYS - 1) });
+
+    const calls: string[] = [];
+    await acquireFavicons(db, ["was-dead.com"], makeIconFetch(calls));
+
+    expect(calls).toHaveLength(0);
+  });
+
+  test("re-arms the retry window when a negative retry fails again", async () => {
+    seedIconRow(db, {
+      hostname: "still-dead.com",
+      iconData: null,
+      fetchedAt: daysAgo(FAVICON_NEGATIVE_RETRY_DAYS + 1),
+    });
+    await acquireFavicons(db, ["still-dead.com"], deadFetch);
+
+    const calls: string[] = [];
+    await acquireFavicons(db, ["still-dead.com"], makeIconFetch(calls));
 
     expect(calls).toHaveLength(0);
   });
