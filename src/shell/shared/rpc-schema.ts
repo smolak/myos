@@ -188,6 +188,7 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
     requests: Record<never, never>;
     messages: {
       "clipboard:new-entry": { id: string; content: string; contentType: string };
+      "rss:ingest-completed": { fetched: number; newEntries: number };
     };
   };
 }

@@ -55,6 +55,7 @@ describe("rssReaderFeature definition", () => {
     expect(keys).toContain("rss:feed-deleted");
     expect(keys).toContain("rss:new-entry");
     expect(keys).toContain("rss:entry-read");
+    expect(keys).toContain("rss:ingest-completed");
   });
 
   test("manifest declares feed-list widget with medium and wide sizes", () => {
@@ -232,6 +233,55 @@ describe("fetch-feeds through the public action surface", () => {
     const payloads = rows.map((r) => JSON.parse(r.payload) as { title: string; link: string });
     expect(payloads[0]).toMatchObject({ title: "Post One", link: "https://site-a.com/articles/1" });
     expect(payloads[1]).toMatchObject({ title: "Post Two", link: "https://site-b.com/posts/2" });
+  });
+
+  test("emits rss:ingest-completed exactly once with fetched and new-entry counts", async () => {
+    const feature = createRssReaderFeature(async () => new Response(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const coreDb = dbManager.getCoreDatabase();
+    const rows = coreDb
+      .query<{ payload: string }, [string]>("SELECT payload FROM event_log WHERE event_name = ?")
+      .all("rss:ingest-completed");
+    expect(rows).toHaveLength(1);
+    expect(JSON.parse(rows[0]?.payload ?? "{}")).toEqual({ fetched: 1, newEntries: 2 });
+  });
+
+  test("emits rss:ingest-completed on every ingest, with a zero count when nothing new is stored", async () => {
+    const feature = createRssReaderFeature(async () => new Response(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const coreDb = dbManager.getCoreDatabase();
+    const rows = coreDb
+      .query<{ payload: string }, [string]>("SELECT payload FROM event_log WHERE event_name = ? ORDER BY id")
+      .all("rss:ingest-completed");
+    expect(rows).toHaveLength(2);
+    expect(JSON.parse(rows[1]?.payload ?? "{}")).toEqual({ fetched: 1, newEntries: 0 });
+  });
+
+  test("emits rss:ingest-completed even while favicon acquisition never settles", async () => {
+    const feature = createRssReaderFeature((input) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://example.com/feed") return Promise.resolve(new Response(FEED_XML));
+      return new Promise<Response>(() => {}); // favicon requests hang forever
+    });
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const coreDb = dbManager.getCoreDatabase();
+    const rows = coreDb
+      .query<{ id: number }, [string]>("SELECT id FROM event_log WHERE event_name = ?")
+      .all("rss:ingest-completed");
+    expect(rows).toHaveLength(1);
   });
 
   async function getFaviconsWhenReady(expectedCount: number): Promise<Record<string, string>> {

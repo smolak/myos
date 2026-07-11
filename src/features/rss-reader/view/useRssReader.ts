@@ -48,6 +48,14 @@ export function useRssReader(): UseRssReaderReturn {
     })();
   }, [reloadAll]);
 
+  // React to background Ingests pushed from the bun side; deliberately no
+  // isLoading toggle — a background refresh must never flicker the view
+  useEffect(() => {
+    const handler = () => void reloadAll();
+    rpc.addMessageListener("rss:ingest-completed", handler);
+    return () => rpc.removeMessageListener("rss:ingest-completed", handler);
+  }, [reloadAll]);
+
   const addFeed = useCallback(
     async (url: string) => {
       setIsLoading(true);

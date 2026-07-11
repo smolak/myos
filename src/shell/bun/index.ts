@@ -661,6 +661,11 @@ void startupPromise.then(() => {
     rpc.send["clipboard:new-entry"](p);
   });
 
+  eventBus.subscribe("rss:ingest-completed", async (payload) => {
+    const p = payload as { fetched: number; newEntries: number };
+    rpc.send["rss:ingest-completed"](p);
+  });
+
   eventBus.subscribe("todo:item-completed", async (payload) => {
     const p = payload as { title?: string };
     await addNotification({
