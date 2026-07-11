@@ -81,3 +81,17 @@ bun run hmr            # Vite HMR dev server (for fast UI iteration)
 bun run test:watch     # Bun tests in watch mode
 bun run test:ui:watch  # Vitest in watch mode
 ```
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live in GitHub Issues (`smolak/myos`), operated via the `gh` CLI. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary — the five canonical role names (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) used verbatim. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context: `CONTEXT-MAP.md` at the root maps the Core context and per-feature contexts under `src/features/`. See `docs/agents/domain.md`.
