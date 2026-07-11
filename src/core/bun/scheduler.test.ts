@@ -521,6 +521,19 @@ describe("Scheduler", () => {
       expect(() => scheduler.start()).not.toThrow();
     });
 
+    test("executes due tasks immediately on start, without waiting for the poll interval", async () => {
+      let called = false;
+      seedTask(db, { nextRunAt: new Date(Date.now() - 1000).toISOString() });
+      scheduler.registerHandler("task-1", async () => {
+        called = true;
+      });
+
+      scheduler.start(); // poll interval is 60s — only the immediate poll can fire this
+      await Bun.sleep(10);
+
+      expect(called).toBe(true);
+    });
+
     test("calling start twice does not create multiple poll loops", () => {
       scheduler.start();
       expect(() => scheduler.start()).not.toThrow();

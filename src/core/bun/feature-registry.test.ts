@@ -62,9 +62,27 @@ describe("FeatureRegistry", () => {
   });
 
   afterEach(async () => {
+    scheduler.stop();
     dbManager.closeAll();
     await rm(tmpDir, { recursive: true, force: true });
   });
+
+  function rewindTaskToOverdue(taskId: string): void {
+    // Simulates next_run_at passing while the app was closed (downtime, crash).
+    coreDb
+      .query("UPDATE scheduled_tasks SET next_run_at = ? WHERE id = ?")
+      .run(new Date(Date.now() - 3_600_000).toISOString(), taskId);
+  }
+
+  async function restartWithOverdueTask(features: FeatureDefinition[], taskId: string): Promise<void> {
+    // First session registers the task; its next_run_at then passes while the app is closed.
+    await registry.startup(features);
+    scheduler.stop();
+    rewindTaskToOverdue(taskId);
+    // Second session: startup must fire the overdue task on its own.
+    await registry.startup(features);
+    await Bun.sleep(10);
+  }
 
   describe("registration", () => {
     test("registers feature in features table on startup", async () => {
@@ -304,6 +322,57 @@ describe("FeatureRegistry", () => {
 
       const result = await querierCtx?.query("provider-feature", "greet", { name: "world" });
       expect(result).toBe("hello world");
+    });
+  });
+
+  describe("scheduler startup", () => {
+    test("runs an overdue scheduled task after startup completes without manual polling", async () => {
+      let ran = false;
+      const feature = makeFeature({
+        id: "sched-feature",
+        activate: async (ctx) => {
+          ctx.scheduler.register("overdue-task", { type: "interval", value: 60_000 }, async () => {
+            ran = true;
+          });
+        },
+      });
+
+      await restartWithOverdueTask([feature], "overdue-task");
+
+      expect(ran).toBe(true);
+    });
+
+    test("reschedules an overdue task into the future after it fires", async () => {
+      const feature = makeFeature({
+        id: "sched-feature",
+        activate: async (ctx) => {
+          ctx.scheduler.register("overdue-task", { type: "interval", value: 60_000 }, async () => {});
+        },
+      });
+
+      await restartWithOverdueTask([feature], "overdue-task");
+
+      const row = coreDb
+        .query<{ next_run_at: string }, [string]>("SELECT next_run_at FROM scheduled_tasks WHERE id = ?")
+        .get("overdue-task");
+      if (!row) throw new Error(`Scheduled task "overdue-task" not found`);
+      expect(new Date(row.next_run_at).getTime()).toBeGreaterThan(Date.now());
+    });
+
+    test("runs tasks of the last feature to activate, proving polling starts after all activations", async () => {
+      let ran = false;
+      const first = makeFeature({ id: "first-feature" });
+      const last = makeFeature({
+        id: "last-feature",
+        activate: async (ctx) => {
+          ctx.scheduler.register("last-task", { type: "interval", value: 60_000 }, async () => {
+            ran = true;
+          });
+        },
+      });
+      await restartWithOverdueTask([first, last], "last-task");
+
+      expect(ran).toBe(true);
     });
   });
 
