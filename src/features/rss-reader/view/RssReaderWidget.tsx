@@ -1,5 +1,6 @@
 import { rpc } from "@shell/view/electrobun";
 import type { RssEntry } from "../shared/types";
+import { EntryIcon } from "./EntryIcon";
 import { useRssReaderContext } from "./RssReaderContext";
 
 interface Props {
@@ -15,6 +16,7 @@ function formatDate(iso: string | null): string {
 function EntryRow({ entry, onRead }: { entry: RssEntry; onRead: (id: string) => void }) {
   return (
     <li className="flex items-start gap-2 py-1.5 border-b border-zinc-800 last:border-0">
+      <EntryIcon link={entry.link} />
       <div className="flex-1 min-w-0">
         <button
           type="button"

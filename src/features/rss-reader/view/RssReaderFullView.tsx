@@ -1,5 +1,6 @@
 import { rpc } from "@shell/view/electrobun";
 import { useState } from "react";
+import { EntryIcon } from "./EntryIcon";
 import { useRssReaderContext } from "./RssReaderContext";
 import type { StoredEntry, StoredFeed } from "./useRssReader";
 
@@ -29,6 +30,7 @@ function EntryItem({
     <li className="flex items-start gap-3 py-3 border-b border-zinc-800 last:border-0">
       {!entry.isRead && <span className="w-1.5 h-1.5 mt-1.5 shrink-0 rounded-full bg-blue-400" aria-hidden />}
       {entry.isRead && <span className="w-1.5 mt-1.5 shrink-0" aria-hidden />}
+      <EntryIcon link={entry.link} />
       <div className="flex-1 min-w-0">
         <button
           type="button"

@@ -1,6 +1,6 @@
 import { rpc } from "@shell/view/electrobun";
 import { useCallback, useEffect, useState } from "react";
-import type { RssEntry, RssFeed } from "../shared/types";
+import type { FaviconMap, RssEntry, RssFeed } from "../shared/types";
 
 // Type aliases preserved for component compatibility
 export type StoredFeed = RssFeed;
@@ -9,6 +9,7 @@ export type StoredEntry = RssEntry;
 export interface UseRssReaderReturn {
   readonly feeds: readonly RssFeed[];
   readonly entries: readonly RssEntry[];
+  readonly favicons: FaviconMap;
   readonly unreadCount: number;
   readonly isLoading: boolean;
   addFeed(url: string): Promise<void>;
@@ -21,15 +22,20 @@ export interface UseRssReaderReturn {
 export function useRssReader(): UseRssReaderReturn {
   const [feeds, setFeeds] = useState<RssFeed[]>([]);
   const [entries, setEntries] = useState<RssEntry[]>([]);
+  const [favicons, setFavicons] = useState<FaviconMap>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const reloadAll = useCallback(async () => {
-    const [feedList, entryList] = await Promise.all([
+    const [feedList, entryList, faviconMap] = await Promise.all([
       rpc.request["rss:get-feeds"]({}),
       rpc.request["rss:get-entries"]({}),
+      // Favicons are purely additive: a failed lookup degrades to placeholders
+      // instead of blocking feeds and entries
+      rpc.request["rss:get-favicons"]({}).catch((): FaviconMap => ({})),
     ]);
     setFeeds(feedList as RssFeed[]);
     setEntries(entryList as RssEntry[]);
+    setFavicons(faviconMap);
   }, []);
 
   useEffect(() => {
@@ -87,5 +93,5 @@ export function useRssReader(): UseRssReaderReturn {
 
   const unreadCount = entries.filter((e) => !e.isRead).length;
 
-  return { feeds, entries, unreadCount, isLoading, addFeed, deleteFeed, markRead, markUnread, refresh };
+  return { feeds, entries, favicons, unreadCount, isLoading, addFeed, deleteFeed, markRead, markUnread, refresh };
 }

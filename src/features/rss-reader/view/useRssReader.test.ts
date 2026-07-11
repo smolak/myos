@@ -4,6 +4,7 @@ import type { RssEntry, RssFeed } from "../shared/types";
 
 const mockGetFeeds = vi.fn();
 const mockGetEntries = vi.fn();
+const mockGetFavicons = vi.fn();
 const mockFetchFeeds = vi.fn();
 const mockAddFeed = vi.fn();
 const mockDeleteFeed = vi.fn();
@@ -15,6 +16,7 @@ vi.mock("@shell/view/electrobun", () => ({
     request: {
       "rss:get-feeds": (...args: unknown[]) => mockGetFeeds(...args),
       "rss:get-entries": (...args: unknown[]) => mockGetEntries(...args),
+      "rss:get-favicons": (...args: unknown[]) => mockGetFavicons(...args),
       "rss:fetch-feeds": (...args: unknown[]) => mockFetchFeeds(...args),
       "rss:add-feed": (...args: unknown[]) => mockAddFeed(...args),
       "rss:delete-feed": (...args: unknown[]) => mockDeleteFeed(...args),
@@ -65,6 +67,10 @@ const flushAll = () =>
   act(async () => {
     await new Promise((r) => setTimeout(r, 0));
   });
+
+beforeEach(() => {
+  mockGetFavicons.mockResolvedValue({});
+});
 
 describe("useRssReader — mount", () => {
   beforeEach(() => {
@@ -120,6 +126,63 @@ describe("useRssReader — mount", () => {
     await flushAll();
     expect(result.current.feeds).toHaveLength(1);
     expect(result.current.entries).toHaveLength(2);
+    expect(result.current.isLoading).toBe(false);
+  });
+});
+
+describe("useRssReader — favicons", () => {
+  beforeEach(() => {
+    mockGetFeeds.mockResolvedValue([FEED_A]);
+    mockGetEntries.mockResolvedValue([ENTRY_UNREAD]);
+    mockFetchFeeds.mockResolvedValue({ fetched: 0, newEntries: 0 });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("exposes the favicon map keyed by hostname", async () => {
+    const map = { "example.com": "data:image/png;base64,AAAA" };
+    mockGetFavicons.mockResolvedValue(map);
+
+    const { result } = renderHook(() => useRssReader());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.favicons).toEqual(map);
+  });
+
+  test("starts with an empty favicon map", async () => {
+    const { result } = renderHook(() => useRssReader());
+    expect(result.current.favicons).toEqual({});
+    await flushAll();
+  });
+
+  test("reloads favicons after the startup fetch completes", async () => {
+    renderHook(() => useRssReader());
+    await flushAll();
+    // once for initial load, once after startup fetch
+    expect(mockGetFavicons).toHaveBeenCalledTimes(2);
+  });
+
+  test("shows favicons that arrived via the startup fetch", async () => {
+    const fresh = { "fresh.example.com": "data:image/png;base64,BBBB" };
+    mockGetFavicons.mockResolvedValueOnce({}).mockResolvedValueOnce(fresh);
+
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+
+    expect(result.current.favicons).toEqual(fresh);
+  });
+
+  test("degrades to an empty favicon map when the favicon query fails, still loading feeds and entries", async () => {
+    mockGetFavicons.mockRejectedValue(new Error("favicon query failed"));
+
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+
+    expect(result.current.feeds).toHaveLength(1);
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.favicons).toEqual({});
     expect(result.current.isLoading).toBe(false);
   });
 });
