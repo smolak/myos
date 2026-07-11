@@ -74,6 +74,16 @@ describe("FeatureRegistry", () => {
       .run(new Date(Date.now() - 3_600_000).toISOString(), taskId);
   }
 
+  async function restartWithOverdueTask(features: FeatureDefinition[], taskId: string): Promise<void> {
+    // First session registers the task; its next_run_at then passes while the app is closed.
+    await registry.startup(features);
+    scheduler.stop();
+    rewindTaskToOverdue(taskId);
+    // Second session: startup must fire the overdue task on its own.
+    await registry.startup(features);
+    await Bun.sleep(10);
+  }
+
   describe("registration", () => {
     test("registers feature in features table on startup", async () => {
       const feature = makeFeature({ id: "my-feature", name: "My Feature" });
@@ -327,13 +337,7 @@ describe("FeatureRegistry", () => {
         },
       });
 
-      // First session registers the task; its next_run_at then passes while the app is closed.
-      await registry.startup([feature]);
-      scheduler.stop();
-      rewindTaskToOverdue("overdue-task");
-
-      await registry.startup([feature]);
-      await Bun.sleep(10);
+      await restartWithOverdueTask([feature], "overdue-task");
 
       expect(ran).toBe(true);
     });
@@ -345,17 +349,14 @@ describe("FeatureRegistry", () => {
           ctx.scheduler.register("overdue-task", { type: "interval", value: 60_000 }, async () => {});
         },
       });
-      await registry.startup([feature]);
-      scheduler.stop();
-      rewindTaskToOverdue("overdue-task");
 
-      await registry.startup([feature]);
-      await Bun.sleep(10);
+      await restartWithOverdueTask([feature], "overdue-task");
 
       const row = coreDb
         .query<{ next_run_at: string }, [string]>("SELECT next_run_at FROM scheduled_tasks WHERE id = ?")
         .get("overdue-task");
-      expect(new Date(row!.next_run_at).getTime()).toBeGreaterThan(Date.now());
+      if (!row) throw new Error(`Scheduled task "overdue-task" not found`);
+      expect(new Date(row.next_run_at).getTime()).toBeGreaterThan(Date.now());
     });
 
     test("runs tasks of the last feature to activate, proving polling starts after all activations", async () => {
@@ -369,12 +370,7 @@ describe("FeatureRegistry", () => {
           });
         },
       });
-      await registry.startup([first, last]);
-      scheduler.stop();
-      rewindTaskToOverdue("last-task");
-
-      await registry.startup([first, last]);
-      await Bun.sleep(10);
+      await restartWithOverdueTask([first, last], "last-task");
 
       expect(ran).toBe(true);
     });

@@ -521,7 +521,7 @@ describe("Scheduler", () => {
       expect(() => scheduler.start()).not.toThrow();
     });
 
-    test("start executes due tasks immediately without waiting for the poll interval", async () => {
+    test("executes due tasks immediately on start, without waiting for the poll interval", async () => {
       let called = false;
       seedTask(db, { nextRunAt: new Date(Date.now() - 1000).toISOString() });
       scheduler.registerHandler("task-1", async () => {
