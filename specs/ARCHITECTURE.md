@@ -113,6 +113,10 @@ See the reference RSS implementation in `ARCHITECTURE-RATIONALE.md` for how mani
 3. `deactivate` — cleanup on shutdown or disable.
 4. `uninstall` — nuclear cleanup. Core deletes the feature's DB file; this hook cleans up extras.
 
+### Startup sequence
+
+`FeatureRegistry.startup()` owns the boot order: register every feature (install + migrations), activate every feature, resume pending actions, then start the Scheduler's polling loop. The Scheduler starts last — inside `startup()`, not in the shell — so every scheduled-task handler is registered before the first poll, for any caller. The first poll runs immediately on start: tasks whose `next_run_at` accumulated in the past (downtime, crashes) fire right away and are rescheduled forward.
+
 ### FeatureContext (provided by core to each feature)
 
 ```typescript

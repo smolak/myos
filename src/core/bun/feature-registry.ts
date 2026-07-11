@@ -52,6 +52,8 @@ export class FeatureRegistry {
       await this.activate(feature);
     }
     await this.actionQueue.resumePending();
+    // Start polling only after every feature has activated, so all task handlers are registered before the first poll.
+    this.scheduler.start();
   }
 
   private async register(feature: FeatureDefinition): Promise<void> {
