@@ -350,7 +350,9 @@ describe("useRssReader — background ingest push", () => {
     await flushAll();
 
     const backgroundEntry: RssEntry = { ...ENTRY_UNREAD, id: "e3", title: "Background Article" };
+    const refreshedFeed: RssFeed = { ...FEED_A, lastFetchedAt: "2026-01-02T00:00:00Z" };
     mockGetEntries.mockResolvedValue([ENTRY_UNREAD, ENTRY_READ, backgroundEntry]);
+    mockGetFeeds.mockResolvedValue([refreshedFeed]);
     await act(async () => {
       pushMessage("rss:ingest-completed", { fetched: 1, newEntries: 1 });
     });
@@ -358,6 +360,7 @@ describe("useRssReader — background ingest push", () => {
     expect(result.current.entries).toHaveLength(3);
     expect(result.current.entries.some((e) => e.title === "Background Article")).toBe(true);
     expect(result.current.unreadCount).toBe(2);
+    expect(result.current.feeds[0]?.lastFetchedAt).toBe("2026-01-02T00:00:00Z");
   });
 
   test("keeps isLoading false while the push-triggered reload is still in flight", async () => {
