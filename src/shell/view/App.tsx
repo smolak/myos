@@ -19,7 +19,7 @@ import { HabitsFullView } from "@features/habits/view/HabitsFullView";
 import { HabitsWidget } from "@features/habits/view/HabitsWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
-import { RssReaderProvider } from "@features/rss-reader/view/RssReaderContext";
+import { RssReaderProvider, useRssReaderContext } from "@features/rss-reader/view/RssReaderContext";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
 import { SnippetsProvider, useSnippetsContext } from "@features/snippets/view/SnippetsContext";
@@ -97,6 +97,25 @@ function SnippetsCommandRegistrar({ onOpenFullView }: { onOpenFullView: () => vo
       action: onOpenFullView,
     });
   }, [onOpenFullView]);
+
+  return null;
+}
+
+function RssReaderCommandRegistrar() {
+  const { refresh } = useRssReaderContext();
+
+  useEffect(() => {
+    return commandRegistry.register({
+      id: "rss:refresh-feeds",
+      label: "Refresh RSS Feeds",
+      description: "Fetch new entries from all configured feeds",
+      group: "RSS Reader",
+      keywords: ["rss", "feed", "refresh", "ingest", "fetch", "update", "reload"],
+      action: () => {
+        void refresh();
+      },
+    });
+  }, [refresh]);
 
   return null;
 }
@@ -465,6 +484,7 @@ function App() {
         <CountdownsProvider>
           <BookmarksProvider>
             <RssReaderProvider>
+              <RssReaderCommandRegistrar />
               <HabitsProvider>
                 <DailyJournalProvider>
                   <div

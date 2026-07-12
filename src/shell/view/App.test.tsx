@@ -93,6 +93,67 @@ describe("App", () => {
     expect(focusCommands.some((c) => c.id === "focus:daily-journal")).toBe(true);
   });
 
+  test("registers a Refresh RSS Feeds command in the command registry", async () => {
+    const { commandRegistry } = await import("./command-registry");
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
+    expect(command).toBeDefined();
+    expect(command?.label).toBe("Refresh RSS Feeds");
+  });
+
+  test("invoking the Refresh RSS Feeds command triggers a feed fetch", async () => {
+    const { commandRegistry } = await import("./command-registry");
+    const { rpc } = await import("./electrobun");
+    vi.mocked(rpc.request["rss:get-feeds"]).mockResolvedValue([
+      {
+        id: "feed-1",
+        url: "https://example.com/rss",
+        title: "Example",
+        description: null,
+        lastFetchedAt: null,
+        fetchIntervalMinutes: 60,
+        createdAt: "2026-07-12T00:00:00.000Z",
+        updatedAt: "2026-07-12T00:00:00.000Z",
+      },
+    ]);
+
+    await act(async () => {
+      render(<App />);
+    });
+    vi.mocked(rpc.request["rss:fetch-feeds"]).mockClear();
+
+    const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
+    expect(command).toBeDefined();
+    await act(async () => {
+      command?.action();
+    });
+
+    expect(rpc.request["rss:fetch-feeds"]).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not fetch feeds via the Refresh RSS Feeds command when no feeds are configured", async () => {
+    const { commandRegistry } = await import("./command-registry");
+    const { rpc } = await import("./electrobun");
+    vi.mocked(rpc.request["rss:get-feeds"]).mockResolvedValue([]);
+
+    await act(async () => {
+      render(<App />);
+    });
+    vi.mocked(rpc.request["rss:fetch-feeds"]).mockClear();
+
+    const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
+    expect(command).toBeDefined();
+    await act(async () => {
+      command?.action();
+    });
+
+    expect(rpc.request["rss:fetch-feeds"]).not.toHaveBeenCalled();
+  });
+
   test("entering focus mode via command shows FocusModeView", async () => {
     const { commandRegistry } = await import("./command-registry");
 
