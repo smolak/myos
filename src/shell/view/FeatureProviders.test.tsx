@@ -1,33 +1,40 @@
 import { render, screen } from "@testing-library/react";
-import { createContext, type ReactNode, useContext } from "react";
+import { type ComponentType, createContext, type ReactNode, useContext } from "react";
 import { describe, expect, test } from "vitest";
 import { FeatureProviders } from "./FeatureProviders";
 import type { FeatureViewDescriptor } from "./feature-views";
 
-const GreetingContext = createContext("none");
+const GreetingContext = createContext("no greeting provided");
 
 function GreetingProvider({ children }: { children: ReactNode }) {
-  return <GreetingContext.Provider value="hello">{children}</GreetingContext.Provider>;
+  return <GreetingContext.Provider value="hello from provider">{children}</GreetingContext.Provider>;
 }
 
 function GreetingRegistrar() {
   const greeting = useContext(GreetingContext);
-  return <span data-testid="registrar-greeting">{greeting}</span>;
+  return <span>registrar saw: {greeting}</span>;
 }
 
 function GreetingConsumer() {
   const greeting = useContext(GreetingContext);
-  return <span data-testid="child-greeting">{greeting}</span>;
+  return <span>child saw: {greeting}</span>;
 }
 
-function makeDescriptor(overrides: Partial<FeatureViewDescriptor>): FeatureViewDescriptor {
+interface DescriptorOptions {
+  featureId?: string;
+  Provider?: ComponentType<{ children: ReactNode }>;
+  CommandRegistrar?: ComponentType;
+}
+
+function makeDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
   return {
-    featureId: "greeting",
+    featureId: overrides.featureId ?? "greeting",
     displayName: "Greeting",
     icon: "👋",
     description: "Says hello",
-    ...overrides,
-  } as FeatureViewDescriptor;
+    Provider: overrides.Provider,
+    CommandRegistrar: overrides.CommandRegistrar,
+  };
 }
 
 describe("FeatureProviders", () => {
@@ -38,17 +45,17 @@ describe("FeatureProviders", () => {
       </FeatureProviders>,
     );
 
-    expect(screen.getByTestId("child-greeting")).toHaveTextContent("hello");
+    expect(screen.getByText("child saw: hello from provider")).toBeInTheDocument();
   });
 
   test("renders children unwrapped when no descriptor has a provider", () => {
     render(
-      <FeatureProviders descriptors={[makeDescriptor({})]}>
+      <FeatureProviders descriptors={[makeDescriptor()]}>
         <GreetingConsumer />
       </FeatureProviders>,
     );
 
-    expect(screen.getByTestId("child-greeting")).toHaveTextContent("none");
+    expect(screen.getByText("child saw: no greeting provided")).toBeInTheDocument();
   });
 
   test("mounts command registrars inside the feature providers", () => {
@@ -60,7 +67,7 @@ describe("FeatureProviders", () => {
       </FeatureProviders>,
     );
 
-    expect(screen.getByTestId("registrar-greeting")).toHaveTextContent("hello");
+    expect(screen.getByText("registrar saw: hello from provider")).toBeInTheDocument();
   });
 
   test("mounts a registrar inside another feature's provider", () => {
@@ -75,6 +82,6 @@ describe("FeatureProviders", () => {
       </FeatureProviders>,
     );
 
-    expect(screen.getByTestId("registrar-greeting")).toHaveTextContent("hello");
+    expect(screen.getByText("registrar saw: hello from provider")).toBeInTheDocument();
   });
 });

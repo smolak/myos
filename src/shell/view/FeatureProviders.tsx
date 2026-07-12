@@ -6,11 +6,10 @@ interface Props {
   children: ReactNode;
 }
 
-// Folds the descriptor list into the provider tree: each descriptor's optional
-// Provider wraps the tree in descriptor-list order (first descriptor outermost).
-// Command Registrars mount inside all providers so every registrar can consume
-// any feature's context. Feature providers are independent of each other — see
-// ARCHITECTURE.md § Feature View Registration.
+// Nesting follows descriptor-list order (first descriptor outermost) — safe
+// only because feature providers are independent of each other; see
+// ARCHITECTURE.md § Feature View Registration. Registrars mount inside all
+// providers so every registrar can consume any feature's context.
 export function FeatureProviders({ descriptors, children }: Props) {
   const inner = (
     <>

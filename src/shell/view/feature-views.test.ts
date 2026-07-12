@@ -8,35 +8,55 @@ import {
   findFeatureView,
   MODAL_SIZE_CLASSES,
   resolveWidget,
+  type WidgetDescriptor,
 } from "./feature-views";
 
 const DummyWidget = () => null;
 const DummyFullView = () => null;
 
-function makeDescriptor(overrides: Partial<FeatureViewDescriptor> = {}): FeatureViewDescriptor {
+interface DescriptorOptions {
+  featureId?: string;
+  displayName?: string;
+  icon?: string;
+  description?: string;
+  widgets?: Readonly<Record<string, WidgetDescriptor>>;
+  navKeywords?: readonly string[];
+}
+
+function makeIdentity(overrides: DescriptorOptions) {
   return {
-    featureId: "todo",
-    displayName: "Todo",
-    icon: "✓",
-    description: "Tasks and to-do lists",
-    widgets: { "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 } },
+    featureId: overrides.featureId ?? "todo",
+    displayName: overrides.displayName ?? "Todo",
+    icon: overrides.icon ?? "✓",
+    description: overrides.description ?? "Tasks and to-do lists",
+    navKeywords: overrides.navKeywords,
+  };
+}
+
+function makeDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
+  return {
+    ...makeIdentity(overrides),
+    widgets: overrides.widgets ?? { "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 } },
     FullView: DummyFullView,
     modalSize: "compact",
     supportsFocusMode: true,
-    ...overrides,
-  } as FeatureViewDescriptor;
+  };
 }
 
-function makeWidgetlessDescriptor(overrides: Partial<FeatureViewDescriptor> = {}): FeatureViewDescriptor {
-  const descriptor = makeDescriptor(overrides);
-  const { widgets: _widgets, ...rest } = descriptor;
-  return rest as FeatureViewDescriptor;
+function makeWidgetlessDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
+  return {
+    ...makeIdentity(overrides),
+    FullView: DummyFullView,
+    modalSize: "compact",
+    supportsFocusMode: true,
+  };
 }
 
-function makeViewlessDescriptor(overrides: Partial<FeatureViewDescriptor> = {}): FeatureViewDescriptor {
-  const descriptor = makeDescriptor(overrides);
-  const { FullView: _f, modalSize: _m, supportsFocusMode: _s, ...rest } = descriptor;
-  return rest as FeatureViewDescriptor;
+function makeViewlessDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
+  return {
+    ...makeIdentity(overrides),
+    widgets: overrides.widgets ?? { "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 } },
+  };
 }
 
 describe("buildNavigationCommands", () => {

@@ -229,8 +229,8 @@ interface FeatureViewDescriptor {
   readonly description: string;
   readonly widgets?: Readonly<Record<string, WidgetDescriptor>>; // keyed by widgetId
   readonly FullView?: ComponentType<{ onClose: () => void }>;
-  readonly modalSize?: ModalSize;       // required iff FullView is present (type-enforced)
-  readonly supportsFocusMode?: boolean; // only allowed when FullView is present (type-enforced)
+  readonly modalSize?: ModalSize;       // required with FullView, absent otherwise (type-enforced)
+  readonly supportsFocusMode?: boolean; // required with FullView, absent otherwise (type-enforced)
   readonly navKeywords?: readonly string[]; // extra search keywords for the generated commands
   readonly Provider?: ComponentType<{ children: ReactNode }>; // feature context provider
   readonly CommandRegistrar?: ComponentType; // feature-owned commands beyond nav/focus
