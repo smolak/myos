@@ -1,33 +1,4 @@
 import type { DashboardPage, LayoutItem } from "@core/types";
-import { BookmarksProvider } from "@features/bookmarks/view/BookmarksContext";
-import { BookmarksFullView } from "@features/bookmarks/view/BookmarksFullView";
-import { BookmarksWidget } from "@features/bookmarks/view/BookmarksWidget";
-import { CalendarFullView } from "@features/calendar/view/CalendarFullView";
-import { CalendarWidget } from "@features/calendar/view/CalendarWidget";
-import { ClipboardHistoryProvider } from "@features/clipboard-history/view/ClipboardHistoryContext";
-import { ClipboardHistoryFullView } from "@features/clipboard-history/view/ClipboardHistoryFullView";
-import { ClipboardHistoryWidget } from "@features/clipboard-history/view/ClipboardHistoryWidget";
-import { ClockWidget } from "@features/clock/view/ClockWidget";
-import { CountdownsProvider } from "@features/countdowns/view/CountdownsContext";
-import { CountdownsFullView } from "@features/countdowns/view/CountdownsFullView";
-import { CountdownsWidget } from "@features/countdowns/view/CountdownsWidget";
-import { DailyJournalProvider } from "@features/daily-journal/view/DailyJournalContext";
-import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
-import { DailyJournalWidget } from "@features/daily-journal/view/DailyJournalWidget";
-import { HabitsProvider } from "@features/habits/view/HabitsContext";
-import { HabitsFullView } from "@features/habits/view/HabitsFullView";
-import { HabitsWidget } from "@features/habits/view/HabitsWidget";
-import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
-import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
-import { RssReaderProvider } from "@features/rss-reader/view/RssReaderContext";
-import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
-import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
-import { SnippetsProvider } from "@features/snippets/view/SnippetsContext";
-import { SnippetsFullView } from "@features/snippets/view/SnippetsFullView";
-import { SnippetsWidget } from "@features/snippets/view/SnippetsWidget";
-import { TodoFullView } from "@features/todo/view/TodoFullView";
-import { TodoWidget } from "@features/todo/view/TodoWidget";
-import { WeatherWidget } from "@features/weather/view/WeatherWidget";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppOptions } from "./AppOptions";
 import { CommandPalette } from "./CommandPalette";
@@ -35,8 +6,16 @@ import { commandRegistry } from "./command-registry";
 import { DashboardGrid } from "./DashboardGrid";
 import { rpc } from "./electrobun";
 import { FeatureCatalog } from "./FeatureCatalog";
+import { FeatureProviders } from "./FeatureProviders";
 import { FocusModeView } from "./FocusModeView";
-import { buildFocusCommands, buildNavigationCommands, FEATURE_VIEWS } from "./feature-views";
+import {
+  buildFocusCommands,
+  buildNavigationCommands,
+  FEATURE_VIEWS,
+  findFeatureView,
+  MODAL_SIZE_CLASSES,
+  resolveWidget,
+} from "./feature-views";
 import { registerHotkey } from "./hotkeys";
 import { NotificationCenter } from "./NotificationCenter";
 import { ThemeToggle } from "./ThemeToggle";
@@ -210,48 +189,22 @@ function App() {
   );
 
   function getWidgetContent(item: LayoutItem, onOpenFullView: () => void) {
-    if (item.featureId === "todo" && item.widgetId === "task-list") {
-      return <TodoWidget onOpenFullView={onOpenFullView} />;
+    const entry = resolveWidget(FEATURE_VIEWS, item.featureId, item.widgetId);
+    if (entry) {
+      return <entry.Widget onOpenFullView={onOpenFullView} />;
     }
-    if (item.featureId === "pomodoro" && item.widgetId === "timer") {
-      return <PomodoroWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "rss-reader" && item.widgetId === "feed-list") {
-      return <RssReaderWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "clock" && item.widgetId === "display") {
-      return <ClockWidget />;
-    }
-    if (item.featureId === "weather" && item.widgetId === "conditions") {
-      return <WeatherWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "daily-journal" && item.widgetId === "summary") {
-      return <DailyJournalWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "calendar" && item.widgetId === "upcoming-events") {
-      return <CalendarWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "habits" && item.widgetId === "daily-checkin") {
-      return <HabitsWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "bookmarks" && item.widgetId === "recent-list") {
-      return <BookmarksWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "countdowns" && item.widgetId === "upcoming") {
-      return <CountdownsWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "clipboard-history" && item.widgetId === "recent-clips") {
-      return <ClipboardHistoryWidget onOpenFullView={onOpenFullView} />;
-    }
-    if (item.featureId === "snippets" && item.widgetId === "favorites") {
-      return <SnippetsWidget onOpenFullView={onOpenFullView} />;
-    }
+    // Unrecognized featureId/widgetId in a stored layout degrades to a
+    // harmless placeholder instead of crashing the dashboard
     return (
       <span className="text-xs text-zinc-500">
         {item.featureId}/{item.widgetId}
       </span>
     );
   }
+
+  const fullViewDescriptor = fullViewFeature ? findFeatureView(FEATURE_VIEWS, fullViewFeature) : undefined;
+  const FullViewComponent = fullViewDescriptor?.FullView;
+  const fullViewModalSize = fullViewDescriptor?.modalSize;
 
   function renderWidget(item: LayoutItem) {
     const onOpenFullView = () => setFullViewFeature(item.featureId);
@@ -263,186 +216,100 @@ function App() {
   }
 
   return (
-    <SnippetsProvider>
-      <ClipboardHistoryProvider>
-        <CountdownsProvider>
-          <BookmarksProvider>
-            <RssReaderProvider>
-              <HabitsProvider>
-                <DailyJournalProvider>
-                  {FEATURE_VIEWS.map(
-                    ({ featureId, CommandRegistrar }) => CommandRegistrar && <CommandRegistrar key={featureId} />,
-                  )}
-                  <div
-                    className="flex flex-col h-screen text-zinc-100 os-desktop"
-                    style={{ background: "var(--user-bg, var(--bg-app))" }}
-                  >
-                    <header
-                      className="shrink-0 bg-zinc-900/80 px-5 py-3 backdrop-blur flex items-center justify-between relative z-10"
-                      style={{
-                        boxShadow: "var(--shadow-header)",
-                        borderBottom: "1px solid var(--border-color-subtle)",
-                      }}
-                    >
-                      <h1
-                        className="text-sm font-semibold tracking-tight select-none"
-                        style={{ color: "var(--accent-color)", letterSpacing: "-0.02em" }}
-                      >
-                        MyOS
-                      </h1>
-                      <div className="flex items-center gap-1.5">
-                        <ThemeToggle
-                          mode={themeMode}
-                          accentColor={accentColor}
-                          onModeChange={(m) => void setThemeMode(m)}
-                          onAccentChange={(c) => void setAccentColor(c)}
-                        />
-                        <NotificationCenter
-                          notifications={notifications}
-                          unreadCount={unreadCount}
-                          onMarkRead={(id) => void markRead(id)}
-                          onClearAll={() => void clearAll()}
-                        />
-                        <button
-                          type="button"
-                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2.5 py-1 transition-colors"
-                          onClick={() => setCatalogOpen(true)}
-                          aria-label="Open feature catalog"
-                          title="Add features"
-                        >
-                          ⊞
-                        </button>
-                        <button
-                          type="button"
-                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2.5 py-1 transition-colors font-mono"
-                          onClick={() => setPaletteOpen(true)}
-                          aria-label="Open command palette"
-                        >
-                          ⌘K
-                        </button>
-                        <button
-                          type="button"
-                          className="text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2 py-1 transition-colors text-sm leading-none"
-                          onClick={() => setAppOptionsOpen(true)}
-                          aria-label="Open app options"
-                        >
-                          ⚙
-                        </button>
-                      </div>
-                    </header>
-                    <main className="flex-1 overflow-auto p-5">
-                      <DashboardGrid
-                        page={currentPage}
-                        onLayoutChange={handleLayoutChange}
-                        renderWidget={renderWidget}
-                        onOpenCatalog={() => setCatalogOpen(true)}
-                      />
-                    </main>
+    <FeatureProviders descriptors={FEATURE_VIEWS}>
+      <div
+        className="flex flex-col h-screen text-zinc-100 os-desktop"
+        style={{ background: "var(--user-bg, var(--bg-app))" }}
+      >
+        <header
+          className="shrink-0 bg-zinc-900/80 px-5 py-3 backdrop-blur flex items-center justify-between relative z-10"
+          style={{
+            boxShadow: "var(--shadow-header)",
+            borderBottom: "1px solid var(--border-color-subtle)",
+          }}
+        >
+          <h1
+            className="text-sm font-semibold tracking-tight select-none"
+            style={{ color: "var(--accent-color)", letterSpacing: "-0.02em" }}
+          >
+            MyOS
+          </h1>
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle
+              mode={themeMode}
+              accentColor={accentColor}
+              onModeChange={(m) => void setThemeMode(m)}
+              onAccentChange={(c) => void setAccentColor(c)}
+            />
+            <NotificationCenter
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkRead={(id) => void markRead(id)}
+              onClearAll={() => void clearAll()}
+            />
+            <button
+              type="button"
+              className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2.5 py-1 transition-colors"
+              onClick={() => setCatalogOpen(true)}
+              aria-label="Open feature catalog"
+              title="Add features"
+            >
+              ⊞
+            </button>
+            <button
+              type="button"
+              className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2.5 py-1 transition-colors font-mono"
+              onClick={() => setPaletteOpen(true)}
+              aria-label="Open command palette"
+            >
+              ⌘K
+            </button>
+            <button
+              type="button"
+              className="text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 rounded-md px-2 py-1 transition-colors text-sm leading-none"
+              onClick={() => setAppOptionsOpen(true)}
+              aria-label="Open app options"
+            >
+              ⚙
+            </button>
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto p-5">
+          <DashboardGrid
+            page={currentPage}
+            onLayoutChange={handleLayoutChange}
+            renderWidget={renderWidget}
+            onOpenCatalog={() => setCatalogOpen(true)}
+          />
+        </main>
 
-                    <CommandPalette
-                      open={paletteOpen}
-                      onClose={() => setPaletteOpen(false)}
-                      commands={commandRegistry.getAll()}
-                      onSearch={(query) => rpc.request["search:global"]({ query })}
-                      onNavigateToFeature={(featureId) => {
-                        setFullViewFeature(featureId);
-                      }}
-                    />
+        <CommandPalette
+          open={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+          commands={commandRegistry.getAll()}
+          onSearch={(query) => rpc.request["search:global"]({ query })}
+          onNavigateToFeature={(featureId) => {
+            setFullViewFeature(featureId);
+          }}
+        />
 
-                    {fullViewFeature === "todo" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
-                          <TodoFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-                    {fullViewFeature === "pomodoro" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-lg h-2/3 rounded-xl overflow-hidden shadow-2xl">
-                          <PomodoroFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-                    {fullViewFeature === "rss-reader" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <RssReaderFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-                    {fullViewFeature === "daily-journal" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <DailyJournalFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-                    {fullViewFeature === "calendar" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <CalendarFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-                    {fullViewFeature === "habits" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <HabitsFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
+        {FullViewComponent && fullViewModalSize && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
+            <div className={`w-full ${MODAL_SIZE_CLASSES[fullViewModalSize]} rounded-xl overflow-hidden shadow-2xl`}>
+              <FullViewComponent onClose={() => setFullViewFeature(null)} />
+            </div>
+          </div>
+        )}
 
-                    {fullViewFeature === "bookmarks" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <BookmarksFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
+        {catalogOpen && (
+          <FeatureCatalog currentLayout={currentPage.layout} onAdd={addWidget} onClose={() => setCatalogOpen(false)} />
+        )}
 
-                    {fullViewFeature === "countdowns" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <CountdownsFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
+        {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
 
-                    {fullViewFeature === "clipboard-history" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-2xl h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <ClipboardHistoryFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-
-                    {fullViewFeature === "snippets" && (
-                      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                        <div className="w-full max-w-lg h-3/4 rounded-xl overflow-hidden shadow-2xl">
-                          <SnippetsFullView onClose={() => setFullViewFeature(null)} />
-                        </div>
-                      </div>
-                    )}
-
-                    {catalogOpen && (
-                      <FeatureCatalog
-                        currentLayout={currentPage.layout}
-                        onAdd={addWidget}
-                        onClose={() => setCatalogOpen(false)}
-                      />
-                    )}
-
-                    {focusModeFeatureId && <FocusModeView featureId={focusModeFeatureId} onExit={exitFocusMode} />}
-
-                    {appOptionsOpen && <AppOptions onClose={() => setAppOptionsOpen(false)} />}
-                  </div>
-                </DailyJournalProvider>
-              </HabitsProvider>
-            </RssReaderProvider>
-          </BookmarksProvider>
-        </CountdownsProvider>
-      </ClipboardHistoryProvider>
-    </SnippetsProvider>
+        {appOptionsOpen && <AppOptions onClose={() => setAppOptionsOpen(false)} />}
+      </div>
+    </FeatureProviders>
   );
 }
 

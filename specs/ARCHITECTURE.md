@@ -99,7 +99,7 @@ interface FeatureDefinition<
 }
 ```
 
-Palette commands are **not** declared in the manifest — they are registered view-side (see *Command Palette Registration* under UI Layer). A static bun-side declaration cannot express a command's action, which always needs a view-side closure.
+Palette commands are **not** declared in the manifest — they are registered view-side (see *Feature View Registration* under UI Layer). A static bun-side declaration cannot express a command's action, which always needs a view-side closure.
 
 ### Manifest Declarations
 
@@ -209,23 +209,41 @@ interface LayoutItem {
 }
 ```
 
-### Command Palette Registration
+### Feature View Registration
 
-The `Cmd+K` palette is populated entirely on the view side. The shell lists one **FeatureViewDescriptor** per feature in `src/shell/view/feature-views.ts`:
+The **FeatureViewDescriptor** list in `src/shell/view/feature-views.ts` is the single view-side registration point for a feature. The shell never enumerates feature IDs; everything per-feature it renders — Widgets, full-view modals, Focus Mode content, the Feature Catalog, widget title bars, context providers, and palette commands — is derived by mapping over this list. Adding a feature to the shell is exactly one descriptor entry.
 
 ```typescript
+type ModalSize = "compact" | "wide" | "tall";
+
+interface WidgetDescriptor {
+  readonly Widget: ComponentType<{ onOpenFullView?: () => void }>;
+  readonly defaultW: number;            // default grid size used by the Feature Catalog
+  readonly defaultH: number;
+}
+
 interface FeatureViewDescriptor {
   readonly featureId: string;
   readonly displayName: string;
-  readonly hasFullView: boolean;        // shell generates "nav:<featureId>" — "Open <displayName>"
-  readonly supportsFocusMode: boolean;  // shell generates "focus:<featureId>" — "Focus Mode: <displayName>"
+  readonly icon: string;                // display identity: Feature Catalog, widget title bar
+  readonly description: string;
+  readonly widgets?: Readonly<Record<string, WidgetDescriptor>>; // keyed by widgetId
+  readonly FullView?: ComponentType<{ onClose: () => void }>;
+  readonly modalSize?: ModalSize;       // required iff FullView is present (type-enforced)
+  readonly supportsFocusMode?: boolean; // only allowed when FullView is present (type-enforced)
   readonly navKeywords?: readonly string[]; // extra search keywords for the generated commands
+  readonly Provider?: ComponentType<{ children: ReactNode }>; // feature context provider
   readonly CommandRegistrar?: ComponentType; // feature-owned commands beyond nav/focus
 }
 ```
 
-- **Generated commands.** The shell maps over the descriptors to produce navigation (`nav:*`) and focus-mode (`focus:*`) commands. Features never hand-write these; a feature without a full view (`hasFullView: false`) gets no `nav:*` command.
-- **Command Registrars.** Feature-specific commands — including dynamic, context-bound ones (e.g. one "Expand Snippet" command per Snippet) — are registered by a *Command Registrar*: a React component in the feature's `view/` folder that renders `null` and registers commands in the **Command Registry** via `useRegisterCommand` / `commandRegistry`. The shell mounts every registrar in one place, inside the innermost provider of the tree, so each registrar can consume its feature's context.
+- **Capability from presence.** A feature's capabilities are expressed by which fields it declares, not by boolean flags: no `widgets` means no Dashboard presence (and no Feature Catalog entry), no `FullView` means no modal, no `nav:*` command, and no Focus Mode. The descriptor type couples `FullView`, `modalSize`, and `supportsFocusMode` so a modal size or focus-mode support without a Full View is a compile error.
+- **Widgets.** The shell resolves a `LayoutItem`'s featureId/widgetId against the descriptors' `widgets` maps. An unmatched lookup renders a harmless placeholder, so a stale persisted layout never crashes the Dashboard. Every Widget component accepts an optional `onOpenFullView` callback; widgets without an expand affordance ignore it.
+- **Full View.** The same `FullView` component backs the expand-button modal, the `nav:*` palette command, and Focus Mode. `modalSize` is a named size (`compact` = max-w-lg h-2/3, `wide` = max-w-2xl h-3/4, `tall` = max-w-lg h-3/4); the size-to-class mapping lives in the shell so descriptors never carry raw styling.
+- **Feature Catalog.** The catalog lists every descriptor with at least one Widget, using its icon/displayName/description; "Add to desktop" uses the feature's first declared Widget and its default grid size (one catalog entry per feature).
+- **Generated commands.** The shell maps over the descriptors to produce navigation (`nav:*`) and focus-mode (`focus:*`) commands. Features never hand-write these; a feature without a `FullView` gets no `nav:*` command.
+- **Provider composition.** The shell folds the descriptor list into the provider tree: each descriptor's optional `Provider` wraps the tree in descriptor-list order (first descriptor outermost). Feature providers are independent — no provider consumes another feature's context — and the fold relies on that assumption; a future cross-provider dependency would have to be expressed some other way.
+- **Command Registrars.** Feature-specific commands — including dynamic, context-bound ones (e.g. one "Expand Snippet" command per Snippet) — are registered by a *Command Registrar*: a React component in the feature's `view/` folder that renders `null` and registers commands in the **Command Registry** via `useRegisterCommand` / `commandRegistry`. The shell mounts every registrar inside all feature providers, so each registrar can consume its feature's context.
 
 ---
 
@@ -577,7 +595,7 @@ src/
 │   ├── view/
 │   │   ├── index.html
 │   │   ├── App.tsx
-│   │   ├── feature-views.ts      # FeatureViewDescriptor list (palette nav/focus + registrars)
+│   │   ├── feature-views.ts      # FeatureViewDescriptor list — single view-side feature registry
 │   │   ├── DashboardGrid.tsx
 │   │   ├── WidgetSlot.tsx
 │   │   ├── PageTabs.tsx
@@ -629,7 +647,7 @@ src/
 ## Feature Ideas
 
 ### Must-have (core)
-- **Command Palette** — Cmd+K. Search across features, execute actions, navigate. Nav/focus commands are generated from each feature's FeatureViewDescriptor; feature-specific commands are registered view-side by Command Registrars (see UI Layer § Command Palette Registration).
+- **Command Palette** — Cmd+K. Search across features, execute actions, navigate. Nav/focus commands are generated from each feature's FeatureViewDescriptor; feature-specific commands are registered view-side by Command Registrars (see UI Layer § Feature View Registration).
 - **Notification Center** — native OS notifications + in-app bell icon with history. Per-feature notification preferences.
 - **Theming** — light/dark/system toggle, accent color picker. CSS custom properties from day one.
 - **Data Export** — per-feature JSON/CSV export, full archive export, import support (OPML, Todoist, etc.).

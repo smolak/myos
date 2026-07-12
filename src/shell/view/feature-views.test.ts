@@ -1,19 +1,42 @@
 import { describe, expect, test, vi } from "vitest";
 import {
+  buildCatalogEntries,
   buildFocusCommands,
   buildNavigationCommands,
   FEATURE_VIEWS,
   type FeatureViewDescriptor,
+  findFeatureView,
+  MODAL_SIZE_CLASSES,
+  resolveWidget,
 } from "./feature-views";
+
+const DummyWidget = () => null;
+const DummyFullView = () => null;
 
 function makeDescriptor(overrides: Partial<FeatureViewDescriptor> = {}): FeatureViewDescriptor {
   return {
     featureId: "todo",
     displayName: "Todo",
-    hasFullView: true,
+    icon: "✓",
+    description: "Tasks and to-do lists",
+    widgets: { "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 } },
+    FullView: DummyFullView,
+    modalSize: "compact",
     supportsFocusMode: true,
     ...overrides,
-  };
+  } as FeatureViewDescriptor;
+}
+
+function makeWidgetlessDescriptor(overrides: Partial<FeatureViewDescriptor> = {}): FeatureViewDescriptor {
+  const descriptor = makeDescriptor(overrides);
+  const { widgets: _widgets, ...rest } = descriptor;
+  return rest as FeatureViewDescriptor;
+}
+
+function makeViewlessDescriptor(overrides: Partial<FeatureViewDescriptor> = {}): FeatureViewDescriptor {
+  const descriptor = makeDescriptor(overrides);
+  const { FullView: _f, modalSize: _m, supportsFocusMode: _s, ...rest } = descriptor;
+  return rest as FeatureViewDescriptor;
 }
 
 describe("buildNavigationCommands", () => {
@@ -30,7 +53,7 @@ describe("buildNavigationCommands", () => {
 
   test("skips descriptors without a full view", () => {
     const commands = buildNavigationCommands(
-      [makeDescriptor({ featureId: "weather", displayName: "Weather", hasFullView: false })],
+      [makeViewlessDescriptor({ featureId: "weather", displayName: "Weather" })],
       vi.fn(),
     );
 
@@ -58,7 +81,7 @@ describe("buildFocusCommands", () => {
     const commands = buildFocusCommands(
       [
         makeDescriptor(),
-        makeDescriptor({ featureId: "clock", displayName: "Clock", supportsFocusMode: false }),
+        makeViewlessDescriptor({ featureId: "clock", displayName: "Clock" }),
         makeDescriptor({ featureId: "snippets", displayName: "Snippets" }),
       ],
       vi.fn(),
@@ -85,11 +108,117 @@ describe("buildFocusCommands", () => {
   });
 });
 
+describe("resolveWidget", () => {
+  test("returns the widget entry matching featureId and widgetId", () => {
+    const entry = resolveWidget([makeDescriptor()], "todo", "task-list");
+
+    expect(entry?.Widget).toBe(DummyWidget);
+    expect(entry).toMatchObject({ defaultW: 2, defaultH: 2 });
+  });
+
+  test("resolves among multiple widgets of the same feature", () => {
+    const Second = () => null;
+    const descriptor = makeDescriptor({
+      widgets: {
+        "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 },
+        "quick-add": { Widget: Second, defaultW: 1, defaultH: 1 },
+      },
+    });
+
+    expect(resolveWidget([descriptor], "todo", "quick-add")?.Widget).toBe(Second);
+  });
+
+  test("returns undefined for an unknown featureId", () => {
+    expect(resolveWidget([makeDescriptor()], "nope", "task-list")).toBeUndefined();
+  });
+
+  test("returns undefined for an unknown widgetId", () => {
+    expect(resolveWidget([makeDescriptor()], "todo", "nope")).toBeUndefined();
+  });
+
+  test("returns undefined for a descriptor without widgets", () => {
+    expect(resolveWidget([makeWidgetlessDescriptor()], "todo", "task-list")).toBeUndefined();
+  });
+});
+
+describe("findFeatureView", () => {
+  test("returns the descriptor for a known featureId", () => {
+    const descriptor = makeDescriptor({ featureId: "habits" });
+
+    expect(findFeatureView([descriptor], "habits")).toBe(descriptor);
+  });
+
+  test("returns undefined for an unknown featureId", () => {
+    expect(findFeatureView([makeDescriptor()], "nope")).toBeUndefined();
+  });
+});
+
+describe("MODAL_SIZE_CLASSES", () => {
+  test("maps each named size to the shell's existing class combination", () => {
+    expect(MODAL_SIZE_CLASSES).toEqual({
+      compact: "max-w-lg h-2/3",
+      wide: "max-w-2xl h-3/4",
+      tall: "max-w-lg h-3/4",
+    });
+  });
+});
+
+describe("buildCatalogEntries", () => {
+  test("lists one entry per descriptor with at least one widget", () => {
+    const entries = buildCatalogEntries([
+      makeDescriptor(),
+      makeWidgetlessDescriptor({ featureId: "phantom", displayName: "Phantom" }),
+    ]);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.featureId).toBe("todo");
+  });
+
+  test("uses the descriptor's display identity and first widget's defaults", () => {
+    const entries = buildCatalogEntries([
+      makeDescriptor({
+        widgets: {
+          "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 },
+          "quick-add": { Widget: DummyWidget, defaultW: 1, defaultH: 1 },
+        },
+      }),
+    ]);
+
+    expect(entries[0]).toEqual({
+      featureId: "todo",
+      displayName: "Todo",
+      icon: "✓",
+      description: "Tasks and to-do lists",
+      widgetId: "task-list",
+      defaultW: 2,
+      defaultH: 2,
+    });
+  });
+});
+
 describe("FEATURE_VIEWS", () => {
   test("lists each feature exactly once", () => {
     const ids = FEATURE_VIEWS.map((f) => f.featureId);
 
     expect(new Set(ids).size).toEqual(ids.length);
+  });
+
+  test("declares a modal size for every full view", () => {
+    for (const descriptor of FEATURE_VIEWS.filter((d) => d.FullView)) {
+      expect(descriptor.modalSize, descriptor.featureId).toBeDefined();
+    }
+  });
+
+  test("declares a full view for every focus-mode feature", () => {
+    for (const descriptor of FEATURE_VIEWS.filter((d) => d.supportsFocusMode)) {
+      expect(descriptor.FullView, descriptor.featureId).toBeDefined();
+    }
+  });
+
+  test("declares at least one widget for every feature", () => {
+    for (const descriptor of FEATURE_VIEWS) {
+      expect(Object.keys(descriptor.widgets ?? {}).length, descriptor.featureId).toBeGreaterThan(0);
+    }
   });
 
   test("does not generate a nav command for weather (no full view)", () => {
@@ -130,5 +259,36 @@ describe("FEATURE_VIEWS", () => {
       "focus:clipboard-history",
       "focus:snippets",
     ]);
+  });
+
+  test("resolves a widget for every item in the default dashboard layout", () => {
+    const defaultLayout: ReadonlyArray<[string, string]> = [
+      ["todo", "task-list"],
+      ["pomodoro", "timer"],
+      ["clock", "display"],
+      ["weather", "conditions"],
+      ["rss-reader", "feed-list"],
+      ["daily-journal", "summary"],
+      ["calendar", "upcoming-events"],
+      ["habits", "daily-checkin"],
+      ["bookmarks", "recent-list"],
+      ["countdowns", "upcoming"],
+      ["clipboard-history", "recent-clips"],
+      ["snippets", "favorites"],
+    ];
+
+    for (const [featureId, widgetId] of defaultLayout) {
+      expect(resolveWidget(FEATURE_VIEWS, featureId, widgetId), `${featureId}/${widgetId}`).toBeDefined();
+    }
+  });
+
+  test("lists every feature in the catalog", () => {
+    const entries = buildCatalogEntries(FEATURE_VIEWS);
+
+    expect(entries).toHaveLength(FEATURE_VIEWS.length);
+    for (const entry of entries) {
+      expect(entry.icon).not.toEqual("");
+      expect(entry.description).not.toEqual("");
+    }
   });
 });
