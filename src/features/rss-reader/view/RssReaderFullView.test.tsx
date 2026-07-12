@@ -124,6 +124,14 @@ describe("RssReaderFullView", () => {
   });
 
   describe("Manage tab", () => {
+    test("triggers a refresh from the Manage tab button", () => {
+      mocks.state.feeds = [makeFeed()];
+      render(<RssReaderFullView />);
+      fireEvent.click(screen.getByRole("button", { name: "Manage" }));
+      fireEvent.click(screen.getByRole("button", { name: "Refresh all" }));
+      expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    });
+
     test("keeps feed rows icon-free", () => {
       mocks.state.feeds = [makeFeed()];
       mocks.state.entries = [makeEntry()];
