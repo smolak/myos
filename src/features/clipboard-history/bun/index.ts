@@ -65,13 +65,6 @@ export const clipboardHistoryFeature: FeatureDefinition<
         description: "Shows recent clipboard entries",
       },
     ],
-    commands: [
-      {
-        id: "open-clipboard-history",
-        label: "Open Clipboard History",
-        description: "Browse and search clipboard history",
-      },
-    ],
   },
 
   async install(_ctx) {},

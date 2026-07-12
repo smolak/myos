@@ -19,7 +19,6 @@ const EMPTY_MANIFEST = {
   permissions: [],
   scheduledTasks: [],
   widgets: [],
-  commands: [],
 };
 
 function makeFeature(overrides: Partial<FeatureDefinition> = {}): FeatureDefinition {

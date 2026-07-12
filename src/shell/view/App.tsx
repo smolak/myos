@@ -19,10 +19,10 @@ import { HabitsFullView } from "@features/habits/view/HabitsFullView";
 import { HabitsWidget } from "@features/habits/view/HabitsWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
-import { RssReaderProvider, useRssReaderContext } from "@features/rss-reader/view/RssReaderContext";
+import { RssReaderProvider } from "@features/rss-reader/view/RssReaderContext";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
-import { SnippetsProvider, useSnippetsContext } from "@features/snippets/view/SnippetsContext";
+import { SnippetsProvider } from "@features/snippets/view/SnippetsContext";
 import { SnippetsFullView } from "@features/snippets/view/SnippetsFullView";
 import { SnippetsWidget } from "@features/snippets/view/SnippetsWidget";
 import { TodoFullView } from "@features/todo/view/TodoFullView";
@@ -36,6 +36,7 @@ import { DashboardGrid } from "./DashboardGrid";
 import { rpc } from "./electrobun";
 import { FeatureCatalog } from "./FeatureCatalog";
 import { FocusModeView } from "./FocusModeView";
+import { buildFocusCommands, buildNavigationCommands, FEATURE_VIEWS } from "./feature-views";
 import { registerHotkey } from "./hotkeys";
 import { NotificationCenter } from "./NotificationCenter";
 import { ThemeToggle } from "./ThemeToggle";
@@ -68,54 +69,6 @@ const DEFAULT_PAGES: DashboardPage[] = [
     order: 0,
   },
 ];
-
-function SnippetsCommandRegistrar({ onOpenFullView }: { onOpenFullView: () => void }) {
-  const { snippets, expand } = useSnippetsContext();
-
-  useEffect(() => {
-    if (snippets.length === 0) return;
-    return commandRegistry.registerMany(
-      snippets.map((s) => ({
-        id: `snippets:expand:${s.id}`,
-        label: `Expand Snippet: ${s.name}`,
-        description: s.template.length > 60 ? `${s.template.slice(0, 60)}…` : s.template,
-        group: "Snippets",
-        keywords: ["snippet", "template", "expand", "copy"],
-        action: () => {
-          void expand(s.id).then((text) => navigator.clipboard.writeText(text));
-        },
-      })),
-    );
-  }, [snippets, expand]);
-
-  useRegisterCommand({
-    id: "nav:snippets",
-    label: "Open Snippets",
-    description: "View and manage text snippets",
-    group: "Navigation",
-    keywords: ["snippet", "template", "text", "expand"],
-    action: onOpenFullView,
-  });
-
-  return null;
-}
-
-function RssReaderCommandRegistrar() {
-  const { refresh } = useRssReaderContext();
-
-  useRegisterCommand({
-    id: "rss:refresh-feeds",
-    label: "Refresh RSS Feeds",
-    description: "Fetch new entries from all configured feeds",
-    group: "RSS Reader",
-    keywords: ["rss", "feed", "refresh", "ingest", "fetch", "update", "reload"],
-    action: () => {
-      void refresh();
-    },
-  });
-
-  return null;
-}
 
 function App() {
   const [pages, setPages] = useState<DashboardPage[]>(DEFAULT_PAGES);
@@ -203,176 +156,13 @@ function App() {
     action: () => setAppOptionsOpen(true),
   });
 
-  // Register built-in navigation commands
+  // Navigation and focus-mode commands are generated from the feature view descriptors
   useEffect(() => {
-    return commandRegistry.registerMany([
-      {
-        id: "nav:todo",
-        label: "Open Todo",
-        description: "View and manage todos",
-        group: "Navigation",
-        keywords: ["task", "tasks"],
-        action: () => setFullViewFeature("todo"),
-      },
-      {
-        id: "nav:pomodoro",
-        label: "Open Pomodoro",
-        description: "Focus timer",
-        group: "Navigation",
-        keywords: ["timer", "focus", "session"],
-        action: () => setFullViewFeature("pomodoro"),
-      },
-      {
-        id: "nav:rss",
-        label: "Open RSS Reader",
-        description: "Browse feed entries",
-        group: "Navigation",
-        keywords: ["feed", "articles", "news"],
-        action: () => setFullViewFeature("rss-reader"),
-      },
-      {
-        id: "nav:weather",
-        label: "Open Weather",
-        description: "Current conditions",
-        group: "Navigation",
-        keywords: ["forecast", "temperature"],
-        action: () => setFullViewFeature("weather"),
-      },
-      {
-        id: "nav:journal",
-        label: "Open Daily Journal",
-        description: "View today's activity and write notes",
-        group: "Navigation",
-        keywords: ["journal", "diary", "notes", "timeline"],
-        action: () => setFullViewFeature("daily-journal"),
-      },
-      {
-        id: "nav:calendar",
-        label: "Open Calendar",
-        description: "View upcoming events and manage calendars",
-        group: "Navigation",
-        keywords: ["calendar", "events", "schedule", "ics"],
-        action: () => setFullViewFeature("calendar"),
-      },
-      {
-        id: "nav:habits",
-        label: "Open Habits",
-        description: "View and manage daily habits",
-        group: "Navigation",
-        keywords: ["habits", "streak", "daily", "routine"],
-        action: () => setFullViewFeature("habits"),
-      },
-      {
-        id: "nav:bookmarks",
-        label: "Open Bookmarks",
-        description: "View and manage bookmarks",
-        group: "Navigation",
-        keywords: ["bookmark", "link", "url", "save"],
-        action: () => setFullViewFeature("bookmarks"),
-      },
-      {
-        id: "nav:countdowns",
-        label: "Open Countdowns",
-        description: "View and manage countdown timers",
-        group: "Navigation",
-        keywords: ["countdown", "timer", "date", "event"],
-        action: () => setFullViewFeature("countdowns"),
-      },
-      {
-        id: "nav:clipboard-history",
-        label: "Open Clipboard History",
-        description: "Browse and search clipboard history",
-        group: "Navigation",
-        keywords: ["clipboard", "copy", "paste", "history"],
-        action: () => setFullViewFeature("clipboard-history"),
-      },
-    ]);
+    return commandRegistry.registerMany(buildNavigationCommands(FEATURE_VIEWS, setFullViewFeature));
   }, []);
 
-  // Register focus mode commands
   useEffect(() => {
-    return commandRegistry.registerMany([
-      {
-        id: "focus:todo",
-        label: "Focus Mode: Todo",
-        description: "Open Todo in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "task", "tasks", "fullscreen"],
-        action: () => enterFocusMode("todo"),
-      },
-      {
-        id: "focus:pomodoro",
-        label: "Focus Mode: Pomodoro",
-        description: "Open Pomodoro timer in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "timer", "session", "fullscreen"],
-        action: () => enterFocusMode("pomodoro"),
-      },
-      {
-        id: "focus:rss-reader",
-        label: "Focus Mode: RSS Reader",
-        description: "Open RSS Reader in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "feed", "articles", "news", "fullscreen"],
-        action: () => enterFocusMode("rss-reader"),
-      },
-      {
-        id: "focus:daily-journal",
-        label: "Focus Mode: Daily Journal",
-        description: "Open Daily Journal in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "journal", "diary", "notes", "fullscreen"],
-        action: () => enterFocusMode("daily-journal"),
-      },
-      {
-        id: "focus:calendar",
-        label: "Focus Mode: Calendar",
-        description: "Open Calendar in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "calendar", "events", "schedule", "fullscreen"],
-        action: () => enterFocusMode("calendar"),
-      },
-      {
-        id: "focus:habits",
-        label: "Focus Mode: Habits",
-        description: "Open Habits in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "habits", "streak", "routine", "fullscreen"],
-        action: () => enterFocusMode("habits"),
-      },
-      {
-        id: "focus:bookmarks",
-        label: "Focus Mode: Bookmarks",
-        description: "Open Bookmarks in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "bookmark", "link", "fullscreen"],
-        action: () => enterFocusMode("bookmarks"),
-      },
-      {
-        id: "focus:countdowns",
-        label: "Focus Mode: Countdowns",
-        description: "Open Countdowns in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "countdown", "timer", "date", "fullscreen"],
-        action: () => enterFocusMode("countdowns"),
-      },
-      {
-        id: "focus:clipboard-history",
-        label: "Focus Mode: Clipboard History",
-        description: "Open Clipboard History in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "clipboard", "copy", "paste", "fullscreen"],
-        action: () => enterFocusMode("clipboard-history"),
-      },
-      {
-        id: "focus:snippets",
-        label: "Focus Mode: Snippets",
-        description: "Open Snippets in full-screen focus mode",
-        group: "Focus Mode",
-        keywords: ["focus", "snippet", "template", "expand", "fullscreen"],
-        action: () => enterFocusMode("snippets"),
-      },
-    ]);
+    return commandRegistry.registerMany(buildFocusCommands(FEATURE_VIEWS, enterFocusMode));
   }, [enterFocusMode]);
 
   const handleLayoutChange = useCallback(
@@ -474,14 +264,15 @@ function App() {
 
   return (
     <SnippetsProvider>
-      <SnippetsCommandRegistrar onOpenFullView={() => setFullViewFeature("snippets")} />
       <ClipboardHistoryProvider>
         <CountdownsProvider>
           <BookmarksProvider>
             <RssReaderProvider>
-              <RssReaderCommandRegistrar />
               <HabitsProvider>
                 <DailyJournalProvider>
+                  {FEATURE_VIEWS.map(
+                    ({ featureId, CommandRegistrar }) => CommandRegistrar && <CommandRegistrar key={featureId} />,
+                  )}
                   <div
                     className="flex flex-col h-screen text-zinc-100 os-desktop"
                     style={{ background: "var(--user-bg, var(--bg-app))" }}

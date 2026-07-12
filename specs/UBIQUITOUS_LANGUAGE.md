@@ -69,14 +69,17 @@
 | Term | Definition | Aliases to avoid |
 | ---- | ---------- | ---------------- |
 | **AppRPCSchema** | The typed IPC contract (extending `ElectrobunRPCSchema`) defining all request/response pairs between the Bun process and the webview | IPC schema, RPC contract |
-| **Command** | A named, user-invocable action registered in a FeatureManifest and surfaced in the Command Palette | Shortcut, menu item |
-| **CommandDeclaration** | The static metadata in a FeatureManifest describing a Command's id, label, and optional params | Command definition, command config |
+| **Command** | A named, user-invocable action registered view-side in the Command Registry and surfaced in the Command Palette | Shortcut, menu item, CommandDeclaration (retired — manifest-declared commands no longer exist) |
+| **Command Registry** | The view-side registry holding all currently registered Commands; the Command Palette reads from it | Command store, palette registry |
+| **Feature View Descriptor** | A Feature's view-side entry in the shell's `feature-views.ts` list — display name, full-view/focus-mode capability, nav keywords, and optional Command Registrar — from which the shell generates `nav:*` and `focus:*` Commands | Feature view config, view manifest |
+| **Command Registrar** | A Feature-owned React component (rendering null) that registers the Feature's Commands in the Command Registry, mounted by the shell inside the provider tree | Command component, registrar hook |
 | **Command Palette** | The `Cmd+K` search overlay that surfaces registered Commands across all Features | Quick launcher, search bar, spotlight |
 
 ## Relationships
 
 - A **Feature** implements exactly one **FeatureDefinition** and declares one **FeatureManifest**.
-- A **FeatureManifest** contains zero or more **WidgetDeclarations**, **CommandDeclarations**, **EventDeclarations**, **ActionDeclarations**, **QueryDeclarations**, and **ScheduledTaskDeclarations**.
+- A **FeatureManifest** contains zero or more **WidgetDeclarations**, **EventDeclarations**, **ActionDeclarations**, **QueryDeclarations**, and **ScheduledTaskDeclarations**.
+- The shell lists one **Feature View Descriptor** per **Feature** in `feature-views.ts`; it generates the Feature's navigation and focus-mode **Commands** from it, and mounts the Feature's **Command Registrar** (if any) to register the rest.
 - Each active **Feature** owns exactly one **FeatureDB** and operates within one **FeatureContext**.
 - An **Event** is delivered by the **EventBus** to all **EventSubscriptions** and recorded in the **EventLog**.
 - A **Script** listens for **Events** via the **EventBus** and enqueues **Actions** via the **ActionQueue** inside a **ScriptExecution**.

@@ -95,14 +95,15 @@ interface FeatureDefinition<
     permissions: Permission[];
     scheduledTasks: ScheduledTaskDeclaration[];
     widgets: WidgetDeclaration[];
-    commands: CommandDeclaration[];
   };
 }
 ```
 
+Palette commands are **not** declared in the manifest — they are registered view-side (see *Command Palette Registration* under UI Layer). A static bun-side declaration cannot express a command's action, which always needs a view-side closure.
+
 ### Manifest Declarations
 
-Each declaration type (`EventDeclarations`, `ActionDeclarations`, `QueryDeclarations`) carries optional schema metadata — `payload`, `params`, `result` fields that describe the shape of data in human-readable string form (e.g., `{ entryId: "string" }`). These are used for documentation, command palette hints, and future runtime validation. They are **not** the source of runtime type safety — that comes from the generic type parameters `TEvents`, `TActions`, `TQueries` on `FeatureDefinition`.
+Each declaration type (`EventDeclarations`, `ActionDeclarations`, `QueryDeclarations`) carries optional schema metadata — `payload`, `params`, `result` fields that describe the shape of data in human-readable string form (e.g., `{ entryId: "string" }`). These are used for documentation and future runtime validation. They are **not** the source of runtime type safety — that comes from the generic type parameters `TEvents`, `TActions`, `TQueries` on `FeatureDefinition`.
 
 See the reference RSS implementation in `ARCHITECTURE-RATIONALE.md` for how manifest declarations look in practice.
 
@@ -207,6 +208,24 @@ interface LayoutItem {
   config?: Record<string, unknown>;
 }
 ```
+
+### Command Palette Registration
+
+The `Cmd+K` palette is populated entirely on the view side. The shell lists one **FeatureViewDescriptor** per feature in `src/shell/view/feature-views.ts`:
+
+```typescript
+interface FeatureViewDescriptor {
+  readonly featureId: string;
+  readonly displayName: string;
+  readonly hasFullView: boolean;        // shell generates "nav:<featureId>" — "Open <displayName>"
+  readonly supportsFocusMode: boolean;  // shell generates "focus:<featureId>" — "Focus Mode: <displayName>"
+  readonly navKeywords?: readonly string[]; // extra search keywords for the generated commands
+  readonly CommandRegistrar?: ComponentType; // feature-owned commands beyond nav/focus
+}
+```
+
+- **Generated commands.** The shell maps over the descriptors to produce navigation (`nav:*`) and focus-mode (`focus:*`) commands. Features never hand-write these; a feature without a full view (`hasFullView: false`) gets no `nav:*` command.
+- **Command Registrars.** Feature-specific commands — including dynamic, context-bound ones (e.g. one "Expand Snippet" command per Snippet) — are registered by a *Command Registrar*: a React component in the feature's `view/` folder that renders `null` and registers commands in the **Command Registry** via `useRegisterCommand` / `commandRegistry`. The shell mounts every registrar in one place, inside the innermost provider of the tree, so each registrar can consume its feature's context.
 
 ---
 
@@ -558,6 +577,7 @@ src/
 │   ├── view/
 │   │   ├── index.html
 │   │   ├── App.tsx
+│   │   ├── feature-views.ts      # FeatureViewDescriptor list (palette nav/focus + registrars)
 │   │   ├── DashboardGrid.tsx
 │   │   ├── WidgetSlot.tsx
 │   │   ├── PageTabs.tsx
@@ -609,7 +629,7 @@ src/
 ## Feature Ideas
 
 ### Must-have (core)
-- **Command Palette** — Cmd+K. Search across features, execute actions, navigate. Features register commands in their manifest.
+- **Command Palette** — Cmd+K. Search across features, execute actions, navigate. Nav/focus commands are generated from each feature's FeatureViewDescriptor; feature-specific commands are registered view-side by Command Registrars (see UI Layer § Command Palette Registration).
 - **Notification Center** — native OS notifications + in-app bell icon with history. Per-feature notification preferences.
 - **Theming** — light/dark/system toggle, accent color picker. CSS custom properties from day one.
 - **Data Export** — per-feature JSON/CSV export, full archive export, import support (OPML, Todoist, etc.).

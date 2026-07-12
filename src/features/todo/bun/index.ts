@@ -79,13 +79,6 @@ export const todoFeature: FeatureDefinition<TodoEvents, TodoActions, TodoQueries
         description: "Shows active todos",
       },
     ],
-    commands: [
-      {
-        id: "create-todo",
-        label: "Create Todo",
-        description: "Create a new todo item",
-      },
-    ],
   },
 
   async install(_ctx) {},

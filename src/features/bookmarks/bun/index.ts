@@ -69,13 +69,6 @@ export const bookmarksFeature: FeatureDefinition<BookmarksEvents, BookmarksActio
         description: "Shows recent saved bookmarks",
       },
     ],
-    commands: [
-      {
-        id: "open-bookmarks",
-        label: "Open Bookmarks",
-        description: "View and manage your bookmarks",
-      },
-    ],
   },
 
   async install(_ctx) {},

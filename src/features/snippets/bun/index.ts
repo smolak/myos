@@ -67,13 +67,6 @@ export const snippetsFeature: FeatureDefinition<SnippetsEvents, SnippetsActions,
         description: "Shows favorite snippets for quick access",
       },
     ],
-    commands: [
-      {
-        id: "open-snippets",
-        label: "Open Snippets",
-        description: "View and manage text snippets",
-      },
-    ],
   },
 
   async install(_ctx) {},

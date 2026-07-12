@@ -60,13 +60,6 @@ export interface WidgetDeclaration {
   readonly description?: string;
 }
 
-export interface CommandDeclaration {
-  readonly id: string;
-  readonly label: string;
-  readonly params?: string[];
-  readonly description?: string;
-}
-
 export interface FeatureManifest<
   TEvents extends EventMap = EventMap,
   TActions extends ActionMap = ActionMap,
@@ -78,7 +71,6 @@ export interface FeatureManifest<
   readonly permissions: Permission[];
   readonly scheduledTasks: ScheduledTaskDeclaration[];
   readonly widgets: WidgetDeclaration[];
-  readonly commands: CommandDeclaration[];
 }
 
 export interface FeatureDefinition<

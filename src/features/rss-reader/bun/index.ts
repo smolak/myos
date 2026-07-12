@@ -112,13 +112,6 @@ export function createRssReaderFeature(
           description: "Shows recent RSS feed entries",
         },
       ],
-      commands: [
-        {
-          id: "add-feed",
-          label: "Add RSS Feed",
-          description: "Add a new RSS feed URL to the reader",
-        },
-      ],
     },
 
     async install(_ctx) {},
