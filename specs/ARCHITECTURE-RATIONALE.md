@@ -134,7 +134,7 @@ The event log is an operational tool for debugging scripts and auditing cross-fe
 
 The original design had features declare palette commands in their bun-side `FeatureManifest` (`commands: CommandDeclaration[]`). That path was never bridged: nothing ever read manifest commands into the palette, and every real command was registered view-side instead. The structural reason is that a command is not static metadata — its action is a closure over live view state. The Snippets feature registers one "Expand Snippet" command per Snippet from current state; the RSS refresh command calls `refresh()` from `RssReaderContext`. A static bun-side declaration cannot express either.
 
-So view-side registration is canonical: each feature exposes a `FeatureViewDescriptor` (listed in `src/shell/view/feature-views.ts`) from which the shell generates `nav:*`/`focus:*` commands, and feature-owned Command Registrar components register everything else. The trade-off is that commands are invisible to the bun process — acceptable because the palette lives entirely in the view, and nothing bun-side ever needed the declarations.
+So view-side registration is canonical: the shell lists one `FeatureViewDescriptor` per feature in `src/shell/view/feature-views.ts`, generates `nav:*`/`focus:*` commands from the list, and mounts feature-owned Command Registrar components that register everything else. The trade-off is that commands are invisible to the bun process — acceptable because the palette lives entirely in the view, and nothing bun-side ever needed the declarations.
 
 ## Why Backup Is a Core Service (Not a Feature)?
 

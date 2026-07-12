@@ -48,7 +48,6 @@ export const FEATURE_VIEWS: readonly FeatureViewDescriptor[] = [
     displayName: "Weather",
     hasFullView: false,
     supportsFocusMode: false,
-    navKeywords: ["forecast", "temperature"],
   },
   {
     featureId: "daily-journal",

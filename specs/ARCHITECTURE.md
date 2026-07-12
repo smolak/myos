@@ -211,16 +211,16 @@ interface LayoutItem {
 
 ### Command Palette Registration
 
-The `Cmd+K` palette is populated entirely on the view side. Each feature exposes one **FeatureViewDescriptor**, and the shell lists them all in `src/shell/view/feature-views.ts`:
+The `Cmd+K` palette is populated entirely on the view side. The shell lists one **FeatureViewDescriptor** per feature in `src/shell/view/feature-views.ts`:
 
 ```typescript
 interface FeatureViewDescriptor {
-  featureId: string;
-  displayName: string;
-  hasFullView: boolean;        // shell generates "nav:<featureId>" — "Open <displayName>"
-  supportsFocusMode: boolean;  // shell generates "focus:<featureId>" — "Focus Mode: <displayName>"
-  navKeywords?: string[];      // extra search keywords for the generated commands
-  CommandRegistrar?: ComponentType; // feature-owned commands beyond nav/focus
+  readonly featureId: string;
+  readonly displayName: string;
+  readonly hasFullView: boolean;        // shell generates "nav:<featureId>" — "Open <displayName>"
+  readonly supportsFocusMode: boolean;  // shell generates "focus:<featureId>" — "Focus Mode: <displayName>"
+  readonly navKeywords?: readonly string[]; // extra search keywords for the generated commands
+  readonly CommandRegistrar?: ComponentType; // feature-owned commands beyond nav/focus
 }
 ```
 

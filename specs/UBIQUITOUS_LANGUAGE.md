@@ -79,7 +79,7 @@
 
 - A **Feature** implements exactly one **FeatureDefinition** and declares one **FeatureManifest**.
 - A **FeatureManifest** contains zero or more **WidgetDeclarations**, **EventDeclarations**, **ActionDeclarations**, **QueryDeclarations**, and **ScheduledTaskDeclarations**.
-- A **Feature** exposes one **Feature View Descriptor**; the shell generates its navigation and focus-mode **Commands** from it, and mounts its **Command Registrar** (if any) to register the rest.
+- The shell lists one **Feature View Descriptor** per **Feature** in `feature-views.ts`; it generates the Feature's navigation and focus-mode **Commands** from it, and mounts the Feature's **Command Registrar** (if any) to register the rest.
 - Each active **Feature** owns exactly one **FeatureDB** and operates within one **FeatureContext**.
 - An **Event** is delivered by the **EventBus** to all **EventSubscriptions** and recorded in the **EventLog**.
 - A **Script** listens for **Events** via the **EventBus** and enqueues **Actions** via the **ActionQueue** inside a **ScriptExecution**.
