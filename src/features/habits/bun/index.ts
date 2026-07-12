@@ -72,13 +72,6 @@ export const habitsFeature: FeatureDefinition<HabitsEvents, HabitsActions, Habit
         description: "Shows today's habits with completion status",
       },
     ],
-    commands: [
-      {
-        id: "open-habits",
-        label: "Open Habits",
-        description: "View and manage your daily habits",
-      },
-    ],
   },
 
   async install(_ctx) {},

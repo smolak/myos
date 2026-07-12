@@ -62,13 +62,6 @@ export const countdownsFeature: FeatureDefinition<CountdownsEvents, CountdownsAc
         description: "Shows upcoming countdown timers",
       },
     ],
-    commands: [
-      {
-        id: "open-countdowns",
-        label: "Open Countdowns",
-        description: "View and manage countdown timers",
-      },
-    ],
   },
 
   async install(_ctx) {},

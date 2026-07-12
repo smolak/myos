@@ -1,6 +1,4 @@
 import type { DashboardPage } from "@core/types";
-import type { RssFeed } from "@features/rss-reader/shared/types";
-import { makeFeed } from "@features/rss-reader/view/test-fixtures";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import App from "./App";
@@ -42,26 +40,6 @@ vi.mock("./DashboardGrid", () => ({
     <div data-testid="dashboard-grid" data-page-id={page.id} data-page-name={page.name} />
   ),
 }));
-
-// Renders the App with the given feeds, then invokes the palette command,
-// returning the rpc mock with startup fetch calls already cleared
-async function renderAndInvokeRefreshFeedsCommand(feeds: RssFeed[]) {
-  const { commandRegistry } = await import("./command-registry");
-  const { rpc } = await import("./electrobun");
-  vi.mocked(rpc.request["rss:get-feeds"]).mockResolvedValue(feeds);
-
-  await act(async () => {
-    render(<App />);
-  });
-  vi.mocked(rpc.request["rss:fetch-feeds"]).mockClear();
-
-  const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
-  expect(command).toBeDefined();
-  await act(async () => {
-    command?.action();
-  });
-  return rpc;
-}
 
 vi.mock("./FocusModeView", () => ({
   FocusModeView: ({ featureId, onExit }: { featureId: string; onExit: () => void }) => (
@@ -115,7 +93,32 @@ describe("App", () => {
     expect(focusCommands.some((c) => c.id === "focus:daily-journal")).toBe(true);
   });
 
-  test("registers a Refresh RSS Feeds command in the command registry", async () => {
+  test("registers navigation commands generated from the feature view descriptors", async () => {
+    const { commandRegistry } = await import("./command-registry");
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const navCommands = commandRegistry.getAll().filter((c) => c.id.startsWith("nav:"));
+    expect(navCommands.some((c) => c.id === "nav:todo")).toBe(true);
+    expect(navCommands.some((c) => c.id === "nav:rss-reader")).toBe(true);
+    expect(navCommands.some((c) => c.id === "nav:snippets")).toBe(true);
+  });
+
+  test("does not register a nav command for features without a full view", async () => {
+    const { commandRegistry } = await import("./command-registry");
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const ids = commandRegistry.getAll().map((c) => c.id);
+    expect(ids).not.toContain("nav:weather");
+    expect(ids).not.toContain("nav:clock");
+  });
+
+  test("mounts feature command registrars (Refresh RSS Feeds is registered)", async () => {
     const { commandRegistry } = await import("./command-registry");
 
     await act(async () => {
@@ -125,18 +128,6 @@ describe("App", () => {
     const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
     expect(command).toBeDefined();
     expect(command?.label).toBe("Refresh RSS Feeds");
-  });
-
-  test("triggers a feed fetch when the Refresh RSS Feeds command is invoked", async () => {
-    const rpc = await renderAndInvokeRefreshFeedsCommand([makeFeed()]);
-
-    expect(rpc.request["rss:fetch-feeds"]).toHaveBeenCalledTimes(1);
-  });
-
-  test("does not fetch feeds via the Refresh RSS Feeds command when no feeds are configured", async () => {
-    const rpc = await renderAndInvokeRefreshFeedsCommand([]);
-
-    expect(rpc.request["rss:fetch-feeds"]).not.toHaveBeenCalled();
   });
 
   test("entering focus mode via command shows FocusModeView", async () => {

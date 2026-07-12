@@ -22,7 +22,6 @@ export const clockFeature: FeatureDefinition<ClockEvents, ClockActions, ClockQue
         description: "Shows the current time, updating every second",
       },
     ],
-    commands: [],
   },
 
   async install(_ctx) {},

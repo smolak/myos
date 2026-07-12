@@ -130,6 +130,12 @@ The architecture borrows from DDD (bounded contexts, anti-corruption layers, eve
 
 The event log is an operational tool for debugging scripts and auditing cross-feature interactions. It is not a long-term data warehouse. Features that need permanent history (habits streaks, pomodoro statistics) store that in their own databases as structured analytics, not as raw events. 90 days (configurable) balances debuggability with storage growth. Auto-pruning keeps the hot table fast.
 
+## Why Palette Commands Are Registered View-Side (Not in the Manifest)?
+
+The original design had features declare palette commands in their bun-side `FeatureManifest` (`commands: CommandDeclaration[]`). That path was never bridged: nothing ever read manifest commands into the palette, and every real command was registered view-side instead. The structural reason is that a command is not static metadata — its action is a closure over live view state. The Snippets feature registers one "Expand Snippet" command per Snippet from current state; the RSS refresh command calls `refresh()` from `RssReaderContext`. A static bun-side declaration cannot express either.
+
+So view-side registration is canonical: each feature exposes a `FeatureViewDescriptor` (listed in `src/shell/view/feature-views.ts`) from which the shell generates `nav:*`/`focus:*` commands, and feature-owned Command Registrar components register everything else. The trade-off is that commands are invisible to the bun process — acceptable because the palette lives entirely in the view, and nothing bun-side ever needed the declarations.
+
 ## Why Backup Is a Core Service (Not a Feature)?
 
 Backups need privileged access to all DB files — core and every feature. A normal feature only has access to its own DB through the `FeatureContext`. Making backups a feature would require special permissions that break the "no first-class privileges" principle. Instead, the backup system is part of the core, alongside the scheduler, event bus, and database manager. It's the one piece that legitimately needs cross-cutting access.
@@ -218,10 +224,6 @@ const rssFeature: FeatureDefinition<RSSEvents, RSSActions, RSSQueries> = {
       },
     ],
     widgets: [{ id: "feed-list", sizes: ["medium", "wide"] }],
-    commands: [
-      { id: "rss:add-feed", label: "Add RSS Feed", params: ["url"] },
-      { id: "rss:search", label: "Search RSS Entries", params: ["query"] },
-    ],
   },
 
   async install(ctx) {},

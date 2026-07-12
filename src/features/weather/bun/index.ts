@@ -49,7 +49,6 @@ export const weatherFeature: FeatureDefinition<WeatherEvents, WeatherActions, We
         description: "Shows current temperature and weather conditions",
       },
     ],
-    commands: [],
   },
 
   async install(_ctx) {},

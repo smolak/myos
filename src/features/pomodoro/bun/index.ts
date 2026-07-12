@@ -82,18 +82,6 @@ export const pomodoroFeature: FeatureDefinition<PomodoroEvents, PomodoroActions,
         description: "Countdown timer with start/pause/reset controls",
       },
     ],
-    commands: [
-      {
-        id: "start-work-session",
-        label: "Start Work Session",
-        description: "Start a 25-minute work session",
-      },
-      {
-        id: "start-break-session",
-        label: "Start Break Session",
-        description: "Start a 5-minute break session",
-      },
-    ],
   },
 
   async install(_ctx) {},

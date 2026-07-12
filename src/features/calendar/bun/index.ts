@@ -94,13 +94,6 @@ export const calendarFeature: FeatureDefinition<CalendarEvents, CalendarActions,
         description: "Shows upcoming calendar events",
       },
     ],
-    commands: [
-      {
-        id: "add-calendar",
-        label: "Add Calendar",
-        description: "Add a new ICS calendar URL",
-      },
-    ],
   },
 
   async install(_ctx) {},

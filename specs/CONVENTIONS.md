@@ -238,8 +238,12 @@ Follow the strategy defined in `ARCHITECTURE.md § Error Handling`. The rules fo
 @core/types          ← imported by everything
 @core/bun/services   ← imported by features (via injection, never directly)
 @features/*          ← never imported by other features or by core
-@shell/*             ← never imported by features or core
+@shell/*             ← never imported by core; feature views may import only the
+                       shell's view infrastructure (the rpc client, command
+                       registry, and useRegisterCommand) — never shell components
 ```
+
+The `@shell` exception exists because feature view code runs inside the shell's webview: talking to the bun process (rpc) and registering palette commands (Command Registrars, see `ARCHITECTURE.md` § Command Palette Registration) are shell-provided capabilities, not cross-boundary leaks.
 
 ### Path aliases are contracts
 

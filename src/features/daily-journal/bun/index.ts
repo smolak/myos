@@ -70,13 +70,6 @@ export const dailyJournalFeature: FeatureDefinition<DailyJournalEvents, DailyJou
         description: "Shows today's activity and note",
       },
     ],
-    commands: [
-      {
-        id: "open-journal",
-        label: "Open Daily Journal",
-        description: "View today's activity timeline and write notes",
-      },
-    ],
   },
 
   async install(_ctx) {},
