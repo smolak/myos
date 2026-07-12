@@ -1,4 +1,6 @@
 import type { DashboardPage } from "@core/types";
+import type { RssFeed } from "@features/rss-reader/shared/types";
+import { makeFeed } from "@features/rss-reader/view/test-fixtures";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import App from "./App";
@@ -40,6 +42,26 @@ vi.mock("./DashboardGrid", () => ({
     <div data-testid="dashboard-grid" data-page-id={page.id} data-page-name={page.name} />
   ),
 }));
+
+// Renders the App with the given feeds, then invokes the palette command,
+// returning the rpc mock with startup fetch calls already cleared
+async function renderAndInvokeRefreshFeedsCommand(feeds: RssFeed[]) {
+  const { commandRegistry } = await import("./command-registry");
+  const { rpc } = await import("./electrobun");
+  vi.mocked(rpc.request["rss:get-feeds"]).mockResolvedValue(feeds);
+
+  await act(async () => {
+    render(<App />);
+  });
+  vi.mocked(rpc.request["rss:fetch-feeds"]).mockClear();
+
+  const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
+  expect(command).toBeDefined();
+  await act(async () => {
+    command?.action();
+  });
+  return rpc;
+}
 
 vi.mock("./FocusModeView", () => ({
   FocusModeView: ({ featureId, onExit }: { featureId: string; onExit: () => void }) => (
@@ -105,51 +127,14 @@ describe("App", () => {
     expect(command?.label).toBe("Refresh RSS Feeds");
   });
 
-  test("invoking the Refresh RSS Feeds command triggers a feed fetch", async () => {
-    const { commandRegistry } = await import("./command-registry");
-    const { rpc } = await import("./electrobun");
-    vi.mocked(rpc.request["rss:get-feeds"]).mockResolvedValue([
-      {
-        id: "feed-1",
-        url: "https://example.com/rss",
-        title: "Example",
-        description: null,
-        lastFetchedAt: null,
-        fetchIntervalMinutes: 60,
-        createdAt: "2026-07-12T00:00:00.000Z",
-        updatedAt: "2026-07-12T00:00:00.000Z",
-      },
-    ]);
-
-    await act(async () => {
-      render(<App />);
-    });
-    vi.mocked(rpc.request["rss:fetch-feeds"]).mockClear();
-
-    const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
-    expect(command).toBeDefined();
-    await act(async () => {
-      command?.action();
-    });
+  test("triggers a feed fetch when the Refresh RSS Feeds command is invoked", async () => {
+    const rpc = await renderAndInvokeRefreshFeedsCommand([makeFeed()]);
 
     expect(rpc.request["rss:fetch-feeds"]).toHaveBeenCalledTimes(1);
   });
 
   test("does not fetch feeds via the Refresh RSS Feeds command when no feeds are configured", async () => {
-    const { commandRegistry } = await import("./command-registry");
-    const { rpc } = await import("./electrobun");
-    vi.mocked(rpc.request["rss:get-feeds"]).mockResolvedValue([]);
-
-    await act(async () => {
-      render(<App />);
-    });
-    vi.mocked(rpc.request["rss:fetch-feeds"]).mockClear();
-
-    const command = commandRegistry.getAll().find((c) => c.id === "rss:refresh-feeds");
-    expect(command).toBeDefined();
-    await act(async () => {
-      command?.action();
-    });
+    const rpc = await renderAndInvokeRefreshFeedsCommand([]);
 
     expect(rpc.request["rss:fetch-feeds"]).not.toHaveBeenCalled();
   });

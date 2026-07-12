@@ -41,6 +41,7 @@ import { NotificationCenter } from "./NotificationCenter";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAppOptions } from "./useAppOptions";
 import { useNotifications } from "./useNotifications";
+import { useRegisterCommand } from "./useRegisterCommand";
 import { useTheme } from "./useTheme";
 import { WidgetWindow } from "./WidgetWindow";
 
@@ -87,16 +88,14 @@ function SnippetsCommandRegistrar({ onOpenFullView }: { onOpenFullView: () => vo
     );
   }, [snippets, expand]);
 
-  useEffect(() => {
-    return commandRegistry.register({
-      id: "nav:snippets",
-      label: "Open Snippets",
-      description: "View and manage text snippets",
-      group: "Navigation",
-      keywords: ["snippet", "template", "text", "expand"],
-      action: onOpenFullView,
-    });
-  }, [onOpenFullView]);
+  useRegisterCommand({
+    id: "nav:snippets",
+    label: "Open Snippets",
+    description: "View and manage text snippets",
+    group: "Navigation",
+    keywords: ["snippet", "template", "text", "expand"],
+    action: onOpenFullView,
+  });
 
   return null;
 }
@@ -104,18 +103,16 @@ function SnippetsCommandRegistrar({ onOpenFullView }: { onOpenFullView: () => vo
 function RssReaderCommandRegistrar() {
   const { refresh } = useRssReaderContext();
 
-  useEffect(() => {
-    return commandRegistry.register({
-      id: "rss:refresh-feeds",
-      label: "Refresh RSS Feeds",
-      description: "Fetch new entries from all configured feeds",
-      group: "RSS Reader",
-      keywords: ["rss", "feed", "refresh", "ingest", "fetch", "update", "reload"],
-      action: () => {
-        void refresh();
-      },
-    });
-  }, [refresh]);
+  useRegisterCommand({
+    id: "rss:refresh-feeds",
+    label: "Refresh RSS Feeds",
+    description: "Fetch new entries from all configured feeds",
+    group: "RSS Reader",
+    keywords: ["rss", "feed", "refresh", "ingest", "fetch", "update", "reload"],
+    action: () => {
+      void refresh();
+    },
+  });
 
   return null;
 }
@@ -197,16 +194,14 @@ function App() {
   }, [enterFocusMode]);
 
   // Register app-level commands
-  useEffect(() => {
-    return commandRegistry.register({
-      id: "app:open-options",
-      label: "Open App Options",
-      description: "Appearance, data directory, and about",
-      group: "App",
-      keywords: ["settings", "options", "preferences", "appearance", "background", "theme"],
-      action: () => setAppOptionsOpen(true),
-    });
-  }, []);
+  useRegisterCommand({
+    id: "app:open-options",
+    label: "Open App Options",
+    description: "Appearance, data directory, and about",
+    group: "App",
+    keywords: ["settings", "options", "preferences", "appearance", "background", "theme"],
+    action: () => setAppOptionsOpen(true),
+  });
 
   // Register built-in navigation commands
   useEffect(() => {

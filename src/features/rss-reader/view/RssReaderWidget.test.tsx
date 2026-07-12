@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { FaviconMap, RssEntry, RssFeed } from "../shared/types";
 import { RssReaderWidget } from "./RssReaderWidget";
+import { makeEntry, makeFeed } from "./test-fixtures";
 
 const mocks = vi.hoisted(() => {
   const state: { feeds: RssFeed[]; entries: RssEntry[]; favicons: FaviconMap; isLoading: boolean } = {
@@ -27,34 +28,6 @@ vi.mock("./RssReaderContext", () => ({
     refresh: vi.fn(),
   }),
 }));
-
-function makeEntry(overrides: Partial<RssEntry> = {}): RssEntry {
-  return {
-    id: "e1",
-    feedId: "f1",
-    guid: overrides.id ?? "e1",
-    title: "Test Article",
-    link: "https://example.com/1",
-    description: null,
-    publishedAt: "2024-01-01T10:00:00.000Z",
-    isRead: false,
-    createdAt: new Date().toISOString(),
-    ...overrides,
-  };
-}
-
-function makeFeed(): RssFeed {
-  return {
-    id: "f1",
-    url: "https://example.com/feed",
-    title: "Test Feed",
-    description: null,
-    fetchIntervalMinutes: 30,
-    lastFetchedAt: null,
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  };
-}
 
 describe("RssReaderWidget", () => {
   beforeEach(() => {
