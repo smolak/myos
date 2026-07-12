@@ -7,7 +7,7 @@ import type { CountdownWithTimeLeft } from "@features/countdowns/shared/types";
 import type { JournalNote, TimelineEvent } from "@features/daily-journal/shared/types";
 import type { HabitCompletion, HabitWithStats } from "@features/habits/shared/types";
 import type { PomodoroSession, SessionType } from "@features/pomodoro/shared/types";
-import type { FaviconMap, RssEntry, RssFeed } from "@features/rss-reader/shared/types";
+import type { FaviconMap, RssEntry, RssFeed, RssReaderEvents } from "@features/rss-reader/shared/types";
 import type { Snippet } from "@features/snippets/shared/types";
 import type { TodoItem } from "@features/todo/shared/types";
 import type { WeatherData } from "@features/weather/shared/types";
@@ -188,6 +188,7 @@ export interface AppRPCSchema extends ElectrobunRPCSchema {
     requests: Record<never, never>;
     messages: {
       "clipboard:new-entry": { id: string; content: string; contentType: string };
+      "rss:ingest-completed": RssReaderEvents["rss:ingest-completed"];
     };
   };
 }

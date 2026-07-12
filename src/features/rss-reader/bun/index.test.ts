@@ -55,6 +55,7 @@ describe("rssReaderFeature definition", () => {
     expect(keys).toContain("rss:feed-deleted");
     expect(keys).toContain("rss:new-entry");
     expect(keys).toContain("rss:entry-read");
+    expect(keys).toContain("rss:ingest-completed");
   });
 
   test("manifest declares feed-list widget with medium and wide sizes", () => {
@@ -184,11 +185,23 @@ const FEED_XML = `<rss version="2.0"><channel>
   </item>
 </channel></rss>`;
 
+function urlOf(input: URL | RequestInfo): string {
+  return typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+}
+
 describe("fetch-feeds through the public action surface", () => {
   let tmpDir: string;
   let dbManager: DatabaseManager;
   let registry: FeatureRegistry;
   let actionQueue: ActionQueue;
+
+  function getEventPayloads(eventName: string): unknown[] {
+    return dbManager
+      .getCoreDatabase()
+      .query<{ payload: string }, [string]>("SELECT payload FROM event_log WHERE event_name = ? ORDER BY id")
+      .all(eventName)
+      .map((row) => JSON.parse(row.payload) as unknown);
+  }
 
   beforeEach(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "myos-rss-ingest-"));
@@ -224,14 +237,48 @@ describe("fetch-feeds through the public action surface", () => {
 
     await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
 
-    const coreDb = dbManager.getCoreDatabase();
-    const rows = coreDb
-      .query<{ payload: string }, [string]>("SELECT payload FROM event_log WHERE event_name = ?")
-      .all("rss:new-entry");
-    expect(rows).toHaveLength(2);
-    const payloads = rows.map((r) => JSON.parse(r.payload) as { title: string; link: string });
+    const payloads = getEventPayloads("rss:new-entry");
+    expect(payloads).toHaveLength(2);
     expect(payloads[0]).toMatchObject({ title: "Post One", link: "https://site-a.com/articles/1" });
     expect(payloads[1]).toMatchObject({ title: "Post Two", link: "https://site-b.com/posts/2" });
+  });
+
+  test("emits rss:ingest-completed exactly once with fetched and new-entry counts", async () => {
+    const feature = createRssReaderFeature(async () => new Response(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const payloads = getEventPayloads("rss:ingest-completed");
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0]).toEqual({ fetched: 1, newEntries: 2 });
+  });
+
+  test("emits rss:ingest-completed on every ingest, with a zero count when nothing new is stored", async () => {
+    const feature = createRssReaderFeature(async () => new Response(FEED_XML));
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    const payloads = getEventPayloads("rss:ingest-completed");
+    expect(payloads).toHaveLength(2);
+    expect(payloads[1]).toEqual({ fetched: 1, newEntries: 0 });
+  });
+
+  test("emits rss:ingest-completed even while favicon acquisition never settles", async () => {
+    const feature = createRssReaderFeature((input) => {
+      if (urlOf(input) === "https://example.com/feed") return Promise.resolve(new Response(FEED_XML));
+      return new Promise<Response>(() => {}); // favicon requests hang forever
+    });
+    await registry.startup([feature]);
+    await actionQueue.dispatchAction("rss-reader", "add-feed", { url: "https://example.com/feed" });
+
+    await actionQueue.dispatchAction("rss-reader", "fetch-feeds", {});
+
+    expect(getEventPayloads("rss:ingest-completed")).toHaveLength(1);
   });
 
   async function getFaviconsWhenReady(expectedCount: number): Promise<Record<string, string>> {
@@ -245,7 +292,7 @@ describe("fetch-feeds through the public action surface", () => {
 
   function makeSiteFetch(feedXml: string, calls: string[] = []): (url: URL | RequestInfo) => Promise<Response> {
     return async (input) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const url = urlOf(input);
       calls.push(url);
       if (url === "https://example.com/feed") {
         return new Response(feedXml, { headers: { "content-type": "application/rss+xml" } });

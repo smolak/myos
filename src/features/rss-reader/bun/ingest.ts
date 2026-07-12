@@ -7,7 +7,7 @@ import { acquireFavicons } from "./favicon-cache";
 export interface IngestContext {
   readonly db: Database;
   readonly events: {
-    emit(event: "rss:new-entry", payload: RssReaderEvents["rss:new-entry"]): void;
+    emit<K extends "rss:new-entry" | "rss:ingest-completed">(event: K, payload: RssReaderEvents[K]): void;
   };
   readonly log: {
     warn(message: string, ...args: unknown[]): void;
@@ -32,6 +32,10 @@ export async function ingestFeeds(ctx: IngestContext, fetchFn: FetchFn = fetch):
       link: entry.link,
     });
   }
+
+  // One signal per Ingest, sent as soon as entries are stored: views coalesce on this,
+  // and it must never wait on favicon acquisition below (which carries no timeout).
+  ctx.events.emit("rss:ingest-completed", { fetched, newEntries: newEntries.length });
 
   // Runs in the background and never rejects: favicon failures must never delay or fail
   // the feed pipeline; callers observe completion via the returned faviconAcquisition.

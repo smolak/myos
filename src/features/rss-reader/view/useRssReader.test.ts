@@ -11,6 +11,15 @@ const mockDeleteFeed = vi.fn();
 const mockMarkRead = vi.fn();
 const mockMarkUnread = vi.fn();
 
+const messageListeners = new Map<string, Set<(payload: unknown) => void>>();
+
+/** Simulates a bun→view push arriving over the RPC bridge. */
+function pushMessage(name: string, payload: unknown): void {
+  for (const listener of messageListeners.get(name) ?? []) {
+    listener(payload);
+  }
+}
+
 vi.mock("@shell/view/electrobun", () => ({
   rpc: {
     request: {
@@ -22,6 +31,14 @@ vi.mock("@shell/view/electrobun", () => ({
       "rss:delete-feed": (...args: unknown[]) => mockDeleteFeed(...args),
       "rss:mark-read": (...args: unknown[]) => mockMarkRead(...args),
       "rss:mark-unread": (...args: unknown[]) => mockMarkUnread(...args),
+    },
+    addMessageListener: (name: string, listener: (payload: unknown) => void) => {
+      const listeners = messageListeners.get(name) ?? new Set();
+      listeners.add(listener);
+      messageListeners.set(name, listeners);
+    },
+    removeMessageListener: (name: string, listener: (payload: unknown) => void) => {
+      messageListeners.get(name)?.delete(listener);
     },
   },
 }));
@@ -70,6 +87,7 @@ const flushAll = () =>
 
 beforeEach(() => {
   mockGetFavicons.mockResolvedValue({});
+  messageListeners.clear();
 });
 
 describe("useRssReader — mount", () => {
@@ -313,6 +331,103 @@ describe("useRssReader — markRead / markUnread", () => {
     const entry = result.current.entries.find((e) => e.id === "e2");
     expect(entry?.isRead).toBe(false);
     expect(result.current.unreadCount).toBe(2);
+  });
+});
+
+describe("useRssReader — background ingest push", () => {
+  beforeEach(() => {
+    mockGetFeeds.mockResolvedValue([FEED_A]);
+    mockGetEntries.mockResolvedValue([ENTRY_UNREAD, ENTRY_READ]);
+    mockFetchFeeds.mockResolvedValue({ fetched: 1, newEntries: 0 });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("shows entries stored by a background ingest when rss:ingest-completed arrives", async () => {
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+
+    const backgroundEntry: RssEntry = { ...ENTRY_UNREAD, id: "e3", title: "Background Article" };
+    const refreshedFeed: RssFeed = { ...FEED_A, lastFetchedAt: "2026-01-02T00:00:00Z" };
+    mockGetEntries.mockResolvedValue([ENTRY_UNREAD, ENTRY_READ, backgroundEntry]);
+    mockGetFeeds.mockResolvedValue([refreshedFeed]);
+    await act(async () => {
+      pushMessage("rss:ingest-completed", { fetched: 1, newEntries: 1 });
+    });
+
+    expect(result.current.entries).toHaveLength(3);
+    expect(result.current.entries.some((e) => e.title === "Background Article")).toBe(true);
+    expect(result.current.unreadCount).toBe(2);
+    expect(result.current.feeds[0]?.lastFetchedAt).toBe("2026-01-02T00:00:00Z");
+  });
+
+  test("keeps isLoading false while the push-triggered reload is still in flight", async () => {
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+
+    let resolveEntries: (entries: RssEntry[]) => void = () => {};
+    mockGetEntries.mockImplementationOnce(
+      () =>
+        new Promise<RssEntry[]>((resolve) => {
+          resolveEntries = resolve;
+        }),
+    );
+
+    act(() => {
+      pushMessage("rss:ingest-completed", { fetched: 1, newEntries: 1 });
+    });
+    expect(result.current.isLoading).toBe(false);
+
+    await act(async () => {
+      resolveEntries([ENTRY_UNREAD, ENTRY_READ]);
+    });
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  test("stops reacting to pushes after unmount", async () => {
+    const { unmount } = renderHook(() => useRssReader());
+    await flushAll();
+    unmount();
+    vi.clearAllMocks();
+
+    await act(async () => {
+      pushMessage("rss:ingest-completed", { fetched: 1, newEntries: 1 });
+    });
+
+    expect(mockGetEntries).not.toHaveBeenCalled();
+    expect(mockGetFeeds).not.toHaveBeenCalled();
+  });
+
+  test("re-queries favicons on the same signal, so icons cached by earlier ingests appear", async () => {
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+    expect(result.current.favicons).toEqual({});
+
+    const icons = { "site-a.com": "data:image/png;base64,AAAA" };
+    mockGetFavicons.mockResolvedValue(icons);
+    await act(async () => {
+      pushMessage("rss:ingest-completed", { fetched: 1, newEntries: 0 });
+    });
+
+    expect(result.current.favicons).toEqual(icons);
+  });
+
+  test("keeps the current view intact when the favicon query fails during a push reload", async () => {
+    const { result } = renderHook(() => useRssReader());
+    await flushAll();
+
+    const backgroundEntry: RssEntry = { ...ENTRY_UNREAD, id: "e3", title: "Background Article" };
+    mockGetEntries.mockResolvedValue([ENTRY_UNREAD, ENTRY_READ, backgroundEntry]);
+    mockGetFavicons.mockRejectedValue(new Error("favicon query failed"));
+    await act(async () => {
+      pushMessage("rss:ingest-completed", { fetched: 1, newEntries: 1 });
+    });
+
+    expect(result.current.entries).toHaveLength(3);
+    expect(result.current.favicons).toEqual({});
+    expect(result.current.isLoading).toBe(false);
   });
 });
 

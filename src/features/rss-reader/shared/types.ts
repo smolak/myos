@@ -31,6 +31,7 @@ export interface RssReaderEvents extends EventMap {
   "rss:feed-deleted": { feedId: string };
   "rss:new-entry": { entryId: string; feedId: string; title: string; link: string };
   "rss:entry-read": { entryId: string; feedId: string };
+  "rss:ingest-completed": { fetched: number; newEntries: number };
 }
 
 export interface RssReaderActions extends ActionMap {

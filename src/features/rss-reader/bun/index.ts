@@ -36,6 +36,11 @@ export function createRssReaderFeature(
           description: "An RSS entry was marked as read",
           payload: { entryId: "string", feedId: "string" },
         },
+        "rss:ingest-completed": {
+          description:
+            "An Ingest finished storing entries (exactly one per Ingest, before favicon acquisition settles)",
+          payload: { fetched: "number", newEntries: "number" },
+        },
       },
       actions: {
         "add-feed": {

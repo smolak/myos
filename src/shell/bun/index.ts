@@ -21,6 +21,7 @@ import { getTimelineEvents } from "../../features/daily-journal/bun/queries";
 import { habitsFeature } from "../../features/habits/bun/index";
 import { pomodoroFeature } from "../../features/pomodoro/bun/index";
 import { rssReaderFeature } from "../../features/rss-reader/bun/index";
+import type { RssReaderEvents } from "../../features/rss-reader/shared/types";
 import { snippetsFeature } from "../../features/snippets/bun/index";
 import { todoFeature } from "../../features/todo/bun/index";
 import { weatherFeature } from "../../features/weather/bun/index";
@@ -659,6 +660,11 @@ void startupPromise.then(() => {
   eventBus.subscribe("clipboard:copied", async (payload) => {
     const p = payload as { id: string; content: string; contentType: string };
     rpc.send["clipboard:new-entry"](p);
+  });
+
+  eventBus.subscribe("rss:ingest-completed", async (payload) => {
+    // Event Bus payloads are untyped at runtime; the shape's single source of truth is RssReaderEvents
+    rpc.send["rss:ingest-completed"](payload as RssReaderEvents["rss:ingest-completed"]);
   });
 
   eventBus.subscribe("todo:item-completed", async (payload) => {
