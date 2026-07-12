@@ -19,7 +19,7 @@ import { HabitsFullView } from "@features/habits/view/HabitsFullView";
 import { HabitsWidget } from "@features/habits/view/HabitsWidget";
 import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
 import { PomodoroWidget } from "@features/pomodoro/view/PomodoroWidget";
-import { RssReaderProvider } from "@features/rss-reader/view/RssReaderContext";
+import { RssReaderProvider, useRssReaderContext } from "@features/rss-reader/view/RssReaderContext";
 import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
 import { RssReaderWidget } from "@features/rss-reader/view/RssReaderWidget";
 import { SnippetsProvider, useSnippetsContext } from "@features/snippets/view/SnippetsContext";
@@ -41,6 +41,7 @@ import { NotificationCenter } from "./NotificationCenter";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAppOptions } from "./useAppOptions";
 import { useNotifications } from "./useNotifications";
+import { useRegisterCommand } from "./useRegisterCommand";
 import { useTheme } from "./useTheme";
 import { WidgetWindow } from "./WidgetWindow";
 
@@ -87,16 +88,31 @@ function SnippetsCommandRegistrar({ onOpenFullView }: { onOpenFullView: () => vo
     );
   }, [snippets, expand]);
 
-  useEffect(() => {
-    return commandRegistry.register({
-      id: "nav:snippets",
-      label: "Open Snippets",
-      description: "View and manage text snippets",
-      group: "Navigation",
-      keywords: ["snippet", "template", "text", "expand"],
-      action: onOpenFullView,
-    });
-  }, [onOpenFullView]);
+  useRegisterCommand({
+    id: "nav:snippets",
+    label: "Open Snippets",
+    description: "View and manage text snippets",
+    group: "Navigation",
+    keywords: ["snippet", "template", "text", "expand"],
+    action: onOpenFullView,
+  });
+
+  return null;
+}
+
+function RssReaderCommandRegistrar() {
+  const { refresh } = useRssReaderContext();
+
+  useRegisterCommand({
+    id: "rss:refresh-feeds",
+    label: "Refresh RSS Feeds",
+    description: "Fetch new entries from all configured feeds",
+    group: "RSS Reader",
+    keywords: ["rss", "feed", "refresh", "ingest", "fetch", "update", "reload"],
+    action: () => {
+      void refresh();
+    },
+  });
 
   return null;
 }
@@ -178,16 +194,14 @@ function App() {
   }, [enterFocusMode]);
 
   // Register app-level commands
-  useEffect(() => {
-    return commandRegistry.register({
-      id: "app:open-options",
-      label: "Open App Options",
-      description: "Appearance, data directory, and about",
-      group: "App",
-      keywords: ["settings", "options", "preferences", "appearance", "background", "theme"],
-      action: () => setAppOptionsOpen(true),
-    });
-  }, []);
+  useRegisterCommand({
+    id: "app:open-options",
+    label: "Open App Options",
+    description: "Appearance, data directory, and about",
+    group: "App",
+    keywords: ["settings", "options", "preferences", "appearance", "background", "theme"],
+    action: () => setAppOptionsOpen(true),
+  });
 
   // Register built-in navigation commands
   useEffect(() => {
@@ -465,6 +479,7 @@ function App() {
         <CountdownsProvider>
           <BookmarksProvider>
             <RssReaderProvider>
+              <RssReaderCommandRegistrar />
               <HabitsProvider>
                 <DailyJournalProvider>
                   <div
