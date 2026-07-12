@@ -17,5 +17,5 @@ The icon of the website an Entry's link points to, identified by the link's exac
 _Avoid_: Site icon, page icon, and especially feed icon — a Favicon belongs to a link's host, never to the Feed.
 
 **Ingest**:
-The periodic pipeline that fetches all Feeds, stores new Entries, announces them, and acquires Favicons for the Entries' hostnames. Fetching is one step of an Ingest; "fetch" alone refers to the read-only Query sense defined in the Core language.
-_Avoid_: Sync, poll, refresh (as names for the whole pipeline)
+The pipeline that fetches all Feeds, stores new Entries, announces them, and acquires Favicons for the Entries' hostnames. An Ingest is the same pipeline regardless of what triggered it — the schedule, opening the reader, or the reader asking for one explicitly. Fetching is one step of an Ingest; "fetch" alone refers to the read-only Query sense defined in the Core language.
+_Avoid_: Sync, poll, refresh (as names for the whole pipeline); "manual Ingest" as a distinct concept — triggers vary, the Ingest does not

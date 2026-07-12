@@ -60,6 +60,23 @@ function EntryItem({
   );
 }
 
+function RefreshAllButton() {
+  const { feeds, refresh, isLoading } = useRssReaderContext();
+
+  if (feeds.length === 0) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => void refresh()}
+      disabled={isLoading}
+      className="text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50 transition-colors"
+    >
+      {isLoading ? "Refreshing…" : "Refresh all"}
+    </button>
+  );
+}
+
 function FeedTab({
   entries,
   markRead,
@@ -77,15 +94,18 @@ function FeedTab({
     <div>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-zinc-500">{displayed.length} entries</span>
-        <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showUnreadOnly}
-            onChange={(e) => setShowUnreadOnly(e.target.checked)}
-            className="accent-blue-400"
-          />
-          Unread only
-        </label>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showUnreadOnly}
+              onChange={(e) => setShowUnreadOnly(e.target.checked)}
+              className="accent-blue-400"
+            />
+            Unread only
+          </label>
+          <RefreshAllButton />
+        </div>
       </div>
 
       {displayed.length === 0 ? (
@@ -129,13 +149,11 @@ function ManageTab({
   feeds,
   addFeed,
   deleteFeed,
-  refresh,
   isLoading,
 }: {
   feeds: readonly StoredFeed[];
   addFeed: (url: string) => Promise<void>;
   deleteFeed: (id: string) => Promise<void>;
-  refresh: () => Promise<void>;
   isLoading: boolean;
 }) {
   const [urlInput, setUrlInput] = useState("");
@@ -186,16 +204,7 @@ function ManageTab({
 
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Configured Feeds ({feeds.length})</h3>
-        {feeds.length > 0 && (
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            disabled={isLoading}
-            className="text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50 transition-colors"
-          >
-            {isLoading ? "Refreshing…" : "Refresh all"}
-          </button>
-        )}
+        <RefreshAllButton />
       </div>
 
       {feeds.length === 0 ? (
@@ -213,7 +222,7 @@ function ManageTab({
 
 export function RssReaderFullView({ onClose }: Props) {
   const [activeTab, setActiveTab] = useState<"feed" | "manage">("feed");
-  const { feeds, entries, addFeed, deleteFeed, markRead, markUnread, refresh, isLoading } = useRssReaderContext();
+  const { feeds, entries, addFeed, deleteFeed, markRead, markUnread, isLoading } = useRssReaderContext();
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-100">
@@ -251,7 +260,7 @@ export function RssReaderFullView({ onClose }: Props) {
       <div className="flex-1 overflow-auto p-6">
         {activeTab === "feed" && <FeedTab entries={entries} markRead={markRead} markUnread={markUnread} />}
         {activeTab === "manage" && (
-          <ManageTab feeds={feeds} addFeed={addFeed} deleteFeed={deleteFeed} refresh={refresh} isLoading={isLoading} />
+          <ManageTab feeds={feeds} addFeed={addFeed} deleteFeed={deleteFeed} isLoading={isLoading} />
         )}
       </div>
     </div>

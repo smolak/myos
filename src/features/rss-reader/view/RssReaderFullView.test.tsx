@@ -4,15 +4,17 @@ import type { FaviconMap, RssEntry, RssFeed } from "../shared/types";
 import { RssReaderFullView } from "./RssReaderFullView";
 
 const mocks = vi.hoisted(() => {
-  const state: { feeds: RssFeed[]; entries: RssEntry[]; favicons: FaviconMap } = {
+  const state: { feeds: RssFeed[]; entries: RssEntry[]; favicons: FaviconMap; isLoading: boolean } = {
     feeds: [],
     entries: [],
     favicons: {},
+    isLoading: false,
   };
   return {
     openUrl: vi.fn().mockResolvedValue(undefined),
     markRead: vi.fn(),
     markUnread: vi.fn(),
+    refresh: vi.fn().mockResolvedValue(undefined),
     state,
   };
 });
@@ -34,12 +36,12 @@ vi.mock("./RssReaderContext", () => ({
     entries: mocks.state.entries,
     favicons: mocks.state.favicons,
     unreadCount: mocks.state.entries.filter((e) => !e.isRead).length,
-    isLoading: false,
+    isLoading: mocks.state.isLoading,
     addFeed: vi.fn(),
     deleteFeed: vi.fn(),
     markRead: mocks.markRead,
     markUnread: mocks.markUnread,
-    refresh: vi.fn(),
+    refresh: mocks.refresh,
   }),
 }));
 
@@ -76,9 +78,38 @@ describe("RssReaderFullView", () => {
     mocks.state.feeds = [];
     mocks.state.entries = [];
     mocks.state.favicons = {};
+    mocks.state.isLoading = false;
     mocks.openUrl.mockClear();
     mocks.markRead.mockClear();
     mocks.markUnread.mockClear();
+    mocks.refresh.mockClear();
+  });
+
+  describe("Entries tab refresh", () => {
+    test("shows the refresh button when feeds are configured", () => {
+      mocks.state.feeds = [makeFeed()];
+      render(<RssReaderFullView />);
+      expect(screen.getByRole("button", { name: "Refresh all" })).toBeInTheDocument();
+    });
+
+    test("triggers a refresh when the button is clicked", () => {
+      mocks.state.feeds = [makeFeed()];
+      render(<RssReaderFullView />);
+      fireEvent.click(screen.getByRole("button", { name: "Refresh all" }));
+      expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    });
+
+    test("hides the refresh button when no feeds are configured", () => {
+      render(<RssReaderFullView />);
+      expect(screen.queryByRole("button", { name: "Refresh all" })).not.toBeInTheDocument();
+    });
+
+    test("disables the refresh button while an ingest is running", () => {
+      mocks.state.feeds = [makeFeed()];
+      mocks.state.isLoading = true;
+      render(<RssReaderFullView />);
+      expect(screen.getByRole("button", { name: "Refreshing…" })).toBeDisabled();
+    });
   });
 
   describe("Entries tab icons", () => {
@@ -93,6 +124,14 @@ describe("RssReaderFullView", () => {
   });
 
   describe("Manage tab", () => {
+    test("triggers a refresh from the Manage tab button", () => {
+      mocks.state.feeds = [makeFeed()];
+      render(<RssReaderFullView />);
+      fireEvent.click(screen.getByRole("button", { name: "Manage" }));
+      fireEvent.click(screen.getByRole("button", { name: "Refresh all" }));
+      expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    });
+
     test("keeps feed rows icon-free", () => {
       mocks.state.feeds = [makeFeed()];
       mocks.state.entries = [makeEntry()];
