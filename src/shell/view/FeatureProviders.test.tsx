@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
-import { type ComponentType, createContext, type ReactNode, useContext } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { describe, expect, test } from "vitest";
 import { FeatureProviders } from "./FeatureProviders";
-import type { FeatureViewDescriptor } from "./feature-views";
+import { makeDescriptor } from "./test-fixtures";
 
 const GreetingContext = createContext("no greeting provided");
 
@@ -18,23 +18,6 @@ function GreetingRegistrar() {
 function GreetingConsumer() {
   const greeting = useContext(GreetingContext);
   return <span>child saw: {greeting}</span>;
-}
-
-interface DescriptorOptions {
-  featureId?: string;
-  Provider?: ComponentType<{ children: ReactNode }>;
-  CommandRegistrar?: ComponentType;
-}
-
-function makeDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
-  return {
-    featureId: overrides.featureId ?? "greeting",
-    displayName: "Greeting",
-    icon: "👋",
-    description: "Says hello",
-    Provider: overrides.Provider,
-    CommandRegistrar: overrides.CommandRegistrar,
-  };
 }
 
 describe("FeatureProviders", () => {

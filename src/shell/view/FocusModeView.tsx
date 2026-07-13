@@ -6,7 +6,8 @@ interface FocusModeViewProps {
 }
 
 function FeatureContent({ featureId, onExit }: FocusModeViewProps) {
-  const FullView = findFeatureView(FEATURE_VIEWS, featureId)?.FullView;
+  const descriptor = findFeatureView(FEATURE_VIEWS, featureId);
+  const FullView = descriptor?.supportsFocusMode ? descriptor.FullView : undefined;
   return FullView ? <FullView onClose={onExit} /> : null;
 }
 

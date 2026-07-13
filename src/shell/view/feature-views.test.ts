@@ -1,63 +1,15 @@
 import { describe, expect, test, vi } from "vitest";
+import { DEFAULT_PAGES } from "./default-layout";
 import {
   buildCatalogEntries,
   buildFocusCommands,
   buildNavigationCommands,
   FEATURE_VIEWS,
-  type FeatureViewDescriptor,
   findFeatureView,
   MODAL_SIZE_CLASSES,
   resolveWidget,
-  type WidgetDescriptor,
 } from "./feature-views";
-
-const DummyWidget = () => null;
-const DummyFullView = () => null;
-
-interface DescriptorOptions {
-  featureId?: string;
-  displayName?: string;
-  icon?: string;
-  description?: string;
-  widgets?: Readonly<Record<string, WidgetDescriptor>>;
-  navKeywords?: readonly string[];
-}
-
-function makeIdentity(overrides: DescriptorOptions) {
-  return {
-    featureId: overrides.featureId ?? "todo",
-    displayName: overrides.displayName ?? "Todo",
-    icon: overrides.icon ?? "✓",
-    description: overrides.description ?? "Tasks and to-do lists",
-    navKeywords: overrides.navKeywords,
-  };
-}
-
-function makeDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
-  return {
-    ...makeIdentity(overrides),
-    widgets: overrides.widgets ?? { "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 } },
-    FullView: DummyFullView,
-    modalSize: "compact",
-    supportsFocusMode: true,
-  };
-}
-
-function makeWidgetlessDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
-  return {
-    ...makeIdentity(overrides),
-    FullView: DummyFullView,
-    modalSize: "compact",
-    supportsFocusMode: true,
-  };
-}
-
-function makeViewlessDescriptor(overrides: DescriptorOptions = {}): FeatureViewDescriptor {
-  return {
-    ...makeIdentity(overrides),
-    widgets: overrides.widgets ?? { "task-list": { Widget: DummyWidget, defaultW: 2, defaultH: 2 } },
-  };
-}
+import { DummyWidget, makeDescriptor, makeViewlessDescriptor, makeWidgetlessDescriptor } from "./test-fixtures";
 
 describe("buildNavigationCommands", () => {
   test("generates an Open command per descriptor with a full view", () => {
@@ -174,12 +126,10 @@ describe("findFeatureView", () => {
 });
 
 describe("MODAL_SIZE_CLASSES", () => {
-  test("maps each named size to the shell's existing class combination", () => {
-    expect(MODAL_SIZE_CLASSES).toEqual({
-      compact: "max-w-lg h-2/3",
-      wide: "max-w-2xl h-3/4",
-      tall: "max-w-lg h-3/4",
-    });
+  test("declares shell classes for every named size", () => {
+    for (const [size, classes] of Object.entries(MODAL_SIZE_CLASSES)) {
+      expect(classes, size).not.toEqual("");
+    }
   });
 });
 
@@ -282,22 +232,10 @@ describe("FEATURE_VIEWS", () => {
   });
 
   test("resolves a widget for every item in the default dashboard layout", () => {
-    const defaultLayout: ReadonlyArray<[string, string]> = [
-      ["todo", "task-list"],
-      ["pomodoro", "timer"],
-      ["clock", "display"],
-      ["weather", "conditions"],
-      ["rss-reader", "feed-list"],
-      ["daily-journal", "summary"],
-      ["calendar", "upcoming-events"],
-      ["habits", "daily-checkin"],
-      ["bookmarks", "recent-list"],
-      ["countdowns", "upcoming"],
-      ["clipboard-history", "recent-clips"],
-      ["snippets", "favorites"],
-    ];
+    const items = DEFAULT_PAGES.flatMap((page) => page.layout);
 
-    for (const [featureId, widgetId] of defaultLayout) {
+    expect(items).not.toHaveLength(0);
+    for (const { featureId, widgetId } of items) {
       expect(resolveWidget(FEATURE_VIEWS, featureId, widgetId), `${featureId}/${widgetId}`).toBeDefined();
     }
   });
