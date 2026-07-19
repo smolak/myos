@@ -1,12 +1,4 @@
-import { BookmarksFullView } from "@features/bookmarks/view/BookmarksFullView";
-import { CalendarFullView } from "@features/calendar/view/CalendarFullView";
-import { ClipboardHistoryFullView } from "@features/clipboard-history/view/ClipboardHistoryFullView";
-import { DailyJournalFullView } from "@features/daily-journal/view/DailyJournalFullView";
-import { HabitsFullView } from "@features/habits/view/HabitsFullView";
-import { PomodoroFullView } from "@features/pomodoro/view/PomodoroFullView";
-import { RssReaderFullView } from "@features/rss-reader/view/RssReaderFullView";
-import { SnippetsFullView } from "@features/snippets/view/SnippetsFullView";
-import { TodoFullView } from "@features/todo/view/TodoFullView";
+import { FEATURE_VIEWS, findFeatureView } from "./feature-views";
 
 interface FocusModeViewProps {
   featureId: string;
@@ -14,16 +6,9 @@ interface FocusModeViewProps {
 }
 
 function FeatureContent({ featureId, onExit }: FocusModeViewProps) {
-  if (featureId === "todo") return <TodoFullView onClose={onExit} />;
-  if (featureId === "pomodoro") return <PomodoroFullView onClose={onExit} />;
-  if (featureId === "rss-reader") return <RssReaderFullView onClose={onExit} />;
-  if (featureId === "daily-journal") return <DailyJournalFullView onClose={onExit} />;
-  if (featureId === "calendar") return <CalendarFullView onClose={onExit} />;
-  if (featureId === "habits") return <HabitsFullView onClose={onExit} />;
-  if (featureId === "bookmarks") return <BookmarksFullView onClose={onExit} />;
-  if (featureId === "clipboard-history") return <ClipboardHistoryFullView onClose={onExit} />;
-  if (featureId === "snippets") return <SnippetsFullView onClose={onExit} />;
-  return null;
+  const descriptor = findFeatureView(FEATURE_VIEWS, featureId);
+  const FullView = descriptor?.supportsFocusMode ? descriptor.FullView : undefined;
+  return FullView ? <FullView onClose={onExit} /> : null;
 }
 
 export function FocusModeView({ featureId, onExit }: FocusModeViewProps) {

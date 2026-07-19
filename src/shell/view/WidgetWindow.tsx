@@ -1,112 +1,5 @@
 import type { ReactNode } from "react";
-
-export interface FeatureMeta {
-  title: string;
-  icon: string;
-  description: string;
-  widgetId: string;
-  defaultW: number;
-  defaultH: number;
-}
-
-export const FEATURE_META: Record<string, FeatureMeta> = {
-  todo: {
-    title: "Todo",
-    icon: "✓",
-    description: "Tasks and to-do lists",
-    widgetId: "task-list",
-    defaultW: 2,
-    defaultH: 2,
-  },
-  pomodoro: {
-    title: "Pomodoro",
-    icon: "⏱",
-    description: "Focus timer sessions",
-    widgetId: "timer",
-    defaultW: 2,
-    defaultH: 1,
-  },
-  clock: {
-    title: "Clock",
-    icon: "🕐",
-    description: "Current time display",
-    widgetId: "display",
-    defaultW: 1,
-    defaultH: 1,
-  },
-  weather: {
-    title: "Weather",
-    icon: "⛅",
-    description: "Temperature and conditions",
-    widgetId: "conditions",
-    defaultW: 1,
-    defaultH: 1,
-  },
-  "rss-reader": {
-    title: "RSS Reader",
-    icon: "📡",
-    description: "News feeds and articles",
-    widgetId: "feed-list",
-    defaultW: 4,
-    defaultH: 2,
-  },
-  calendar: {
-    title: "Calendar",
-    icon: "📅",
-    description: "Events and schedule",
-    widgetId: "upcoming-events",
-    defaultW: 2,
-    defaultH: 2,
-  },
-  "daily-journal": {
-    title: "Daily Journal",
-    icon: "📓",
-    description: "Activity log and notes",
-    widgetId: "summary",
-    defaultW: 2,
-    defaultH: 2,
-  },
-  habits: {
-    title: "Habits",
-    icon: "🎯",
-    description: "Daily habit tracking",
-    widgetId: "daily-checkin",
-    defaultW: 2,
-    defaultH: 1,
-  },
-  bookmarks: {
-    title: "Bookmarks",
-    icon: "🔖",
-    description: "Saved links and URLs",
-    widgetId: "recent-list",
-    defaultW: 2,
-    defaultH: 1,
-  },
-  countdowns: {
-    title: "Countdowns",
-    icon: "⏳",
-    description: "Timers to important dates",
-    widgetId: "upcoming",
-    defaultW: 2,
-    defaultH: 1,
-  },
-  "clipboard-history": {
-    title: "Clipboard",
-    icon: "📋",
-    description: "Recent clipboard entries",
-    widgetId: "recent-clips",
-    defaultW: 2,
-    defaultH: 1,
-  },
-  snippets: {
-    title: "Snippets",
-    icon: "✂️",
-    description: "Reusable text templates",
-    widgetId: "favorites",
-    defaultW: 2,
-    defaultH: 1,
-  },
-};
+import { FEATURE_VIEWS, findFeatureView } from "./feature-views";
 
 interface Props {
   featureId: string;
@@ -116,9 +9,9 @@ interface Props {
 }
 
 export function WidgetWindow({ featureId, children, onExpand, onClose }: Props) {
-  const meta = FEATURE_META[featureId];
-  const title = meta?.title ?? featureId;
-  const icon = meta?.icon ?? "○";
+  const descriptor = findFeatureView(FEATURE_VIEWS, featureId);
+  const title = descriptor?.displayName ?? featureId;
+  const icon = descriptor?.icon ?? "○";
 
   return (
     <div className="widget-window flex flex-col h-full rounded-xl overflow-hidden" data-feature={featureId}>

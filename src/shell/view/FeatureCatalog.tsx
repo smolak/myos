@@ -1,5 +1,5 @@
 import type { LayoutItem } from "@core/types";
-import { FEATURE_META } from "./WidgetWindow";
+import { buildCatalogEntries, FEATURE_VIEWS } from "./feature-views";
 
 interface Props {
   currentLayout: LayoutItem[];
@@ -41,12 +41,12 @@ export function FeatureCatalog({ currentLayout, onAdd, onClose }: Props) {
         {/* Feature grid */}
         <div className="overflow-auto p-6">
           <div className="grid grid-cols-3 gap-3">
-            {Object.entries(FEATURE_META).map(([id, meta]) => {
-              const isActive = activeFeatureIds.has(id);
+            {buildCatalogEntries(FEATURE_VIEWS).map((entry) => {
+              const isActive = activeFeatureIds.has(entry.featureId);
               return (
                 <div
-                  key={id}
-                  data-feature={id}
+                  key={entry.featureId}
+                  data-feature={entry.featureId}
                   className="feature-catalog-card rounded-xl p-4 border transition-all"
                   style={{
                     background: "var(--bg-surface-raised, var(--bg-surface))",
@@ -61,13 +61,13 @@ export function FeatureCatalog({ currentLayout, onAdd, onClose }: Props) {
                       className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0"
                       style={{ background: "color-mix(in srgb, var(--feature-color) 15%, transparent)" }}
                     >
-                      {meta.icon}
+                      {entry.icon}
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate" style={{ color: "var(--feature-color)" }}>
-                        {meta.title}
+                        {entry.displayName}
                       </div>
-                      <div className="text-xs text-zinc-500 truncate">{meta.description}</div>
+                      <div className="text-xs text-zinc-500 truncate">{entry.description}</div>
                     </div>
                   </div>
 
@@ -81,7 +81,7 @@ export function FeatureCatalog({ currentLayout, onAdd, onClose }: Props) {
                     <button
                       type="button"
                       onClick={() => {
-                        onAdd(id, meta.widgetId, meta.defaultW, meta.defaultH);
+                        onAdd(entry.featureId, entry.widgetId, entry.defaultW, entry.defaultH);
                         onClose();
                       }}
                       className="text-xs rounded-lg px-3 py-1.5 transition-colors text-zinc-200 hover:text-zinc-100"

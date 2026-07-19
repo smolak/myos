@@ -243,7 +243,7 @@ Follow the strategy defined in `ARCHITECTURE.md § Error Handling`. The rules fo
                        registry, and useRegisterCommand) — never shell components
 ```
 
-The `@shell` exception exists because feature view code runs inside the shell's webview: talking to the bun process (rpc) and registering palette commands (Command Registrars, see `ARCHITECTURE.md` § Command Palette Registration) are shell-provided capabilities, not cross-boundary leaks.
+The `@shell` exception exists because feature view code runs inside the shell's webview: talking to the bun process (rpc) and registering palette commands (Command Registrars, see `ARCHITECTURE.md` § Feature View Registration) are shell-provided capabilities, not cross-boundary leaks.
 
 ### Path aliases are contracts
 
